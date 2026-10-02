@@ -1356,7 +1356,7 @@ function renderStats() {
       const cnt = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; cnt[g] = (cnt[g] || 0) + 1; });
       gl.innerHTML = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).map(g => `<span${g === 'nonfiction' ? ` title="${esc([...new Set(pile.filter(b => b.genre === 'nonfiction').map(b => b.genreName).filter(Boolean))].join(', '))}"` : ''}><i style="background:var(--g-${g})"></i>${GENRES[g]} <span class="num muted">${cnt[g]} · ${Math.round(cnt[g] / pile.length * 100)}%</span></span>`).join('')
         + (pile.some(b => b.genreSrc === 'guess') ? `<span class="muted">${fmtInt(pile.filter(b => b.genreSrc === 'guess').length)} genres are guessed from the book's title, because Amazon has no store page for them.</span>` : '')
-        + (pile.length > SHELF ? `<span class="muted">Each genre gets its share of the ${globeG.length ? SHELF - 1 : SHELF} spines on the shelf.${globeG.length ? ' The globe holds the genres under 5%.' : ''}${comicG.length ? ' The comic holds the ones under 3%.' : ''}</span>` : '');
+        + (globeG.length || comicG.length ? `<span class="muted">${globeG.length ? 'The globe holds the genres under 5%.' : ''}${globeG.length && comicG.length ? ' ' : ''}${comicG.length ? 'The comic holds the ones under 3%.' : ''}</span>` : '');
       gl.hidden = false;
     } else gl.hidden = true;
     if (pile.length > shown.length) html += `<div class="more">+ ${fmtInt(pile.length - shown.length)} more that didn't fit on the shelf${S.settings.spineMode === 'genre' ? ', in the same proportions' : ''}</div>`;
