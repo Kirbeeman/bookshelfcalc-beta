@@ -221,6 +221,13 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
   background:linear-gradient(rgba(255,255,255,.2) 0 2px,transparent 2px calc(100% - 3px),rgba(0,0,0,.24) calc(100% - 3px)),linear-gradient(90deg,transparent 0 6px,var(--bd) 6px 9px,transparent 9px calc(100% - 9px),var(--bd) calc(100% - 9px) calc(100% - 6px),transparent 0),var(--c)}
 .lay .spine.g2{background:linear-gradient(rgba(255,255,255,.2) 0 2px,transparent 2px calc(100% - 3px),rgba(0,0,0,.24) calc(100% - 3px)),linear-gradient(90deg,transparent 0 5px,var(--outline) 5px 6px,var(--c2) 6px 12px,var(--outline) 12px 13px,transparent 13px calc(100% - 13px),var(--outline) calc(100% - 13px) calc(100% - 12px),var(--c2) calc(100% - 12px) calc(100% - 6px),var(--outline) calc(100% - 6px) calc(100% - 5px),transparent 0),var(--c)}
 .lay .spine:first-child{margin-top:0}
+.gx{display:inline-block;vertical-align:bottom;margin:0 0 12px 14px;line-height:0;cursor:help;--dk-metal:#c99a3e}
+.gx-spin{animation:gxspin 9s linear infinite}@keyframes gxspin{from{transform:translateX(0)}to{transform:translateX(-60px)}}
+.cb-b,.cb-p{transform-box:fill-box;transform-origin:center;animation:3.2s var(--d) ease-in infinite both}.cb-b{animation-name:cbrise}.cb-p{animation-name:cbpop;opacity:0}
+@keyframes cbrise{0%{transform:translateY(0) scale(.4);opacity:0}10%{opacity:1}30%{transform:translate(2px,-12px) scale(.8)}55%{transform:translate(-2px,-26px) scale(1)}80%{transform:translate(1px,-38px) scale(1.05);opacity:1}86%{transform:translate(1px,-38px) scale(1.45);opacity:0}100%{transform:translate(1px,-38px) scale(1.45);opacity:0}}
+@keyframes cbpop{0%,80%{opacity:0;transform:scale(.6)}86%{opacity:1;transform:scale(1)}96%{opacity:0;transform:scale(1.35)}100%{opacity:0}}
+.cb-fire{transform-origin:30px 90px;animation:dkflick 1.4s ease-in-out infinite alternate}@keyframes dkflick{0%{transform:scale(1,1)}50%{transform:scale(1.06,.92)}100%{transform:scale(.95,1.05)}}
+@media (prefers-reduced-motion:reduce){.gx-spin,.cb-b,.cb-p,.cb-fire{animation:none}.cb-p{opacity:0}}
 .decor{display:inline-block;vertical-align:bottom;margin-bottom:12px;line-height:0;--dk-metal:#c99a3e;--dk-leaf:#5a9a4e;--dk-leaf2:#3d7a43;--dk-leaf3:#8cbf7a;--dk-pot:#c0663a;--dk-pot2:#ece4d4;--dk-vase:#2f7f86;--dk-bloom:#e8566a;--dk-box:#b5462f;--dk-wax:#efe4c8}
 .decor.orn{margin:0 6px 12px}
 .decor svg{display:block;width:100%;height:100%;overflow:visible}
@@ -839,6 +846,39 @@ const DECOR = {
   pumpkin: [66, 60, `<svg viewBox="0 0 66 60"><path d="M33 13c1-6 4-9 8-10" stroke="#3f6b1f" stroke-width="4.5" fill="none" stroke-linecap="round"/><ellipse cx="18" cy="39" rx="15" ry="20" fill="#e2701c" ${OL}/><ellipse cx="48" cy="39" rx="15" ry="20" fill="#e2701c" ${OL}/><ellipse cx="33" cy="38" rx="15" ry="21" fill="#f58a2a" ${OL}/><path d="M26 22c-3 10-3 22 0 34M40 22c3 10 3 22 0 34" stroke="rgba(120,50,0,.4)" stroke-width="1.5" fill="none"/><path d="M24 30a10 6 0 0 1 8-6" stroke="rgba(255,255,255,.4)" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`],
   potion: [44, 80, `<svg viewBox="-2 0 44 80"><rect x="15" y="2" width="10" height="9" rx="2" fill="#8a5a36" ${OL}/><path d="M15 10h10v14c9 4 13 11 13 22a18 18 0 0 1-36 0c0-11 4-18 13-22z" fill="rgba(220,210,255,.18)" ${OL}/><path d="M4 46a16 16 0 0 0 32 0c0-3-1-6-2-8H6c-1 2-2 5-2 8z" fill="#9be35a"/><circle cx="14" cy="50" r="2.5" fill="rgba(255,255,255,.5)"/><circle cx="22" cy="44" r="1.6" fill="rgba(255,255,255,.5)"/><path d="M-1 60h42v6H-1z" fill="#6e4a2e" ${OL}/><path d="M1 66h5v14H1zM34 66h5v14h-5z" fill="#5a3b24" ${OL}/><path d="M-2 76h44v4H-2z" fill="#6e4a2e" ${OL}/></svg>`],
 };
+// Genre globe (phone shelf): a spinning globe whose lands are the small genres' colors
+function globeSvg(gs) {
+  const c = i => `var(--g-${gs[i % gs.length]})`;
+  const lands = [[6, 20, 'M0 0c6-5 15-4 18 2s-2 12-9 11-12-6-9-13z'], [30, 12, 'M0 0c5-3 12-1 12 5s-6 9-11 6-5-7-1-11z'], [22, 34, 'M0 0c7-2 14 3 12 9s-11 6-14 1 0-8 2-10z'], [46, 28, 'M0 0c4-4 11-3 12 3s-5 8-9 6-6-5-3-9z'], [8, 40, 'M0 0c3-2 8 0 7 4s-6 4-8 1 0-4 1-5z']];
+  const set = lands.map(([x, y, d], i) => `<path transform="translate(${x} ${y})" d="${d}" fill="${c(i)}" stroke="var(--outline)" stroke-width="1" vector-effect="non-scaling-stroke"/>`).join('');
+  return `<svg viewBox="0 0 60 92" width="60" height="92" aria-hidden="true"><defs><clipPath id="gxClip"><circle cx="30" cy="34" r="24"/></clipPath></defs>
+    <path d="M30 60v18" stroke="var(--dk-metal)" stroke-width="4"/><path d="M14 90h32l-4-10H18z" fill="var(--dk-metal)" stroke="var(--outline)" stroke-width="1.6"/>
+    <circle cx="30" cy="34" r="24" fill="#5aa9d6" stroke="var(--outline)" stroke-width="1.6"/>
+    <g clip-path="url(#gxClip)"><g class="gx-spin"><g transform="translate(6 0)">${set}</g><g transform="translate(66 0)">${set}</g></g>
+      <path d="M12 26a24 24 0 0 0 0 16" stroke="rgba(255,255,255,.35)" stroke-width="3" fill="none"/></g>
+    <circle cx="30" cy="34" r="24" fill="none" stroke="var(--outline)" stroke-width="1.6"/>
+    <path d="M30 6a28 28 0 0 1 0 56" stroke="var(--dk-metal)" stroke-width="3" fill="none"/><circle cx="30" cy="6" r="2" fill="var(--dk-metal)"/><circle cx="30" cy="62" r="2" fill="var(--dk-metal)"/></svg>`;
+}
+// Halloween: a little cauldron instead, its bubbles in the genres' colors, rising and popping
+function cauldronSvg(gs) {
+  const bubbles = [[24, 0, 4.5], [34, 0.8, 3.5], [29, 1.6, 5], [38, 2.3, 3], [21, 3.0, 3.8]].map(([x, d, r], i) =>
+    `<g class="cb" style="--d:${d}s"><circle class="cb-b" cx="${x}" cy="44" r="${r}" fill="var(--g-${gs[i % gs.length]})" stroke="var(--outline)" stroke-width="1" vector-effect="non-scaling-stroke"/><path class="cb-p" d="M${x} ${44 - 38 - r - 3}v-3M${x - r - 3} ${44 - 38}h-3M${x + r + 3} ${44 - 38}h3M${x - r - 1} ${44 - 38 - r - 1}l-2-2M${x + r + 1} ${44 - 38 - r - 1}l2-2" stroke="var(--g-${gs[i % gs.length]})" stroke-width="1.8" stroke-linecap="round"/></g>`).join('');
+  return `<svg viewBox="0 0 60 92" width="60" height="92" aria-hidden="true" overflow="visible">${bubbles}
+    <path d="M14 86l-4 6M46 86l4 6" stroke="var(--outline)" stroke-width="3" stroke-linecap="round"/>
+    <path class="cb-fire" d="M20 90c-2-6 3-8 2-13 4 3 5 6 4 9 2-3 2-6 1-9 5 4 7 9 5 13z" fill="#ff8c2e" stroke="var(--outline)" stroke-width="1.2"/>
+    <ellipse cx="30" cy="66" rx="24" ry="20" fill="#26212e" stroke="var(--outline)" stroke-width="1.6"/>
+    <path d="M16 60a16 14 0 0 1 8-10" stroke="rgba(255,255,255,.18)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="30" cy="48" rx="22" ry="5" fill="#6a3592" stroke="var(--outline)" stroke-width="1.6"/>
+    <ellipse cx="30" cy="46" rx="25" ry="5.5" fill="none" stroke="#3a3346" stroke-width="4"/><ellipse cx="30" cy="46" rx="25" ry="5.5" fill="none" stroke="var(--outline)" stroke-width="1.2"/></svg>`;
+}
+const smallGenreSvg = gs => document.documentElement.dataset.theme === 'halloween' ? cauldronSvg(gs) : globeSvg(gs);
+// Comic (phone shelf): lying flat, its cover panels in the tiny genres' colors
+function comicSvg(gs) {
+  const n = Math.min(gs.length, 4), w = 52 / n;
+  const panels = Array.from({length: n}, (_, i) => `<path d="M${10 + i * w} 2h${w - 2}l-6 12h${-(w - 2)}z" fill="var(--g-${gs[i]})" stroke="var(--outline)" stroke-width="1" vector-effect="non-scaling-stroke"/>`).join('');
+  return `<svg viewBox="0 0 70 22" width="70" height="22" aria-hidden="true"><path d="M8 0h60l-8 16H0z" fill="#f4ecd8" stroke="var(--outline)" stroke-width="1.6"/>${panels}
+    <path d="M0 16h60v5H0z" fill="#e8dcc0" stroke="var(--outline)" stroke-width="1.6"/><path d="M60 16l8-16v5l-8 16z" fill="#d9cba8" stroke="var(--outline)" stroke-width="1.6"/></svg>`;
+}
 // The last shelf's leftover space gets a bookend and these, in order; ORNAMENTS are the small things set between books now and then (Default spine colors only)
 const DECOR_SETS = {halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
 const ORNAMENTS = {halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
@@ -846,16 +886,23 @@ function decorShelf() {
   const bc = document.querySelector('#stack .bookcase'); if (!bc) return;
   bc.querySelectorAll('.decor:not(.orn)').forEach(n => n.remove());
   const oset = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default; // a theme change swaps the ornaments too
+  bc.querySelectorAll('.gx-globe').forEach(n => { n.innerHTML = smallGenreSvg(n.dataset.g.split(' ')); }); // and the globe ↔ cauldron
   bc.querySelectorAll('.orn').forEach((n, j) => { const k = oset[j % oset.length]; n.style.width = DECOR[k][0] + 'px'; n.style.height = DECOR[k][1] + 'px'; n.innerHTML = DECOR[k][2]; });
-  const spines = bc.querySelectorAll(':scope > .spine, :scope > .lay, :scope > .orn'); if (!spines.length) return;
+  // The genre globe/cauldron and the comic stand to the right of the bookend, so take them out while measuring
+  const gxs = [...bc.querySelectorAll(':scope > .gx')]; gxs.forEach(n => n.remove());
+  const gxW = gxs.reduce((a, n) => a + (n.classList.contains('gx-globe') ? 60 : 70) + 14, 0);
+  const spines = bc.querySelectorAll(':scope > .spine, :scope > .lay, :scope > .orn'); if (!spines.length) { gxs.forEach(n => bc.appendChild(n)); return; }
   const last = spines[spines.length - 1].getBoundingClientRect(), box = bc.getBoundingClientRect();
-  const free = Math.floor(box.right - 20 - last.right - 4); // 10px frame + 10px padding on the right
-  if (free < DECOR.bookend[0] + 4) return;
+  const free = Math.floor(box.right - 20 - last.right - 4) - gxW; // 10px frame + 10px padding on the right
+  const bookend = `<span class="decor" aria-hidden="true" style="width:${DECOR.bookend[0]}px;height:${DECOR.bookend[1]}px">${DECOR.bookend[2]}</span>`;
+  if (free < DECOR.bookend[0] + 4) { if (gxs.length) { bc.insertAdjacentHTML('beforeend', bookend); gxs.forEach(n => bc.appendChild(n)); } return; }
   const t = document.documentElement.dataset.theme, set = DECOR_SETS[t] || DECOR_SETS.default;
-  const picks = ['bookend']; let used = DECOR.bookend[0] + 4;
+  const picks = []; let used = DECOR.bookend[0] + 4;
   for (let i = 0; i < 12; i++) { const k = set[i % set.length], w = DECOR[k][0]; if (used + w + 22 > free) break; picks.push(k); used += w + 22; }
-  const extra = picks.length > 1 ? Math.max(0, free - used) / (picks.length - 1) : 0; // spread whatever is left between the items
-  bc.insertAdjacentHTML('beforeend', picks.map((k, i) => `<span class="decor" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px;margin-left:${i ? Math.floor(22 + extra) : 0}px">${DECOR[k][2]}</span>`).join(''));
+  const extra = picks.length ? Math.max(0, free - used) / picks.length : 0; // spread whatever is left between the items
+  bc.insertAdjacentHTML('beforeend', bookend);
+  gxs.forEach(n => bc.appendChild(n));
+  bc.insertAdjacentHTML('beforeend', picks.map(k => `<span class="decor" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px;margin-left:${Math.floor(22 + extra)}px">${DECOR[k][2]}</span>`).join(''));
 }
 
 function renderAll() { if (S.settings.theme && typeof applyTheme === 'function') applyTheme(S.settings.theme); trackReading(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
@@ -915,16 +962,24 @@ function renderStats() {
   if (!pile.length) {
     stack.innerHTML = n ? '<div class="pile-empty">The shelf is empty. Every book has been opened.</div>' : '<div class="pile-empty muted">Import your library to fill the shelf.</div>';
   } else {
-    const SHELF = 100;
+    const SHELF = window.matchMedia('(max-width: 640px)').matches ? 10 : 100; // a phone gets a short shelf; the rest is counted below it
     // Within any group: just-bought books first (newest first), then the longest-waiting
     const pickOrder = list => [...list.filter(isNew).sort((a,b) => b.date.localeCompare(a.date)), ...list.filter(b => !isNew(b)).sort((a,b) => (a.date || '9').localeCompare(b.date || '9'))];
-    let shown;
+    let shown, globeG = [], comicG = [];
     if (S.settings.spineMode === 'genre') {
       // The shelf doubles as a chart: each genre gets spines in proportion to its share of the unread pile, grouped together, biggest first
       const groups = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; (groups[g] ||= []).push(b); });
-      const slots = Math.min(SHELF, pile.length);
-      const keys = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
-      const exact = keys.map(g => groups[g].length / pile.length * slots);
+      let slots = Math.min(SHELF, pile.length);
+      let keys = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
+      // A phone's 10 spines are 10% each, too coarse for small genres: under 5% they're the lands on a spinning globe, under 3% a comic lying on the shelf
+      if (SHELF <= 10 && pile.length > SHELF) {
+        const share = g => groups[g].length / pile.length;
+        comicG = keys.filter(g => share(g) < 0.03); globeG = keys.filter(g => share(g) >= 0.03 && share(g) < 0.05);
+        keys = keys.filter(g => share(g) >= 0.05);
+        if (globeG.length) slots--;
+      }
+      const big = keys.reduce((a, g) => a + groups[g].length, 0) || 1;
+      const exact = keys.map(g => groups[g].length / big * slots);
       const seats = exact.map(Math.floor);
       let left = slots - seats.reduce((a, b) => a + b, 0);
       exact.map((x, i) => [x - seats[i], i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (left > 0) { seats[i]++; left--; } }); // largest remainders get the leftover seats
@@ -951,19 +1006,24 @@ function renderStats() {
     let html = '<div class="bookcase">';
     for (let i = 0; i < shown.length; i++) {
       const b = shown[i], h = hash(b.id + b.title);
-      if (i > 2 && h % 11 === 0 && !isNew(b)) {
+      if (SHELF > 10 && i > 2 && h % 11 === 0 && !isNew(b)) { // no piles on a phone's short shelf
         const n = 2 + (h >> 4) % 2, seg = shown.slice(i, i + n), cut = seg.findIndex(isNew), pile2 = cut < 0 ? seg : seg.slice(0, cut);
         if (pile2.length >= 2) { html += `<span class="lay">${pile2.map(x => spineOf(x, i, true)).join('')}</span>`; i += pile2.length - 1; continue; }
       }
       html += spineOf(b, i, false);
       if (!gmode && i % 23 === 11 && i < shown.length - 3) { const set = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default, k = set[(i / 23 | 0) % set.length]; html += `<span class="decor orn" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px">${DECOR[k][2]}</span>`; }
     }
+    if (globeG.length || comicG.length) {
+      const pct = g => `${GENRES[g]} ${Math.round(pile.filter(b => (GENRES[b.genre] ? b.genre : 'unknown') === g).length / pile.length * 100)}%`;
+      if (globeG.length) html += `<span class="gx gx-globe" data-g="${globeG.join(' ')}" title="Genres under 5% of your unread books: ${esc(globeG.map(pct).join(', '))}">${smallGenreSvg(globeG)}</span>`;
+      if (comicG.length) html += `<span class="gx" title="Genres under 3% of your unread books: ${esc(comicG.map(pct).join(', '))}">${comicSvg(comicG)}</span>`;
+    }
     html += '</div>';
     const gl = $('#genreLegend');
     if (S.settings.spineMode === 'genre') {
       const cnt = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; cnt[g] = (cnt[g] || 0) + 1; });
       gl.innerHTML = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).map(g => `<span${g === 'nonfiction' ? ` title="${esc([...new Set(pile.filter(b => b.genre === 'nonfiction').map(b => b.genreName).filter(Boolean))].join(', '))}"` : ''}><i style="background:var(--g-${g})"></i>${GENRES[g]} <span class="num muted">${cnt[g]} · ${Math.round(cnt[g] / pile.length * 100)}%</span></span>`).join('')
-        + (pile.length > SHELF ? `<span class="muted">Each genre gets its share of the ${SHELF} spines on the shelf.</span>` : '');
+        + (pile.length > SHELF ? `<span class="muted">Each genre gets its share of the ${globeG.length ? SHELF - 1 : SHELF} spines on the shelf.${globeG.length ? ' The globe holds the genres under 5%.' : ''}${comicG.length ? ' The comic holds the ones under 3%.' : ''}</span>` : '');
       gl.hidden = false;
     } else gl.hidden = true;
     if (pile.length > shown.length) html += `<div class="more">+ ${fmtInt(pile.length - shown.length)} more that didn't fit on the shelf${S.settings.spineMode === 'genre' ? ', in the same proportions' : ''}</div>`;
