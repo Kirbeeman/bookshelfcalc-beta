@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kindle Library Calculator (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      1.50
+// @version      1.51
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -197,6 +197,8 @@ function parseBookInfo(html) {
       const e = doc.querySelector(sel); const v = e && num(e.textContent); if (v != null) return v;
     }
     const v = num(swText); if (v != null && v > 0) return v;
+    m = text.match(/Kindle Price:?\s*\$\s?(\d[\d,]*\.\d\d)/i); // phone layout of the book page
+    if (m) return +m[1].replace(/,/g, '');
     m = text.match(/(?:^|\s)Kindle\s*\$\s?(\d[\d,]*\.\d\d)(?!\s*or)/);
     return m ? +m[1].replace(/,/g, '') : null;
   })();
@@ -1922,7 +1924,45 @@ window.addEventListener('message', e => {
   else if (d.type === 'binfoResult' && kpWaiters[d.id]) { const w = kpWaiters[d.id]; delete kpWaiters[d.id]; try { w(JSON.parse(d.data)); } catch { w(null); } }
   else if (d.type === 'result' && bridgeWaiters) { const w = bridgeWaiters; bridgeWaiters = null; try { w.resolve(JSON.parse(d.data)); } catch (err) { w.reject(err); } }
 });
+// ---------- phone sync bookmark: amazon.com opens this page with #bm and hands over what it read there ----------
+const BOOKMARKLET = "(async()=>{const e=\"__SITE__\",t=location.hostname;if(!/^www\\.amazon\\.(com|co\\.uk|ca|com\\.au)$/.test(t)){const e=/^(?:[a-z.]+\\.)?amazon\\.(com|co\\.uk|ca|com\\.au)$/.test(t)?\"https://www.\"+t.replace(/^.*?amazon\\./,\"amazon.\")+\"/\":\"https://www.amazon.com/\";return void(confirm(\"Open amazon.com first, then tap the Shelf of Shame sync bookmark again there.\\n\\nGo to amazon.com now?\")&&(location.href=e))}if(window.__klcbm)return void window.__klcbm.show();const n=\"klcbm-\",o=(e,t)=>{try{const o=localStorage.getItem(n+e);return o??t}catch{return t}},a=(e,t)=>{try{localStorage.setItem(n+e,t)}catch{}};let r=!1;const s=(e,t)=>window.setTimeout(e,r?0:t),i=e=>r?Promise.reject(new Error(\"stopped\")):fetch(e,{credentials:\"include\"}).then(async e=>({status:e.status,text:await e.text(),finalUrl:e.url})),c=(e,t)=>fetch(e,{method:\"POST\",credentials:\"include\",headers:{\"Content-Type\":\"application/x-www-form-urlencoded\"},body:t}).then(async e=>({status:e.status,text:await e.text()}));a(\"kindleHost\",t);let d=!1;function l(e){const t=(new DOMParser).parseFromString(e,\"text/html\");t.querySelectorAll(\"script,style,noscript\").forEach(e=>e.remove());const n=(t.body?t.body.textContent:\"\").replace(/\\s+/g,\" \"),o=e=>{const t=String(e||\"\").match(/\\$\\s?(\\d[\\d,]*\\.\\d\\d)/);return t?+t[1].replace(/,/g,\"\"):null},a=(()=>{const e=t.querySelector(\"#tmm-grid-swatch-KINDLE, #tmmSwatches .swatchElement.selected, #formats\"),a=e?e.textContent.replace(/\\s+/g,\" \"):\"\";let r=a.match(/\\$\\s?[\\d,]*\\.\\d\\d\\s*or\\s*\\$\\s?(\\d[\\d,]*\\.\\d\\d)\\s*to buy/i)||n.match(/Kindle\\s*\\$\\s?[\\d,]*\\.\\d\\d\\s*or\\s*\\$\\s?(\\d[\\d,]*\\.\\d\\d)\\s*to buy/i);if(r)return+r[1].replace(/,/g,\"\");for(const e of[\"#kindleALCAccordion_desktop_price_content\",\"#priceBlock-outsideOfForm_feature_div\",\"#kindle-price\",\"#corePriceDisplay_desktop_feature_div .a-offscreen\",\"#corePrice_feature_div .a-offscreen\"]){const n=t.querySelector(e),a=n&&o(n.textContent);if(null!=a)return a}const s=o(a);return null!=s&&s>0?s:(r=n.match(/Kindle Price:?\\s*\\$\\s?(\\d[\\d,]*\\.\\d\\d)/i),r?+r[1].replace(/,/g,\"\"):(r=n.match(/(?:^|\\s)Kindle\\s*\\$\\s?(\\d[\\d,]*\\.\\d\\d)(?!\\s*or)/),r?+r[1].replace(/,/g,\"\"):null))})(),r=t.querySelector(\"#rpi-attribute-book_details-ebook_pages .rpi-attribute-value\"),s=(r?r.textContent:\"\").match(/([\\d,]+)\\s*pages/i)||n.match(/Print length\\s*:?[^\\d]{0,6}([\\d,]+)\\s*pages/i),i=s?+s[1].replace(/,/g,\"\"):null,c=t.querySelector(\"#wayfinding-breadcrumbs_feature_div\"),d=[];c&&d.push(c.textContent.replace(/\\s+/g,\" \").trim());for(const e of n.matchAll(/#[\\d,]+ in ([^#(]{3,80}?)(?= \\(| #|$)/g))/^Kindle Store$/i.test(e[1].trim())||d.push(e[1].trim());const l=c?[...c.querySelectorAll(\"li a\")].map(e=>e.textContent.replace(/\\s+/g,\" \").trim()).filter(Boolean):[],p=d.slice(c?1:0).map(e=>e.replace(/\\s*Customer Reviews.*$/i,\"\").trim());return{price:a,pages:i,cats:d.slice(0,6),trail:l,best:p.slice(0,5)}}const p=document.createElement(\"div\");p.id=\"klcbm\",p.innerHTML='<style>#klcbm{position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483647;max-width:440px;margin:0 auto;background:#1b1e20;color:#f2f2ee;font:15px/1.45 system-ui,sans-serif;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35);padding:14px 16px}\\n#klcbm b{font-weight:700}#klcbm .t{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}#klcbm .x{all:unset;cursor:pointer;font-size:22px;line-height:1;opacity:.7;padding:0 4px}\\n#klcbm .m{font-size:14px;color:#cfd3cf;min-height:20px}#klcbm .bar{height:6px;border-radius:3px;background:#3a3f43;margin:10px 0;overflow:hidden}#klcbm .bar i{display:block;height:100%;width:0;background:#9fb0ff;transition:width .3s}\\n#klcbm .row{display:flex;gap:8px;flex-wrap:wrap}#klcbm button.b{all:unset;cursor:pointer;text-align:center;flex:1;padding:11px 12px;border-radius:8px;font-weight:700;font-size:15px;background:#3a3f43;color:#f2f2ee}#klcbm button.b.p{background:#f2c14e;color:#1b1206}#klcbm button.b[disabled]{opacity:.4;cursor:default}\\n#klcbm a{color:#9fb0ff}#klcbm [hidden]{display:none!important}</style>\\n<div class=\"t\"><b>Shelf of Shame sync</b><button class=\"x\" aria-label=\"Close\">\u00d7</button></div>\\n<div class=\"m\" id=\"klcbm-m\">Starting\u2026</div><div class=\"bar\"><i id=\"klcbm-bar\"></i></div>\\n<div class=\"row\"><button class=\"b\" id=\"klcbm-stop\" hidden>Send what I have</button><button class=\"b p\" id=\"klcbm-send\" hidden>Send to Shelf of Shame</button></div>',document.body.appendChild(p);const m=e=>document.getElementById(e),h=(e,t)=>{m(\"klcbm-m\").innerHTML=e,null!=t&&(m(\"klcbm-bar\").style.width=Math.round(100*Math.min(1,t))+\"%\")};window.__klcbm={show:()=>{p.hidden=!1}},p.querySelector(\".x\").onclick=()=>{r=!0,p.remove(),delete window.__klcbm},m(\"klcbm-stop\").onclick=()=>{r=!0,m(\"klcbm-stop\").disabled=!0,h(\"Finishing up\u2026\")};const u={v:1,host:t,time:Date.now(),owned:null,prices:{},info:{},errors:{}};try{h(\"Reading your books from Content &amp; Devices\u2026\",.05);const e=await async function(e){const t=o(\"kindleHost\",\"read.amazon.com\").replace(/^read\\./,\"www.\"),n=((await i(`https://${t}/hz/mycd/digital-console/contentlist/booksAll/dateDsc/`)).text.match(/csrfToken\\s*[=:]\\s*[\"']([^\"']+)/)||[])[1];if(!n)throw new Error(`sign in at ${t} first`);const a=[];for(let o=0;o<5e3;o+=100){const r={contentType:\"Ebook\",contentCategoryReference:\"booksAll\",itemStatusList:[\"Active\"],showSharedContent:!0,fetchCriteria:{sortOrder:\"DESCENDING\",sortIndex:\"DATE\",startIndex:o,batchSize:100,totalContentCount:-1},surfaceType:\"LargeDesktop\"},s=await c(`https://${t}/hz/mycd/digital-console/ajax`,\"activity=GetContentOwnershipData&activityInput=\"+encodeURIComponent(JSON.stringify(r))+\"&csrfToken=\"+encodeURIComponent(n));let i;try{i=JSON.parse(s.text).GetContentOwnershipData}catch{throw new Error(\"Amazon sent an unexpected reply\")}const d=i&&i.items||[];for(const e of d)a.push({asin:e.asin,title:e.title,authors:e.authors,acquiredTime:e.acquiredTime,acquiredDate:e.acquiredDate,readStatus:e.readStatus,originType:e.originType,orderId:e.orderId,orderDetailURL:e.orderDetailURL});if(e(`Reading purchase dates\u2026 ${a.length}${i&&i.numberOfItems?\" of \"+i.numberOfItems:\"\"}`),d.length<100||i.numberOfItems&&a.length>=i.numberOfItems)break}if(!a.length)throw new Error(\"no books found on Content & Devices\");return a}(e=>h(e.replace(/^Reading purchase dates\u2026/,\"Reading your books\u2026\"),.1));u.owned={v:3,time:Date.now(),items:e}}catch(e){const n=`https://${t}/hz/mycd/digital-console/contentlist/booksAll/dateDsc/`;return h(/sign in/i.test(e.message||\"\")?`<b>Amazon wants you to sign in for Content &amp; Devices.</b> Open <a href=\"${n}\">Content &amp; Devices</a>, sign in if it asks, then tap the bookmark again.`:`Couldn't read your books: ${String(e.message||e).replace(/</g,\"&lt;\")}. Try again in a minute.`,0),void(m(\"klcbm-stop\").hidden=!0)}const b=u.owned.items;if(m(\"klcbm-stop\").hidden=!1,r)u.prices=JSON.parse(o(\"prices\",\"{}\")||\"{}\");else try{u.prices=await async function(e,t,n=[]){const r=JSON.parse(o(\"prices\",\"{}\")||\"{}\"),c=new Set(n.map(e=>String(e).toUpperCase())),l=e.filter(e=>\"Purchase\"===e.originType&&e.orderDetailURL&&!(e.asin in r)&&!c.has(String(e.asin).toUpperCase())),p=new Map;l.forEach(e=>{const t=e.orderId||e.orderDetailURL;p.has(t)||p.set(t,[]),p.get(t).push(e)});const m=[...p].slice(0,150),h=m.reduce((e,[,t])=>e+t.length,0);let u=0,b=0;d=!1;for(const[,e]of m){t(`Reading prices paid\u2026 ${u} of ${h}`);try{const t=await i(e[0].orderDetailURL);if(503===t.status||429===t.status||/validateCaptcha|Enter the characters you see/i.test(t.text)){d=!0;break}const n=(new DOMParser).parseFromString(t.text,\"text/html\");n.querySelectorAll(\"script, style, noscript, header, #navbar, #navFooter\").forEach(e=>e.remove());const o=(n.body?n.body.textContent:\"\").replace(/\\s+/g,\" \"),a=e=>+e.replace(/[^\\d.]/g,\"\");for(const t of e){let n=null;const s=String(t.title||\"\").slice(0,30),i=s?o.indexOf(s):-1;if(i>=0){const e=o.slice(i).match(/Sold by:[^$]{0,200}?\\$\\s?(\\d[\\d,]*\\.\\d\\d)/);e&&(n=a(e[1]))}if(null==n&&1===e.length){const e=o.match(/Item\\(s\\) Subtotal:\\s*\\$\\s?(\\d[\\d,]*\\.\\d\\d)/);e&&(n=a(e[1]))}r[t.asin]=n,u++}}catch{}++b%10==0&&a(\"prices\",JSON.stringify(r)),await new Promise(e=>s(e,450+300*Math.random()))}return a(\"prices\",JSON.stringify(r)),r}(b,e=>{const t=e.match(/(\\d+) of (\\d+)/);h(e,t?.1+.4*t[1]/t[2]:.15)}),u.pPaused=d}catch(e){u.errors.prices=String(e.message||e)}const f=JSON.parse(o(\"info\",\"{}\")||\"{}\"),g=b.map(e=>e.asin).filter(e=>e&&!(e in f)).slice(0,80);for(let e=0;e<g.length&&!r;e++){h(`Reading genres and pages\u2026 ${e} of ${g.length}`,.5+.45*e/g.length);try{const n=await i(`https://${t}/dp/${encodeURIComponent(g[e])}`);if(/validateCaptcha|Enter the characters you see/i.test(n.text)){u.errors.info=\"paused\";break}200===n.status&&(f[g[e]]=l(n.text))}catch{}e%10==9&&a(\"info\",JSON.stringify(f)),await new Promise(e=>s(e,600))}a(\"info\",JSON.stringify(f));const w=new Set(b.map(e=>e.asin));for(const e in f)w.has(e)&&(u.info[e]=f[e]);const y=b.filter(e=>e.asin&&!(e.asin in f)).length,k=new URL(e).origin;h(`<b>Ready:</b> ${b.length} books${y?`. ${y} still need genres and pages; tap the bookmark again later to carry on.`:\".\"}`,1),m(\"klcbm-stop\").hidden=!0;const x=m(\"klcbm-send\");x.hidden=!1;let S=!1;window.addEventListener(\"message\",e=>{e.origin===k&&e.data&&1===e.data.klc&&(\"bm-ready\"!==e.data.type||S||(S=!0,e.source.postMessage({klc:1,type:\"bm-data\",data:JSON.stringify(u)},k)),\"bm-done\"===e.data.type&&h(`<b>Sent.</b> Your library is on the Shelf of Shame tab.${y?` Tap the bookmark again later for the other ${y} books' genres and pages.`:\"\"} You can close this.`,1))}),x.onclick=()=>{S=!1;window.open(e+\"#bm\",\"_blank\")?(h(\"Sending\u2026\"),window.setTimeout(()=>{S||h(\"The Shelf of Shame page didn't answer. Tap Send to try again.\")},3e4)):h(\"Your browser blocked the new tab. Allow pop-ups for amazon.com, then tap Send again.\")}})();";
+const bookmarkletCode = () => 'javascript:' + encodeURIComponent(BOOKMARKLET.replace('__SITE__', location.origin + '/'));
+function initPhoneSync() {
+  if (location.hash !== '#bm' || !window.opener) return;
+  const AMZ = /^https:\/\/www\.amazon\.(com|co\.uk|ca|com\.au)$/;
+  window.addEventListener('message', async e => {
+    const d = e.data;
+    if (!d || d.klc !== 1 || d.type !== 'bm-data' || !AMZ.test(e.origin)) return;
+    let data; try { data = JSON.parse(d.data); } catch { return; }
+    await storeReady;
+    const n = applyPhoneSync(data);
+    try { e.source.postMessage({klc: 1, type: 'bm-done', books: n}, e.origin); } catch {}
+    history.replaceState(null, '', location.pathname + location.search);
+  });
+  window.opener.postMessage({klc: 1, type: 'bm-ready'}, '*'); // just "I'm here"; the data only comes from Amazon's own page
+}
+function applyPhoneSync(data) {
+  const items = data.owned?.items || [];
+  if (!items.length) return 0;
+  leaveDemo(true);
+  merge(fromKindle(items), false, 'kindle');
+  const dated = applyOwnership(items);
+  let priced = 0;
+  for (const b of S.books) {
+    const v = b.asin && data.prices && data.prices[b.asin];
+    if (typeof v === 'number' && !hasPaid(b)) { b.price = v; b.priceSrc = 'order'; priced++; }
+  }
+  const now = Date.now(); let det = 0;
+  for (const b of S.books) { const inf = b.asin && data.info && data.info[b.asin]; if (inf) { applyBookInfo(b, inf, now); det++; } }
+  renderAll(); scheduleSave();
+  lsSet1('klc-bm-last', String(now));
+  const when = new Date(now).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+  setSync(`Synced ${when} with the sync bookmark · ${items.length} books · ${dated} purchase dates${priced ? ` · ${priced} prices` : ''} · details for ${det}`, 'db');
+  toast(`Synced ${fmtInt(items.length)} books from Amazon`);
+  return items.length;
+}
 function startSync() {
+  initPhoneSync();
   if (hasCore) { enableSync(); return; }
   postBridge({type: 'hello'});
   if (location.protocol === 'file:') return;
@@ -1931,8 +1971,10 @@ function startSync() {
     if (syncOn) return;
     // First visit (still on the example) or coming back mid-setup: walk them through it
     if (resume || (S.demo && !lsFlag('klc-wiz-skip'))) { openWizard(resume || 'welcome'); return; }
-    // Has their own books but no script answered: say so, with a way into setup
+    // Has their own books but no script answered: say so, with a way into setup (unless they sync with the bookmark)
     const el = $('#sync'); el.hidden = false; el.className = 'store local';
+    let bmLast = 0; try { bmLast = +(localStorage.getItem('klc-bm-last') || 0); } catch {}
+    if (bmLast) { el.className = 'store db'; el.querySelector('span').textContent = `Last synced with the sync bookmark ${new Date(bmLast).toLocaleDateString([], {month: 'short', day: 'numeric'})}`; renderScriptSect(); return; }
     el.querySelector('span').innerHTML = 'Sync script not detected, so prices, pages and genres are guesses. <a href="#" id="syncHelp" style="color:inherit">Set up sync</a>';
     $('#syncHelp').onclick = e => { e.preventDefault(); openWizard('welcome'); };
     renderScriptSect();
@@ -2029,6 +2071,19 @@ function infoFetch(asins) {
     setTimeout(() => { if (kpWaiters[id]) { delete kpWaiters[id]; resolve(null); } }, 120000);
   });
 }
+// What one look at a book's Amazon page tells us: today's price, page count, genre, second genre and tags
+function applyBookInfo(b, inf, now) {
+  let priced = false;
+  if (!hasPaid(b) && inf.price != null) { b.kp = inf.price; priced = true; }
+  b.kpTime = now;
+  if (!(b.pages > 0) && inf.pages) { b.pages = inf.pages; b.pagesSrc = 'amazon'; }
+  if (b.genreSrc !== 'manual') { const g = amazonGenre(inf); if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = 'amazon'; } }
+  b.tags = amazonTags(inf);
+  if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tags, b.genre);
+  b.genreV = GENRE_V;
+  b.infoTime = now;
+  return priced;
+}
 async function lookupBookInfo() {
   if (kpRunning || !syncOn || S.demo) return;
   const MONTH = 30 * 864e5, now = Date.now();
@@ -2050,14 +2105,8 @@ async function lookupBookInfo() {
       if (!res) break;
       for (const b of batch) {
         const inf = res.info[b.asin]; if (!inf) continue;
-        if (!hasPaid(b) && inf.price != null) { b.kp = inf.price; found++; }
-        b.kpTime = now;
-        if (!(b.pages > 0) && inf.pages) { b.pages = inf.pages; b.pagesSrc = 'amazon'; }
-        if (b.genreSrc !== 'manual') { const g = amazonGenre(inf); if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = 'amazon'; } }
-        b.tags = amazonTags(inf);
-        if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tags, b.genre);
-        b.genreV = GENRE_V;
-        b.infoTime = now; done++;
+        if (applyBookInfo(b, inf, now)) found++;
+        done++;
       }
       renderStats(); renderShelf(); scheduleSave();
       if (res.blocked) { setSync(`${lastSyncMsg} · Amazon paused lookups after ${done}; the rest continue next visit`, 'local'); stage('details', 'err', `${fmtInt(done)} of ${fmtInt(todo.length)}`, done / todo.length); cardError('details', 'Amazon asked us to slow down. The rest of the book details fill in on your next visit.', true); return; }
@@ -2069,7 +2118,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '1.50';
+const LATEST_SCRIPT = '1.51';
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
 const verLess = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); } return false; };
 let scriptVer = '';
@@ -2108,6 +2157,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['1.51', ['Sync from your phone with a bookmark: nothing to install (Settings › Sync from your phone)']],
   ['1.50', ['"This year so far" above the summary: books added and money spent this year, with a monthly average', 'By status is a small table with Books and Pages columns', 'By status shows your shortest and longest unread books, the average length and how many are quick reads']],
   ['1.49', ['No more candles on the shelf, in any theme']],
   ['1.48', ['When Content & Devices wants your password again, the sync says so and links straight to it', 'The red dot on Settings goes away once you\'ve looked at what\'s new', 'A single flower in the vase on the shelf', 'Zon theme: sync problems are readable again']],
@@ -2173,8 +2223,40 @@ function renderScriptSect() {
   const su = $('#sSetup'); if (su) su.onclick = () => { $('#dlgSettings').close(); openWizard('welcome'); };
   const up = $('#sUpdate'); if (up) up.onclick = () => { ssSet('klc-updating', '1'); window.open(SCRIPT_URL, '_blank', 'noopener'); up.textContent = 'Waiting for Tampermonkey…'; up.disabled = true; };
 }
+// Settings: the phone sync bookmark (works in any browser, nothing to install)
+function renderPhoneSect() {
+  if (hasCore || $('#phoneSect')) return;
+  const sec = document.createElement('div'); sec.className = 'files'; sec.id = 'phoneSect';
+  const files = document.querySelector('#dlgSettings .files:not(#scriptSect):not(#phoneSect)') || document.querySelector('#dlgSettings .files'); files.before(sec);
+  sec.innerHTML = `<h4>Sync from your phone (nothing to install)</h4>
+    <p class="note">A bookmark does the syncing. Tap it while you're on amazon.com and it reads your books, purchase dates and prices right there in your browser, then sends them to this page. Nothing is installed and your data doesn't go anywhere else.</p>
+    <div class="row"><button type="button" class="btn primary" id="bmCopy">Copy the sync bookmark</button><a class="btn" id="bmDrag" href="#">Shelf sync</a></div>
+    <p class="note" style="margin-top:-4px">On a computer you can drag <b>Shelf sync</b> to your bookmarks bar instead.</p>
+    <details class="news"><summary>Add it on Android (Chrome)</summary><ol class="bmsteps">
+      <li>Tap <b>Copy the sync bookmark</b> above.</li>
+      <li>Tap <b>⋮</b> (top right), then the <b>☆</b> star to bookmark this page.</li>
+      <li>Tap <b>⋮ › Bookmarks</b>, find the new bookmark, and tap its <b>⋮ › Edit</b>.</li>
+      <li>Change the name to <b>Shelf sync</b>. Clear the URL box, paste, and save.</li>
+      <li>Go to <b>amazon.com</b> (signed in). Tap the address bar, type <b>Shelf sync</b>, and tap the bookmark with the star in the list.</li>
+      <li>When it says <b>Ready</b>, tap <b>Send to Shelf of Shame</b>.</li></ol></details>
+    <details class="news"><summary>Add it on iPhone (Safari) · not tested yet</summary><ol class="bmsteps">
+      <li>Tap <b>Copy the sync bookmark</b> above.</li>
+      <li>Tap <b>Share › Add Bookmark</b> and save it.</li>
+      <li>Open <b>Bookmarks</b>, tap <b>Edit</b>, tap the new bookmark, name it <b>Shelf sync</b>, and replace the address with what you copied.</li>
+      <li>On <b>amazon.com</b>, open Bookmarks and tap <b>Shelf sync</b>. When it says Ready, tap <b>Send to Shelf of Shame</b>.</li></ol></details>
+    <p class="note">The first time, it reads up to 80 books' genres and pages. Tap it again later to carry on with the rest.</p>`;
+  $('#bmDrag').href = bookmarkletCode();
+  $('#bmDrag').onclick = e => { e.preventDefault(); toast('Drag this to your bookmarks bar, or use Copy'); };
+  $('#bmCopy').onclick = async () => {
+    const code = bookmarkletCode();
+    try { await navigator.clipboard.writeText(code); }
+    catch { const t = document.createElement('textarea'); t.value = code; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch {} t.remove(); }
+    toast('Copied. Now save it as a bookmark (steps below).');
+  };
+}
 document.addEventListener('click', e => {
   if (!e.target.closest || !e.target.closest('#btnSettings')) return;
+  renderPhoneSect();
   renderScriptSect();
 });
 
@@ -2343,6 +2425,7 @@ function wizGo(step) {
   const st = document.createElement('style');
   st.textContent = `
 #btnSettings.dot{position:relative}#btnSettings.dot::after{content:"";position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--shame);border:2px solid var(--bg)}
+.bmsteps{margin:6px 0 0;padding-left:20px;font-size:.84rem;display:flex;flex-direction:column;gap:4px}
 .newtag{display:none;margin-left:8px;vertical-align:2px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;background:var(--shame);border-radius:999px;padding:1px 7px}
 #scriptSect.fresh{outline:2px solid var(--shame);outline-offset:6px;border-radius:4px;transition:outline-color .3s}#scriptSect.fresh .newtag{display:inline-block}
 .news summary{cursor:pointer;font-size:.85rem;font-weight:600}.news p{margin:8px 0 2px;font-size:.82rem}.news ul{margin:0;padding-left:18px;font-size:.82rem}
