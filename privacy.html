@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy · Kindle Library Calculator</title>
+<style>
+:root{--bg:#f7f8f5;--ink:#1b1e20;--muted:#5d6560;--rule:#cfd4ce;--accent:#27408b}
+@media (prefers-color-scheme:dark){:root{--bg:#121517;--ink:#e7e8e3;--muted:#9aa29c;--rule:#2d3336;--accent:#9fb0ff}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Georgia,"Times New Roman",serif;padding:32px 16px 64px}
+main{max-width:680px;margin:0 auto}h1{font-size:1.8rem;line-height:1.2;margin:0 0 4px}h2{font-size:1.1rem;margin:28px 0 6px}
+p,li{color:var(--ink)}.muted{color:var(--muted);font-size:.9rem}a{color:var(--accent)}ul{padding-left:20px}
+</style>
+</head>
+<body>
+<main>
+<h1>Privacy</h1>
+<p class="muted">Kindle Library Calculator · bookshelf.kirbee213.tv · Last updated October 2, 2026</p>
+
+<p>The short version: your library is yours. The calculator has no server and no database. Nobody running this site can see your books, your prices or anything else about you.</p>
+
+<h2>Where your library is kept</h2>
+<ul>
+<li><b>In your browser.</b> By default your library is saved only in the browser you use, on your own device.</li>
+<li><b>In your Google Drive, if you choose to connect it.</b> The calculator then saves one file, <i>Kindle Library Calculator.json</i>, in your own Google Drive, so your phone and computer can share it. It goes straight from your browser to Google and back.</li>
+</ul>
+
+<h2>What the Google Drive connection can do</h2>
+<ul>
+<li>It asks only for Google's narrowest Drive permission: access to <b>files this app created</b>. It can't see, read or change anything else in your Drive.</li>
+<li>The sign-in is kept in your browser tab's memory for about an hour and is never sent anywhere else.</li>
+<li>You can disconnect any time in the calculator's Settings, or remove its access at <a href="https://myaccount.google.com/connections">myaccount.google.com/connections</a>. You can delete the file from your Drive whenever you like.</li>
+<li>Information received from Google APIs is used only to save and load your own library file, and follows the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including its Limited Use requirements. It isn't shared, sold or used for anything else.</li>
+</ul>
+
+<h2>Amazon and Goodreads</h2>
+<p>The optional sync script and the phone sync bookmark read your Amazon and Goodreads pages inside your own browser, using your existing sign-ins, and pass what they read to the calculator page on your device. They don't send it anywhere else and they never change anything in your accounts.</p>
+
+<h2>Other things to know</h2>
+<ul>
+<li>No ads, no analytics, no tracking cookies.</li>
+<li>The page loads its fonts from Google Fonts, and Google's sign-in script if you connect Drive.</li>
+<li>The code is public at <a href="https://github.com/Kirbeeman/bookshelfcalc">github.com/Kirbeeman/bookshelfcalc</a>, so anyone can check what it does.</li>
+</ul>
+
+<h2>Questions</h2>
+<p>Open an issue at <a href="https://github.com/Kirbeeman/bookshelfcalc/issues">github.com/Kirbeeman/bookshelfcalc/issues</a>.</p>
+
+<p><a href="./">← Back to the calculator</a></p>
+</main>
+</body>
+</html>
