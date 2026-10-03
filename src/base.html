@@ -1410,7 +1410,7 @@ const drop = $('#drop');
 ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
 drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) readFile(f); });
 $('#file').addEventListener('change', e => { const f = e.target.files[0]; if (f) readFile(f); e.target.value = ''; });
-function readFile(f) { const r = new FileReader(); r.onload = () => { $('#paste').value = r.result; $('#impResult').className = 'result'; $('#impResult').textContent = `Loaded ${f.name}. Press Import.`; }; r.readAsText(f); }
+function readFile(f) { const r = new FileReader(); r.onload = () => { $('#paste').value = r.result; $('#impResult').className = 'result'; $('#impResult').textContent = `Loaded ${f.name}.`; $('#doImport').click(); }; r.readAsText(f); } // picking a file imports it straight away
 
 function parseCSV(text) {
   const rows = []; let row = [], cur = '', q = false;

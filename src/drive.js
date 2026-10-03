@@ -104,6 +104,12 @@ async function syncDrive(interactive) {
       else S.books = mergeLibraries(S.books, rb, gdBase());
       changed = true;
     }
+    if (!f && S.demo) { // nothing in this Google account's Drive yet, and nothing here to put there
+      gdSet('klc-gd-on', '1'); gd.when = 0; gd.err = '';
+      gdStatus('tap'); renderDriveSect();
+      if (interactive) toast("Connected, but this Google account's Drive has no library yet. Sync from Amazon first, and it's saved there.");
+      return;
+    }
     if (!S.demo) await gdWrite(f && f.id, {app: 'kindle-library-calculator', saved: new Date().toISOString(), settings: S.settings, books: S.books});
     gdSaveBase(S.books); gd.lastHash = libHash(S.books);
     gdSet('klc-gd-on', '1'); gd.when = Date.now(); gdSet('klc-gd-when', String(gd.when)); gd.err = '';

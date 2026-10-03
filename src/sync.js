@@ -64,6 +64,7 @@ function applyPhoneSync(data) {
   return items.length;
 }
 function startSync() {
+  if (MOBILE && S.demo) { const p = $('#demoBanner p'); if (p) p.innerHTML = '<strong>This is an example library</strong> of public-domain classics so you can see how it works. Tap <b>Get started</b> to bring in your own books from Amazon, Google Drive or a file.'; const bi = $('#bannerImport'); if (bi) bi.textContent = 'Get started'; }
   initPhoneSync();
   initDrive();
   if (hasCore) { enableSync(); return; }
@@ -260,6 +261,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['1.54', ['On a phone, getting started offers three ways in: sync from Amazon with the bookmark, load from Google Drive, or import a file', 'Picking a file to import brings it in straight away', "Connecting a Google account whose Drive has no library yet says so"]],
   ['1.53', ['Books with no Amazon store page get a genre guessed from their title, marked "guessed"']],
   ['1.52', ['Keep your library in your own Google Drive and share it between your phone and computer (Settings › Google Drive)', 'A 10-book shelf on phones, with a globe (or cauldron) and a comic for the smallest genres']],
   ['1.51', ['Sync from your phone with a bookmark: nothing to install (Settings › Sync from your phone)']],
@@ -480,9 +482,15 @@ function wizGo(step) {
   const prev = s => WSTEPS[WSTEPS.indexOf(s) - 1], next = s => WSTEPS[WSTEPS.indexOf(s) + 1];
   const skip = '<button type="button" class="linkbtn" id="wizSkip">Skip setup and look at the example</button>';
   const v = {
-    welcome: `<h2>Get your own Shelf of Shame</h2>
+    welcome: MOBILE ? `<h2>Get your own Shelf of Shame</h2>
+      <p>Pick how to bring in your books. Nothing to install.</p>
+      <div class="wpick">
+        <button type="button" class="btn primary" id="wzBm"><b>Sync from Amazon</b><span>A bookmark reads your Kindle books on amazon.com, right on this phone</span></button>
+        <button type="button" class="btn" id="wzGd"><b>Load from Google Drive</b><span>Already use the calculator on another device with Google Drive? Bring that library here</span></button>
+        <button type="button" class="btn" id="wzFile"><b>Import a file</b><span>A backup from another device, or a Goodreads export</span></button>
+      </div>` : `<h2>Get your own Shelf of Shame</h2>
       <p>About five minutes, one time. A free browser add-on (Tampermonkey) runs a small script that reads your Kindle library while you're signed in to Amazon. Nothing to download or paste, and your books stay in this browser.</p>
-      ${MOBILE ? `<p class="wwarn">Setup needs a computer (Chrome, Edge, Opera or Firefox). On a phone you can look around the example, or bring in a Goodreads export from <b>Settings → Import a file</b>.</p>` : BR === 'other' ? `<p class="wwarn">This works in Chrome, Edge, Opera or Firefox on a computer. Open this page in one of those to continue.</p>` : `<p class="muted">Looks like you're using <b>${BRNAME}</b>. The steps below are written for it.</p>`}
+      ${MOBILE ? '' : BR === 'other' ? `<p class="wwarn">This works in Chrome, Edge, Opera or Firefox on a computer. Open this page in one of those to continue.</p>` : `<p class="muted">Looks like you're using <b>${BRNAME}</b>. The steps below are written for it.</p>`}
       ${nav(null, MOBILE || BR === 'other' ? null : 'tm', "Let's go")}`,
     tm: `<h2>Add Tampermonkey to ${BRNAME}</h2>
       <p>It's a free, widely used add-on that runs small scripts on websites you choose.</p>
@@ -515,11 +523,14 @@ function wizGo(step) {
       <p class="muted">Book details (genres, pages, prices) then fill in over a few minutes, about a second per book.</p>
       <div class="row wnav" style="justify-content:center"><button type="button" class="btn primary" id="wizClose">I'm signed in, sync now</button></div>`,
   }[step];
-  $('#wizBody').innerHTML = (step === 'check' || step === 'trouble' ? '' : dots) + v + (step === 'done' ? '' : skip);
+  $('#wizBody').innerHTML = (step === 'check' || step === 'trouble' || MOBILE ? '' : dots) + v + (step === 'done' ? '' : skip);
   const b = $('#wizBody');
   b.querySelectorAll('[data-go]').forEach(x => x.onclick = () => wizGo(x.dataset.go));
   b.querySelectorAll('[data-copy]').forEach(x => x.onclick = async () => { try { await navigator.clipboard.writeText(x.dataset.copy); x.textContent = 'Copied ✓'; } catch { x.textContent = x.dataset.copy; } });
   const sk = $('#wizSkip'); if (sk) sk.onclick = wizSkip;
+  const wb = $('#wzBm'); if (wb) wb.onclick = () => { wizSkip(); $('#btnSettings').click(); setTimeout(() => { const p = $('#phoneSect'); if (p) { p.querySelector('details').open = true; p.scrollIntoView({behavior: 'smooth', block: 'start'}); } }, 150); };
+  const wg = $('#wzGd'); if (wg) wg.onclick = () => { wizSkip(); syncDrive(true); };
+  const wf = $('#wzFile'); if (wf) wf.onclick = () => { wizSkip(); openImport(); };
   const cl = $('#wizClose'); if (cl) cl.onclick = () => { $('#dlgWiz').close(); ssSet('klc-wiz', ''); runSync(true); };
   const ck = $('#wizCheck'); if (ck) ck.onclick = () => { ssSet('klc-wiz', 'check'); location.reload(); };
   if (step === 'check') setTimeout(() => { if (!syncOn && wizAt === 'check') { ssSet('klc-wiz', ''); wizGo('trouble'); } }, 2500);
@@ -555,6 +566,7 @@ function wizGo(step) {
 .warnline{font-size:.84rem;border-left:3px solid var(--warn);padding:6px 10px;background:var(--bg);border-radius:0 6px 6px 0;margin-top:6px}.warnline a{color:inherit}
 .wizdlg:focus,.wiz :focus:not(:focus-visible){outline:none}.wiz a.btn{text-decoration:none}
 .forcedlg::backdrop{background:rgba(0,0,0,.28)}.forcedlg{border:1px solid var(--rule);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.45);background:var(--paper);color:var(--ink)}.forceicon{font-size:2rem;line-height:1;color:var(--accent)}
+.wpick{display:flex;flex-direction:column;gap:10px;text-align:left}.wpick .btn{display:flex;flex-direction:column;gap:2px;padding:12px 14px;white-space:normal}.wpick .btn span{font-weight:400;font-size:.82rem;opacity:.8}
 .wizdlg{max-width:min(560px,calc(100vw - 32px));width:100%}
 .wiz{text-align:center;display:flex;flex-direction:column;gap:14px}.wiz h2{font-size:1.4rem}.wiz p{margin:0}
 .wiz .count{font-family:var(--mono);font-size:.72rem;color:var(--muted);letter-spacing:.08em;margin-top:-6px}
