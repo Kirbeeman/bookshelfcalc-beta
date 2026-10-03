@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kindle Library Calculator (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      2.0.0.0.1
+// @version      2.0.0.0.2
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -10,6 +10,11 @@
 // @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
+// @grant        GM.getValue
+// @grant        GM.setValue
+// @grant        GM.listValues
+// @grant        GM.xmlHttpRequest
+// @grant        GM.info
 // @match        https://betabookshelf.kirbee213.tv/*
 // @connect      goodreads.com
 // @connect      amazon.com
@@ -19,7 +24,22 @@
 // @run-at       document-end
 // ==/UserScript==
 
-(function () {
+// Userscripts, the free script app for iPhone and iPad, only has GM.getValue and friends, which make you wait for an answer.
+// This loads the saved values first, then hands the script the same GM_ functions Tampermonkey has.
+// In Tampermonkey the real functions pass straight through and nothing waits.
+(async () => {
+const TM = typeof GM_getValue === 'function' && typeof GM_setValue === 'function';
+const cache = {};
+if (!TM && typeof GM !== 'undefined' && GM.getValue) {
+  let keys = ['grUser', 'kindle', 'kindleHost', 'owned', 'prices'];
+  try { if (GM.listValues) keys = [...new Set([...keys, ...await GM.listValues()])]; } catch {}
+  for (const k of keys) { try { const v = await GM.getValue(k); if (v !== undefined) cache[k] = v; } catch {} }
+}
+const api = TM ? [GM_getValue, GM_setValue] : [(k, d) => k in cache ? cache[k] : d, (k, v) => { cache[k] = v; try { GM.setValue(k, v); } catch {} }];
+api.push(typeof GM_addStyle === 'function' ? GM_addStyle : css => { const st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st); return st; });
+api.push(typeof GM_xmlhttpRequest === 'function' ? GM_xmlhttpRequest : d => GM.xmlHttpRequest(d));
+api.push(typeof GM_info !== 'undefined' ? GM_info : GM.info);
+(function (GM_getValue, GM_setValue, GM_addStyle, GM_xmlhttpRequest, GM_info) {
 'use strict';
 const SITE_URL = 'https://betabookshelf.kirbee213.tv/';
 const host = location.hostname;
@@ -2221,7 +2241,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.0.0.0.1';
+const LATEST_SCRIPT = '2.0.0.0.2';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2267,6 +2287,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.2', ['Set up the bookmark: one tap copies the sync code and opens a page that walks you through saving it, already named Shelf sync', 'The sync script also works in Userscripts, the free script app for iPhone and iPad']],
   ['2.0.0.0.1', ['The bottom of Settings shows which version of the app and of the sync script you have', 'Tapping outside Settings closes it']],
   ['1.55', ['Faster on phones with big libraries: the library table loads 40 books at a time, scrolling no longer redraws the page, and search waits for a pause in typing']],
   ['1.54', ['On a phone, getting started offers three ways in: sync from Amazon with the bookmark, load from Google Drive, or import a file', 'Picking a file to import brings it in straight away', "Connecting a Google account whose Drive has no library yet says so"]],
@@ -2338,6 +2359,13 @@ function renderScriptSect() {
   const su = $('#sSetup'); if (su) su.onclick = () => { $('#dlgSettings').close(); openWizard('welcome'); };
   const up = $('#sUpdate'); if (up) up.onclick = () => { ssSet('klc-updating', '1'); window.open(SCRIPT_URL, '_blank', 'noopener'); up.textContent = 'Waiting for Tampermonkey…'; up.disabled = true; };
 }
+// Copy the bookmark code, then go to bookmark.html: a page titled "Shelf sync", so the bookmark saved there is already named
+async function setupBookmark() {
+  const code = bookmarkletCode();
+  try { await navigator.clipboard.writeText(code); }
+  catch { const t = document.createElement('textarea'); t.value = code; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch {} t.remove(); }
+  location.href = 'bookmark.html#c';
+}
 // Settings: the phone sync bookmark (works in any browser, nothing to install)
 function renderPhoneSect() {
   if (hasCore || $('#phoneSect')) return;
@@ -2345,29 +2373,12 @@ function renderPhoneSect() {
   const files = document.querySelector('#dlgSettings .files:not(#scriptSect):not(#phoneSect)') || document.querySelector('#dlgSettings .files'); files.before(sec);
   sec.innerHTML = `<h4>Sync from your phone (nothing to install)</h4>
     <p class="note">A bookmark does the syncing. Tap it while you're on amazon.com and it reads your books, purchase dates and prices right there in your browser, then sends them to this page. Nothing is installed and your data doesn't go anywhere else.</p>
-    <div class="row"><button type="button" class="btn primary" id="bmCopy">Copy the sync bookmark</button><a class="btn" id="bmDrag" href="#">Shelf sync</a></div>
-    <p class="note" style="margin-top:-4px">On a computer you can drag <b>Shelf sync</b> to your bookmarks bar instead.</p>
-    <details class="news"><summary>Add it on Android (Chrome)</summary><ol class="bmsteps">
-      <li>Tap <b>Copy the sync bookmark</b> above.</li>
-      <li>Tap <b>⋮</b> (top right), then the <b>☆</b> star to bookmark this page.</li>
-      <li>Tap <b>⋮ › Bookmarks</b>, find the new bookmark, and tap its <b>⋮ › Edit</b>.</li>
-      <li>Change the name to <b>Shelf sync</b>. Clear the URL box, paste, and save.</li>
-      <li>Go to <b>amazon.com</b> (signed in). Tap the address bar, type <b>Shelf sync</b>, and tap the bookmark with the star in the list.</li>
-      <li>When it says <b>Ready</b>, tap <b>Send to Shelf of Shame</b>.</li></ol></details>
-    <details class="news"><summary>Add it on iPhone (Safari) · not tested yet</summary><ol class="bmsteps">
-      <li>Tap <b>Copy the sync bookmark</b> above.</li>
-      <li>Tap <b>Share › Add Bookmark</b> and save it.</li>
-      <li>Open <b>Bookmarks</b>, tap <b>Edit</b>, tap the new bookmark, name it <b>Shelf sync</b>, and replace the address with what you copied.</li>
-      <li>On <b>amazon.com</b>, open Bookmarks and tap <b>Shelf sync</b>. When it says Ready, tap <b>Send to Shelf of Shame</b>.</li></ol></details>
+    <div class="row"><button type="button" class="btn primary" id="bmSetup">Set up the bookmark</button><a class="btn" id="bmDrag" href="#">Shelf sync</a></div>
+    <p class="note" style="margin-top:-4px">Copies the sync code and opens a short page that walks you through saving it. On a computer you can drag <b>Shelf sync</b> to your bookmarks bar instead.</p>
     <p class="note">The first time, it reads up to 80 books' genres and pages. Tap it again later to carry on with the rest.</p>`;
   $('#bmDrag').href = bookmarkletCode();
   $('#bmDrag').onclick = e => { e.preventDefault(); toast('Drag this to your bookmarks bar, or use Copy'); };
-  $('#bmCopy').onclick = async () => {
-    const code = bookmarkletCode();
-    try { await navigator.clipboard.writeText(code); }
-    catch { const t = document.createElement('textarea'); t.value = code; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch {} t.remove(); }
-    toast('Copied. Now save it as a bookmark (steps below).');
-  };
+  $('#bmSetup').onclick = setupBookmark;
 }
 document.addEventListener('click', e => {
   if (!e.target.closest || !e.target.closest('#btnSettings')) return;
@@ -2537,7 +2548,7 @@ function wizGo(step) {
   b.querySelectorAll('[data-go]').forEach(x => x.onclick = () => wizGo(x.dataset.go));
   b.querySelectorAll('[data-copy]').forEach(x => x.onclick = async () => { try { await navigator.clipboard.writeText(x.dataset.copy); x.textContent = 'Copied ✓'; } catch { x.textContent = x.dataset.copy; } });
   const sk = $('#wizSkip'); if (sk) sk.onclick = wizSkip;
-  const wb = $('#wzBm'); if (wb) wb.onclick = () => { wizSkip(); $('#btnSettings').click(); setTimeout(() => { const p = $('#phoneSect'); if (p) { p.querySelector('details').open = true; p.scrollIntoView({behavior: 'smooth', block: 'start'}); } }, 150); };
+  const wb = $('#wzBm'); if (wb) wb.onclick = () => { wizSkip(); setupBookmark(); };
   const wg = $('#wzGd'); if (wg) wg.onclick = () => { wizSkip(); syncDrive(true); };
   const wf = $('#wzFile'); if (wf) wf.onclick = () => { wizSkip(); openImport(); };
   const cl = $('#wizClose'); if (cl) cl.onclick = () => { $('#dlgWiz').close(); ssSet('klc-wiz', ''); runSync(true); };
@@ -2777,4 +2788,5 @@ renderAll();
 storeReady = initStore();
 startSync();
 
+})(...api);
 })();
