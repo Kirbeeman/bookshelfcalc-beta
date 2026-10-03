@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Shelf of Shame</title>
-<link rel="icon" type="image/png" href="icon-tag.png" id="favicon">
-<link rel="apple-touch-icon" href="icon-tag-180.png" id="touchicon">
+<link rel="icon" type="image/png" href="icon-tag.png?v=__SCRIPT_VERSION__" id="favicon">
+<link rel="apple-touch-icon" href="icon-tag-180.png?v=__SCRIPT_VERSION__" id="touchicon">
 <meta name="description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
 <meta property="og:title" content="Shelf of Shame">
 <meta property="og:description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
-<meta property="og:image" content="https://bookshelf.kirbee213.tv/og.png">
+<meta property="og:image" content="https://bookshelf.kirbee213.tv/og.png?v=__SCRIPT_VERSION__">
 <meta property="og:url" content="https://bookshelf.kirbee213.tv/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1397,7 +1397,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png`], ['touchicon', `icon-${ico}-180.png`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=__SCRIPT_VERSION__`], ['touchicon', `icon-${ico}-180.png?v=__SCRIPT_VERSION__`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });

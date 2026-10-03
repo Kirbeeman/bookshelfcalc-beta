@@ -24,6 +24,7 @@ src=R(src,"$('#btnImport').onclick = openImport; $('#bannerImport').onclick = op
 src=R(src,"renderAll();\ninitStore();","renderAll();\nstoreReady = initStore();\nstartSync();")
 import re as _re
 VER=_re.search(r'@version\s+(\S+)', open('template.user.js').read()).group(1)
+src=src.replace('__SCRIPT_VERSION__', VER)  # icon addresses carry the version, so browsers fetch a changed icon
 # The phone sync bookmark: the shared Amazon readers from the userscript, wrapped and minified, kept in the page as a string
 import json, subprocess
 _tpl=open('template.user.js').read()

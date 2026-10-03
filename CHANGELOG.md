@@ -6,16 +6,17 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 5 (latest)
+## 2.0 beta 6 (latest)
 
-**A bolder Halloween icon**
+**New icons show up straight away**
 
-- In the **Halloween** theme, the tab and home-screen icon is now a **jack-o'-lantern book**: an orange cover with pumpkin ribs, a green stem and a carved face glowing from inside, on a dark background. The cobwebbed book was too faint to make out at tab size.
+- The tab and home-screen icon addresses carry the version number, so when an icon changes, browsers fetch the new one instead of holding on to the old one. The link preview picture works the same way.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 5** A bolder Halloween icon (the jack-o'-lantern book)
 - **2.0 beta 4** An icon of its own
 - **2.0 beta 3** Now called Shelf of Shame
 - **2.0 beta 2** Easier bookmark setup, and a free script app on iPhone and iPad

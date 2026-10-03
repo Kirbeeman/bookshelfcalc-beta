@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BETA · Shelf of Shame</title>
-<link rel="icon" type="image/png" href="icon-tag.png" id="favicon">
-<link rel="apple-touch-icon" href="icon-tag-180.png" id="touchicon">
+<link rel="icon" type="image/png" href="icon-tag.png?v=2.0.0.0.6" id="favicon">
+<link rel="apple-touch-icon" href="icon-tag-180.png?v=2.0.0.0.6" id="touchicon">
 <meta name="description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
 <meta property="og:title" content="Shelf of Shame">
 <meta property="og:description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
-<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png">
+<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v=2.0.0.0.6">
 <meta property="og:url" content="https://betabookshelf.kirbee213.tv/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1403,7 +1403,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png`], ['touchicon', `icon-${ico}-180.png`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.0.0.0.6`], ['touchicon', `icon-${ico}-180.png?v=2.0.0.0.6`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -1930,7 +1930,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.0.0.0.5';
+const LATEST_SCRIPT = '2.0.0.0.6';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -1976,6 +1976,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.6', ['A changed icon now shows up straight away, instead of the browser holding on to the old one']],
   ['2.0.0.0.5', ['A bolder Halloween icon: a jack-o\'-lantern book with a glowing carved face']],
   ['2.0.0.0.4', ['A Shelf of Shame icon in your browser tab and on your home screen: a book with its price tag still on, or a cobwebbed book in the Halloween theme', 'Sending someone a link to the site shows a picture and a short description']],
   ['2.0.0.0.3', ['The calculator is now called Shelf of Shame everywhere, including the sync script and your Google Drive file']],
