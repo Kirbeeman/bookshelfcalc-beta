@@ -1294,21 +1294,25 @@ function renderStats() {
   if (!pile.length) {
     stack.innerHTML = n ? '<div class="pile-empty">The shelf is empty. Every book has been opened.</div>' : '<div class="pile-empty muted">Import your library to fill the shelf.</div>';
   } else {
-    const SHELF = window.matchMedia('(max-width: 640px)').matches ? 10 : 100; // a phone gets a short shelf; the rest is counted below it
+    const SHELF = window.matchMedia('(max-width: 640px)').matches ? 15 : 100; // a phone gets a short shelf; the rest is counted below it
     // Within any group: just-bought books first (newest first), then the longest-waiting
     const pickOrder = list => [...list.filter(isNew).sort((a,b) => b.date.localeCompare(a.date)), ...list.filter(b => !isNew(b)).sort((a,b) => (a.date || '9').localeCompare(b.date || '9'))];
-    let shown, globeG = [], comicG = [];
+    let shown, globeG = [], comicG = [], globeSmallest = false;
     if (S.settings.spineMode === 'genre') {
       // The shelf doubles as a chart: each genre gets spines in proportion to its share of the unread pile, grouped together, biggest first
       const groups = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; (groups[g] ||= []).push(b); });
       let slots = Math.min(SHELF, pile.length);
       let keys = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
       // A phone's 10 spines are 10% each, too coarse for small genres: under 5% they're the lands on a spinning globe, under 3% a comic lying on the shelf
-      if (SHELF <= 10 && pile.length > SHELF) {
+      if (SHELF <= 15 && pile.length > SHELF) {
         const share = g => groups[g].length / pile.length;
         // Unknown isn't a genre, so it never becomes globe land or comic panels (it stays in the key below)
-        comicG = keys.filter(g => g !== 'unknown' && share(g) < 0.03); globeG = keys.filter(g => g !== 'unknown' && share(g) >= 0.03 && share(g) < 0.05);
-        keys = keys.filter(g => share(g) >= 0.05);
+        // One spine is 1/15 of the pile: under that a genre is globe land, under half that it's on the comic
+        const spine = 1 / SHELF;
+        comicG = keys.filter(g => g !== 'unknown' && share(g) < spine / 2); globeG = keys.filter(g => g !== 'unknown' && share(g) >= spine / 2 && share(g) < spine);
+        // The globe is always there: if no genre falls in its range, it takes the smallest genre that would have had spines
+        if (!globeG.length) { const rest = keys.filter(g => g !== 'unknown' && !comicG.includes(g)); if (rest.length > 1) { globeG = [rest[rest.length - 1]]; globeSmallest = true; } }
+        keys = keys.filter(g => !globeG.includes(g) && !comicG.includes(g) && !(g === 'unknown' && share(g) < spine));
         if (globeG.length) slots--;
       }
       const big = keys.reduce((a, g) => a + groups[g].length, 0) || 1;
@@ -1339,7 +1343,7 @@ function renderStats() {
     let html = '<div class="bookcase">';
     for (let i = 0; i < shown.length; i++) {
       const b = shown[i], h = hash(b.id + b.title);
-      if (SHELF > 10 && i > 2 && h % 11 === 0 && !isNew(b)) { // no piles on a phone's short shelf
+      if (SHELF > 15 && i > 2 && h % 11 === 0 && !isNew(b)) { // no piles on a phone's short shelf
         const n = 2 + (h >> 4) % 2, seg = shown.slice(i, i + n), cut = seg.findIndex(isNew), pile2 = cut < 0 ? seg : seg.slice(0, cut);
         if (pile2.length >= 2) { html += `<span class="lay">${pile2.map(x => spineOf(x, i, true)).join('')}</span>`; i += pile2.length - 1; continue; }
       }
@@ -1348,8 +1352,8 @@ function renderStats() {
     }
     if (globeG.length || comicG.length) {
       const pct = g => `${GENRES[g]} ${Math.round(pile.filter(b => (GENRES[b.genre] ? b.genre : 'unknown') === g).length / pile.length * 100)}%`;
-      if (globeG.length) html += `<span class="gx gx-globe" data-g="${globeG.join(' ')}" title="Genres under 5% of your unread books: ${esc(globeG.map(pct).join(', '))}">${smallGenreSvg(globeG)}</span>`;
-      if (comicG.length) html += `<span class="gx" title="Genres under 3% of your unread books: ${esc(comicG.map(pct).join(', '))}">${comicSvg(comicG)}</span>`;
+      if (globeG.length) html += `<span class="gx gx-globe" data-g="${globeG.join(' ')}" title="${globeSmallest ? 'Your smallest genre' : `Genres under ${Math.round(100 / SHELF)}% of your unread books`}: ${esc(globeG.map(pct).join(', '))}">${smallGenreSvg(globeG)}</span>`;
+      if (comicG.length) html += `<span class="gx" title="Genres under ${Math.round(50 / SHELF)}% of your unread books: ${esc(comicG.map(pct).join(', '))}">${comicSvg(comicG)}</span>`;
     }
     html += '</div>';
     const gl = $('#genreLegend');
@@ -1357,7 +1361,7 @@ function renderStats() {
       const cnt = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; cnt[g] = (cnt[g] || 0) + 1; });
       gl.innerHTML = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).map(g => `<span${g === 'nonfiction' ? ` title="${esc([...new Set(pile.filter(b => b.genre === 'nonfiction').map(b => b.genreName).filter(Boolean))].join(', '))}"` : ''}><i style="background:var(--g-${g})"></i>${GENRES[g]} <span class="num muted">${cnt[g]} · ${Math.round(cnt[g] / pile.length * 100)}%</span></span>`).join('')
         + (pile.some(b => b.genreSrc === 'guess') ? `<span class="muted">${fmtInt(pile.filter(b => b.genreSrc === 'guess').length)} genres are guessed from the book's title, because Amazon has no store page for them.</span>` : '')
-        + (globeG.length || comicG.length ? `<span class="muted">${globeG.length ? 'The globe holds the genres under 5%.' : ''}${globeG.length && comicG.length ? ' ' : ''}${comicG.length ? 'The comic holds the ones under 3%.' : ''}</span>` : '');
+        + (globeG.length || comicG.length ? `<span class="muted">${globeG.length ? (globeSmallest ? `The globe holds your smallest genre, ${esc(GENRES[globeG[0]])}.` : `The globe holds the genres under ${Math.round(100 / SHELF)}%.`) : ''}${globeG.length && comicG.length ? ' ' : ''}${comicG.length ? `The comic holds the ones under ${Math.round(50 / SHELF)}%.` : ''}</span>` : '');
       gl.hidden = false;
     } else gl.hidden = true;
     if (pile.length > shown.length) html += `<div class="more">+ ${fmtInt(pile.length - shown.length)} more that didn't fit on the shelf${S.settings.spineMode === 'genre' ? ', in the same proportions' : ''}</div>`;
