@@ -1,4 +1,4 @@
-# Beta changelog
+# Shelf of Shame beta changelog
 
 Newest first. The latest beta is described in full; earlier ones are listed by title.
 
@@ -6,18 +6,18 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 2 (latest)
+## 2.0 beta 3 (latest)
 
-**Easier bookmark setup, and a free script app on iPhone and iPad**
+**Now called Shelf of Shame**
 
-- **Set up the bookmark**: one tap copies the sync code and opens a short page titled "Shelf sync", so the bookmark saved there is already named. The page shows only the steps for your phone (iPhone or Android), with a button to copy the code again. Sync from Amazon on the welcome screen goes straight there.
-- The sync script can also run in **Userscripts**, the free script app for iPhone, iPad and Mac, as well as Tampermonkey (not yet tried on a real iPhone). Nothing changes for Tampermonkey users.
-- The iPhone steps match current Safari, including the ••• button on iOS 26.
+- The calculator is called **Shelf of Shame** everywhere: the page title and heading, the browser tab, the sync script's name in Tampermonkey or Userscripts, the privacy page and the help text.
+- The Google Drive file is now **Shelf of Shame.json**. A file saved under the old name is found and renamed on the next sync, with nothing lost.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 2** Easier bookmark setup, and a free script app on iPhone and iPad
 - **2.0 beta 1** Version numbers in Settings, and tap outside to close
 - **1.55** Faster on phones with big libraries
 - 15-book phone shelf, and the globe always shows

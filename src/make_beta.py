@@ -11,7 +11,7 @@ html=R(html,'<div class="wrap">','<div class="betabar" role="note"><b>BETA</b> Â
 html=html.replace('</style>','.betabar{background:repeating-linear-gradient(45deg,#f2c14e 0 14px,#e8b23a 14px 28px);color:#1b1206;font:600 .82rem/1.4 system-ui,sans-serif;text-align:center;padding:6px 12px;position:relative;z-index:50}.betabar a{color:inherit}\n</style>',1)
 html=R(html,'<title>','<title>BETA Â· ')
 us=open(G+'/kindle-library-calculator.user.js').read()
-us=R(us,'// @name         Kindle Library Calculator\n','// @name         Kindle Library Calculator (beta)\n')
+us=R(us,'// @name         Shelf of Shame\n','// @name         Shelf of Shame (beta)\n')
 us=R(us,'// @namespace    kindle-library-calculator\n','// @namespace    kindle-library-calculator-beta\n')
 us=us.replace('https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js','https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js')
 us=re.sub(r'// @match        https://(bookshelf\.kirbee213\.tv|kirbeeman\.github\.io/bookshelfcalc|www\.goodreads\.com|read\.amazon\.[a-z.]+/kindle-library)\S*\n','',us)
@@ -25,9 +25,9 @@ shutil.copy(G+'/bm.js', O+'/bm.js')
 shutil.copy(G+'/privacy.html', O+'/privacy.html')
 shutil.copy(G+'/bookmark.html', O+'/bookmark.html')
 open(O+'/CNAME','w').write('betabookshelf.kirbee213.tv\n')
-open(O+'/README.md','w').write("""# Kindle Library Calculator: beta
+open(O+'/README.md','w').write("""# Shelf of Shame: beta
 
-Test copy of the [Kindle Library Calculator](https://github.com/Kirbeeman/bookshelfcalc), served at **https://betabookshelf.kirbee213.tv**.
+Test copy of the [Shelf of Shame](https://github.com/Kirbeeman/bookshelfcalc), served at **https://betabookshelf.kirbee213.tv**.
 
 New features are tried out here before they go to the real site. Things may break.
 

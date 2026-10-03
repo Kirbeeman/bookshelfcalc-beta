@@ -3,7 +3,9 @@
 // and the sign-in token lives in this tab's memory. Nothing goes through any server of ours.
 const GD_CLIENT = '415875336210-7sqa3p2evj9on6be8vu7pal417g39hme.apps.googleusercontent.com';
 const GD_SCOPE = 'https://www.googleapis.com/auth/drive.file';
-const GD_NAME = 'Kindle Library Calculator.json';
+const GD_NAME = 'Shelf of Shame.json';
+const GD_OLD = 'Kindle Library Calculator.json'; // the file's name before the rename; found and renamed on the next sync
+const GD_DESC = 'Your Shelf of Shame library (bookshelf.kirbee213.tv). Delete it any time.';
 const gdGet = k => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
 const gdSet = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} };
 const gd = {token: '', exp: 0, client: null, busy: false, timer: 0, lastHash: '', state: '', when: 0, err: ''};
@@ -66,14 +68,21 @@ async function gapi(method, url, body, type) {
   if (!r.ok) throw new Error(`Google Drive answered ${r.status}`);
   return r;
 }
+// A library file saved before the rename keeps its contents and just gets the new name. If renaming fails, the old name still works.
+// The modified time read before the rename is kept, so a change saved from another device still counts as new.
+async function gdRename(f) {
+  if (f.name !== GD_OLD) return f;
+  try { const r = await gapi('PATCH', `https://www.googleapis.com/drive/v3/files/${f.id}?fields=id`, JSON.stringify({name: GD_NAME, description: GD_DESC}), 'application/json'); if (r) return {...f, name: GD_NAME}; } catch {}
+  return f;
+}
 async function gdFind() {
-  const id = gdGet('klc-gd-file'), F = 'id,modifiedTime,trashed';
-  if (id) { const r = await gapi('GET', `https://www.googleapis.com/drive/v3/files/${id}?fields=${F}`); if (r) { const f = await r.json(); if (!f.trashed) return f; } }
-  const q = encodeURIComponent(`name = '${GD_NAME}' and trashed = false`);
+  const id = gdGet('klc-gd-file'), F = 'id,name,modifiedTime,trashed';
+  if (id) { const r = await gapi('GET', `https://www.googleapis.com/drive/v3/files/${id}?fields=${F}`); if (r) { const f = await r.json(); if (!f.trashed) return gdRename(f); } }
+  const q = encodeURIComponent(`(name = '${GD_NAME}' or name = '${GD_OLD}') and trashed = false`);
   const r = await gapi('GET', `https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&orderBy=modifiedTime desc&fields=files(${F})`);
   const f = r && (await r.json()).files?.[0];
   if (f) gdSet('klc-gd-file', f.id);
-  return f || null;
+  return f ? gdRename(f) : null;
 }
 async function gdWrite(id, obj) {
   const data = JSON.stringify(obj);
@@ -81,7 +90,7 @@ async function gdWrite(id, obj) {
   if (id) r = await gapi('PATCH', `https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=media&fields=id,modifiedTime`, data, 'application/json');
   if (!r) {
     const b = 'klc' + Date.now();
-    const body = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name: GD_NAME, mimeType: 'application/json', description: 'Your Kindle Library Calculator library (bookshelf.kirbee213.tv). Delete it any time.'})}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${data}\r\n--${b}--`;
+    const body = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name: GD_NAME, mimeType: 'application/json', description: GD_DESC})}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${data}\r\n--${b}--`;
     r = await gapi('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime', body, 'multipart/related; boundary=' + b);
   }
   const f = await r.json(); gdSet('klc-gd-file', f.id); gdSet('klc-gd-mtime', f.modifiedTime); return f;
