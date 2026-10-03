@@ -371,6 +371,7 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
 .check{display:flex;gap:8px;align-items:center;font-size:.88rem}
 .note{font-size:.8rem;color:var(--muted);margin:0}
 .dlg-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.verline{margin:12px 0 0;font-size:.8rem;color:var(--muted);text-align:center}
 .result{font-size:.88rem;min-height:1.3em}
 .result.err{color:var(--shame)}
 
@@ -553,6 +554,7 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
     <p class="note">Kindle doesn't report page counts or prices, so unknown values use the numbers above. Values you enter per book always win. About one minute per page is typical for adult fiction.</p>
     <div class="files"><h4>Files and backups</h4><p class="note">Only needed if you don't use the sync script, or to move your library to another browser.</p><div class="row"><button type="button" class="btn" id="btnImport">Import a file</button><button type="button" class="btn" id="btnExport">Back up library</button></div></div>
     <div class="dlg-foot"><div class="row"><button type="button" class="btn danger" id="wipe">Delete all books</button><span class="result err" id="wipeConfirm"></span></div><button type="submit" class="btn primary">Save</button></div>
+    <p class="verline" id="verLine"></p>
   </form>
 </dialog>
 
@@ -1390,6 +1392,8 @@ $('#themePick').innerHTML = THEMES.map(([k, n, d, sw]) => `<button type="button"
 try { applyTheme(localStorage.getItem('klc-theme') || 'default'); } catch {} // before the library loads, so there's no flash
 $('#themePick').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; S.settings.theme = b.dataset.t; applyTheme(b.dataset.t); scheduleSave(); });
 $('#setClose').onclick = () => $('#dlgSettings').close();
+// Clicking the dimmed area around Settings closes it, like the ×. A press that starts inside (e.g. selecting text) doesn't count.
+{ const d = $('#dlgSettings'); let downOut = false; d.addEventListener('pointerdown', e => { downOut = e.target === d; }); d.addEventListener('click', e => { if (downOut && e.target === d) d.close(); downOut = false; }); }
 $('#setForm').addEventListener('submit', e => {
   e.preventDefault();
   S.settings = {

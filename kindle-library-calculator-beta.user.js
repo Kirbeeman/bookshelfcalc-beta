@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kindle Library Calculator (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      1.55
+// @version      2.0.0.0.1
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -489,6 +489,7 @@ document.body.innerHTML = `<div class="wrap">
     <p class="note">Kindle doesn't report page counts or prices, so unknown values use the numbers above. Values you enter per book always win. About one minute per page is typical for adult fiction.</p>
     <div class="files"><h4>Files and backups</h4><p class="note">Only needed if you don't use the sync script, or to move your library to another browser.</p><div class="row"><button type="button" class="btn" id="btnImport">Import a file</button><button type="button" class="btn" id="btnExport">Back up library</button></div></div>
     <div class="dlg-foot"><div class="row"><button type="button" class="btn danger" id="wipe">Delete all books</button><span class="result err" id="wipeConfirm"></span></div><button type="submit" class="btn primary">Save</button></div>
+    <p class="verline" id="verLine"></p>
   </form>
 </dialog>
 
@@ -860,6 +861,7 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
 .check{display:flex;gap:8px;align-items:center;font-size:.88rem}
 .note{font-size:.8rem;color:var(--muted);margin:0}
 .dlg-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.verline{margin:12px 0 0;font-size:.8rem;color:var(--muted);text-align:center}
 .result{font-size:.88rem;min-height:1.3em}
 .result.err{color:var(--shame)}
 
@@ -1702,6 +1704,8 @@ $('#themePick').innerHTML = THEMES.map(([k, n, d, sw]) => `<button type="button"
 try { applyTheme(localStorage.getItem('klc-theme') || 'default'); } catch {} // before the library loads, so there's no flash
 $('#themePick').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; S.settings.theme = b.dataset.t; applyTheme(b.dataset.t); scheduleSave(); });
 $('#setClose').onclick = () => $('#dlgSettings').close();
+// Clicking the dimmed area around Settings closes it, like the ×. A press that starts inside (e.g. selecting text) doesn't count.
+{ const d = $('#dlgSettings'); let downOut = false; d.addEventListener('pointerdown', e => { downOut = e.target === d; }); d.addEventListener('click', e => { if (downOut && e.target === d) d.close(); downOut = false; }); }
 $('#setForm').addEventListener('submit', e => {
   e.preventDefault();
   S.settings = {
@@ -2080,7 +2084,7 @@ function startSync() {
   }, resume === 'check' ? 0 : 1500));
   setInterval(checkPageUpdate, 30 * 60000); setTimeout(checkPageUpdate, 5000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') return; if (document.getElementById('dlgForce')?.open && ssGet('klc-updating')) { location.reload(); return; } if (ssGet('klc-updating')) { ssSet('klc-updating', ''); pendingReload = true; } tryReload(); });
-  if (ssGet('klc-updated-from')) { ssSet('klc-updated-from', ''); lsSet1('klc-unseen', '1'); setTimeout(() => toast(`Updated to version ${LATEST_SCRIPT}. Settings shows what's new.`), 800); }
+  if (ssGet('klc-updated-from')) { ssSet('klc-updated-from', ''); lsSet1('klc-unseen', '1'); setTimeout(() => toast(`Updated to version ${verLabel(LATEST_SCRIPT)}. Settings shows what's new.`), 800); }
   refreshDot();
 }
 function bridgeSync(force, paid) {
@@ -2217,14 +2221,21 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '1.55';
+const LATEST_SCRIPT = '2.0.0.0.1';
+// Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
+const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
 const verLess = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); } return false; };
 let scriptVer = '';
 // The oldest sync script this page works with. Raise it only when a release changes the script itself;
 // page-only releases leave it alone, so people aren't stopped for updates that don't touch their script.
 const REQUIRED_SCRIPT = '1.43';
-function checkScriptVersion(v) { scriptVer = v || ''; renderScriptSect(); refreshDot(); if (v && verLess(v, REQUIRED_SCRIPT)) forceUpdate(v); else if (v && document.getElementById('dlgForce')?.open) { document.getElementById('dlgForce').close(); ssSet('klc-updating', ''); } }
+function renderVerLine() {
+  const el = document.getElementById('verLine'); if (!el) return;
+  const sv = scriptVer ? 'v' + verLabel(scriptVer) + (verLess(scriptVer, LATEST_SCRIPT) ? ' (v' + verLabel(LATEST_SCRIPT) + ' available)' : '') : 'not installed';
+  el.textContent = 'App v' + verLabel(LATEST_SCRIPT) + ' · Sync script ' + sv;
+}
+function checkScriptVersion(v) { scriptVer = v || ''; renderScriptSect(); renderVerLine(); refreshDot(); if (v && verLess(v, REQUIRED_SCRIPT)) forceUpdate(v); else if (v && document.getElementById('dlgForce')?.open) { document.getElementById('dlgForce').close(); ssSet('klc-updating', ''); } }
 // An out-of-date script blocks the page until it's updated: no close button, Esc does nothing, clicks outside do nothing
 function forceUpdate(v) {
   let d = $('#dlgForce');
@@ -2256,6 +2267,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.1', ['The bottom of Settings shows which version of the app and of the sync script you have', 'Tapping outside Settings closes it']],
   ['1.55', ['Faster on phones with big libraries: the library table loads 40 books at a time, scrolling no longer redraws the page, and search waits for a pause in typing']],
   ['1.54', ['On a phone, getting started offers three ways in: sync from Amazon with the bookmark, load from Google Drive, or import a file', 'Picking a file to import brings it in straight away', "Connecting a Google account whose Drive has no library yet says so"]],
   ['1.53', ['Books with no Amazon store page get a genre guessed from their title, marked "guessed"']],
@@ -2317,12 +2329,12 @@ function renderScriptSect() {
   }
   const out = scriptVer && verLess(scriptVer, LATEST_SCRIPT);
   const st = !syncOn ? `<p class="note">Not connected. The free sync script brings in your Kindle library, purchase dates and prices by itself.</p><div class="row"><button type="button" class="btn primary" id="sSetup">Set up sync</button></div>`
-    : out ? `<p class="note"><b>Update ready.</b> You have version ${esc(scriptVer)}; version ${LATEST_SCRIPT} is out. Click Update, press <b>Update</b> in the Tampermonkey tab that opens, then come back. This page finishes by itself.</p><div class="row"><button type="button" class="btn primary" id="sUpdate">Update</button></div>`
-    : `<p class="note" style="color:var(--ok)">✓ Sync script ${esc(scriptVer || LATEST_SCRIPT)}, up to date.</p>`;
+    : out ? `<p class="note"><b>Update ready.</b> You have version ${esc(verLabel(scriptVer))}; version ${verLabel(LATEST_SCRIPT)} is out. Click Update, press <b>Update</b> in the Tampermonkey tab that opens, then come back. This page finishes by itself.</p><div class="row"><button type="button" class="btn primary" id="sUpdate">Update</button></div>`
+    : `<p class="note" style="color:var(--ok)">✓ Sync script ${esc(verLabel(scriptVer || LATEST_SCRIPT))}, up to date.</p>`;
   const unseen = lsFlag('klc-unseen');
   sec.classList.toggle('fresh', !dotSeen() && (!!out || unseen));
   if (!sec.dataset.w) { sec.dataset.w = '1'; const seen = () => { if (!sec.classList.contains('fresh')) return; try { localStorage.setItem('klc-dot-seen', LATEST_SCRIPT); } catch {} lsSet1('klc-unseen', ''); sec.classList.remove('fresh'); refreshDot(); }; ['pointerenter', 'focusin', 'click'].forEach(ev => sec.addEventListener(ev, seen)); }
-  sec.innerHTML = `<h4>Sync script and updates<span class="newtag">new</span></h4>${st}<details class="news"${unseen ? ' open' : ''}><summary>What's new${unseen ? ` in ${LATEST_SCRIPT}` : ''}</summary>${CHANGES.slice(0, 3).map(([v, n]) => `<p><b>${v}</b></p><ul>${n.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('')}</details>`;
+  sec.innerHTML = `<h4>Sync script and updates<span class="newtag">new</span></h4>${st}<details class="news"${unseen ? ' open' : ''}><summary>What's new${unseen ? ` in ${verLabel(LATEST_SCRIPT)}` : ''}</summary>${CHANGES.slice(0, 3).map(([v, n]) => `<p><b>${verLabel(v)}</b></p><ul>${n.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`).join('')}</details>`;
   const su = $('#sSetup'); if (su) su.onclick = () => { $('#dlgSettings').close(); openWizard('welcome'); };
   const up = $('#sUpdate'); if (up) up.onclick = () => { ssSet('klc-updating', '1'); window.open(SCRIPT_URL, '_blank', 'noopener'); up.textContent = 'Waiting for Tampermonkey…'; up.disabled = true; };
 }
@@ -2359,6 +2371,7 @@ function renderPhoneSect() {
 }
 document.addEventListener('click', e => {
   if (!e.target.closest || !e.target.closest('#btnSettings')) return;
+  renderVerLine();
   renderPhoneSect();
   renderScriptSect();
   renderDriveSect(); if (!hasCore && location.protocol !== 'file:') loadGis().catch(() => {});
