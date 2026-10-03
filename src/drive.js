@@ -121,8 +121,9 @@ async function syncDrive(interactive) {
 }
 // After any change saved in this browser, send it to Drive a few seconds later (if the hour-long sign-in is still good)
 function driveQueue() {
-  if (!gdOn() || gdApplying || S.demo || libHash(S.books) === gd.lastHash) return;
-  clearTimeout(gd.timer); gd.timer = setTimeout(() => syncDrive(false), 4000);
+  if (!gdOn() || gdApplying || S.demo) return;
+  // Comparing the whole library is slow on a phone, so it's done once, when the few seconds' wait is over
+  clearTimeout(gd.timer); gd.timer = setTimeout(() => { if (libHash(S.books) !== gd.lastHash) syncDrive(false); }, 4000);
 }
 function gdStatus(state) {
   gd.state = state;
