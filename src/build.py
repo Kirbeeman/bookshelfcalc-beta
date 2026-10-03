@@ -32,7 +32,8 @@ _bm=open('bookmarklet.src.js').read().replace('/*CORE*/', _core)
 open('/tmp/klc-bm.js','w').write(_bm)
 _min=subprocess.run(['terser','/tmp/klc-bm.js','--compress','--mangle','--ecma','2020'],capture_output=True,text=True,check=True).stdout.strip()
 open('../bm.js','w').write(_min + '\n')
-import shutil; shutil.copy('privacy.html', '../privacy.html'); shutil.copy('bookmark.html', '../bookmark.html'); shutil.copy('iphone.html', '../iphone.html')  # served next to the page; the bookmark itself just loads this file
+import shutil; shutil.copy('privacy.html', '../privacy.html'); shutil.copy('bookmark.html', '../bookmark.html'); shutil.copy('iphone.html', '../iphone.html')
+for _f in ['icon-tag.png', 'icon-tag-180.png', 'icon-web.png', 'icon-web-180.png', 'og.png']: shutil.copy(_f, '../' + _f)  # drawn by icons/make_icons.js  # served next to the page; the bookmark itself just loads this file
 _sync=(open('sync.js').read() + '\n' + open('drive.js').read()).replace('__SCRIPT_VERSION__', VER)
 src=R(src,"// ---------- export ----------", _sync+"\n// ---------- export ----------")
 standalone=src.replace('<label class="check full" data-us>','<label class="check full" data-us hidden>')

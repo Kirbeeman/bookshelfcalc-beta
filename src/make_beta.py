@@ -19,12 +19,15 @@ us=R(us,'// @connect      goodreads.com\n','// @match        https://betabookshe
 us=R(us,"const SITE_URL = 'https://bookshelf.kirbee213.tv/';","const SITE_URL = 'https://betabookshelf.kirbee213.tv/';")
 us=R(us,"const onSite = host === 'bookshelf.kirbee213.tv' || (host === 'kirbeeman.github.io' && location.pathname.startsWith('/bookshelfcalc'));","const onSite = host === 'betabookshelf.kirbee213.tv';")
 os.makedirs(O,exist_ok=True)
+html=R(html,'<meta property="og:image" content="https://bookshelf.kirbee213.tv/og.png">','<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png">')
+html=R(html,'<meta property="og:url" content="https://bookshelf.kirbee213.tv/">','<meta property="og:url" content="https://betabookshelf.kirbee213.tv/">')
 open(O+'/index.html','w').write(html)
 open(O+'/kindle-library-calculator-beta.user.js','w').write(us)
 shutil.copy(G+'/bm.js', O+'/bm.js')
 shutil.copy(G+'/privacy.html', O+'/privacy.html')
 shutil.copy(G+'/bookmark.html', O+'/bookmark.html')
 shutil.copy(G+'/iphone.html', O+'/iphone.html')
+for f in ['icon-tag.png', 'icon-tag-180.png', 'icon-web.png', 'icon-web-180.png', 'og.png']: shutil.copy(G+'/'+f, O+'/'+f)
 open(O+'/CNAME','w').write('betabookshelf.kirbee213.tv\n')
 open(O+'/README.md','w').write("""# Shelf of Shame: beta
 

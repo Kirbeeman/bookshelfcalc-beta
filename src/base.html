@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Shelf of Shame</title>
+<link rel="icon" type="image/png" href="icon-tag.png" id="favicon">
+<link rel="apple-touch-icon" href="icon-tag-180.png" id="touchicon">
+<meta name="description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
+<meta property="og:title" content="Shelf of Shame">
+<meta property="og:description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
+<meta property="og:image" content="https://bookshelf.kirbee213.tv/og.png">
+<meta property="og:url" content="https://bookshelf.kirbee213.tv/">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,800&family=JetBrains+Mono:wght@400;600&family=Cormorant+Garamond:wght@600;700&family=Creepster&display=swap">
@@ -1386,6 +1394,13 @@ function applyTheme(t) {
   if (!t || t === 'default') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = t;
   try { localStorage.setItem('klc-theme', t || 'default'); } catch {}
   if (typeof decorShelf === 'function') requestAnimationFrame(decorShelf);
+  // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
+  // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
+  const ico = t === 'halloween' ? 'web' : 'tag';
+  [['favicon', `icon-${ico}.png`], ['touchicon', `icon-${ico}-180.png`]].forEach(([id, href]) => {
+    const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
+    const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
+  });
   const p = document.getElementById('themePick'); if (p) p.querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', b.dataset.t === (t || 'default')));
 }
 $('#themePick').innerHTML = THEMES.map(([k, n, d, sw]) => `<button type="button" role="radio" aria-checked="false" data-t="${k}"><span class="sw">${sw.map(c => `<i style="background:${c}"></i>`).join('')}</span>${n}<small>${d}</small></button>`).join('');

@@ -6,17 +6,18 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 3 (latest)
+## 2.0 beta 4 (latest)
 
-**Now called Shelf of Shame**
+**An icon of its own**
 
-- The calculator is called **Shelf of Shame** everywhere: the page title and heading, the browser tab, the sync script's name in Tampermonkey or Userscripts, the privacy page and the help text.
-- The Google Drive file is now **Shelf of Shame.json**. A file saved under the old name is found and renamed on the next sync, with nothing lost.
+- A **Shelf of Shame icon** in your browser tab, bookmarks and phone home screen: a book with its price tag still on. In the **Halloween** theme it becomes a cobwebbed book, and it switches back when you change theme.
+- **Link previews:** texting or posting a link to the site (or the iPhone guide) shows a picture and a short description instead of a bare address.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 3** Now called Shelf of Shame
 - **2.0 beta 2** Easier bookmark setup, and a free script app on iPhone and iPad
 - **2.0 beta 1** Version numbers in Settings, and tap outside to close
 - **1.55** Faster on phones with big libraries
