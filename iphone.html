@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shelf of Shame on iPhone and iPad</title>
+<style>
+:root{--bg:#f7f8f5;--paper:#ffffff;--ink:#1b1e20;--muted:#5d6560;--rule:#cfd4ce;--accent:#27408b;--btn:#1b1e20;--btnink:#f7f8f5}
+@media (prefers-color-scheme:dark){:root{--bg:#121517;--paper:#1a1e21;--ink:#e7e8e3;--muted:#9aa29c;--rule:#2d3336;--accent:#9fb0ff;--btn:#e7e8e3;--btnink:#121517}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.55 Georgia,"Times New Roman",serif;padding:24px 16px 56px}
+main{max-width:600px;margin:0 auto}
+h1{font-size:1.7rem;line-height:1.2;margin:0 0 8px}
+h2{font-size:1.2rem;line-height:1.3;margin:32px 0 10px}
+p{margin:0 0 12px}
+.lead{font-size:1.05rem}
+.muted{color:var(--muted);font-size:.95rem}
+ul{padding-left:22px;margin:0 0 12px}li{margin:0 0 6px}
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:0 0 12px}
+ol.steps>li{counter-increment:s;position:relative;background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:12px 14px 12px 56px;margin:0 0 10px}
+ol.steps>li::before{content:counter(s);position:absolute;left:12px;top:11px;width:30px;height:30px;border-radius:50%;background:var(--btn);color:var(--btnink);font:700 16px/30px system-ui,sans-serif;text-align:center}
+ol.steps>li p{margin:0}ol.steps>li p+p{margin-top:4px;font-size:.92rem;color:var(--muted)}
+.box{background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;margin:0 0 12px}
+.go{display:inline-block;background:var(--btn);color:var(--btnink);font:700 16px/1 system-ui,sans-serif;padding:14px 18px;border-radius:9px;text-decoration:none;margin:4px 0 8px}
+a{color:var(--accent)}
+code{font-size:.9em}
+table{width:100%;border-collapse:collapse;font-size:.95rem;background:var(--paper);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--rule)}
+th{font-family:system-ui,sans-serif;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+@media (max-width:480px){table,thead,tbody,tr,th,td{display:block}thead{display:none}tr{border-bottom:1px solid var(--rule);padding:6px 0}tr:last-child{border-bottom:0}td{border:0;padding:4px 12px}td:first-child{font-weight:700}}
+</style>
+</head>
+<body>
+<main>
+<h1>Shelf of Shame on iPhone and iPad</h1>
+<p class="lead">The Shelf of Shame shows how many of your Kindle books you haven't read yet, what you've spent and how long they'd take to read. You can set it up on your iPhone or iPad in about five minutes, with no computer and nothing to buy.</p>
+
+<h2>What you need</h2>
+<ul>
+<li>An iPhone or iPad with <b>Safari</b>. Use Safari for every step, not Chrome or the Amazon app.</li>
+<li>Your <b>Amazon</b> email and password (the account your Kindle books are on).</li>
+<li>About five minutes the first time. After that, syncing takes a couple of taps.</li>
+</ul>
+<p class="muted">This is a test version, so a screen may look a little different from these steps. If you get stuck, see the end of this page.</p>
+
+<h2>Step 1: Open the calculator</h2>
+<a class="go" href="./">Open the Shelf of Shame</a>
+<ol class="steps">
+<li><p>Tap the button above (or go to <b>betabookshelf.kirbee213.tv</b> in Safari).</p></li>
+<li><p>A welcome box appears. Tap <b>Sync from Amazon</b>.</p><p>No welcome box? Tap <b>Settings</b>, then <b>Set up the bookmark</b>.</p></li>
+<li><p>A page called <b>Add the Shelf sync bookmark</b> opens. The code you need is already copied for you.</p></li>
+</ol>
+<p class="muted">Keep using the calculator in Safari. Don't add it to your Home Screen; a Home Screen icon keeps its own separate copy and won't see the books you sync in Safari.</p>
+
+<h2>Step 2: Save the Shelf sync bookmark (one time only)</h2>
+<p>The bookmark is what reads your books from Amazon. You'll save it from the page that just opened, then paste the copied code into it.</p>
+<ol class="steps">
+<li><p>Tap <b>Share</b>, then <b>Add Bookmark</b>, then <b>Save</b>. The name <b>Shelf sync</b> is already filled in.</p><p>On iOS 26, tap <b>•••</b> next to the address bar first to find Share.</p></li>
+<li><p>Open your bookmarks: tap the <b>open book</b> button, or on iOS 26 tap <b>•••</b> then <b>Bookmarks</b>.</p></li>
+<li><p><b>Press and hold Shelf sync</b>, then tap <b>Edit</b>.</p></li>
+<li><p>Tap the address under the name, delete everything in it, then tap and hold and choose <b>Paste</b>.</p></li>
+<li><p>Tap <b>Done</b>.</p></li>
+</ol>
+<p>The address should now start with <code>javascript:</code>. If tapping Shelf sync later brings you back to the setup page, the paste didn't take: tap <b>Copy the sync code again</b> on that page and redo steps 2 to 5.</p>
+
+<h2>Step 3: Sync your books</h2>
+<p>Do this the first time, and again whenever you want to bring in new books.</p>
+<ol class="steps">
+<li><p>In Safari, go to <b>amazon.com</b> and sign in if it asks.</p></li>
+<li><p>Open your bookmarks (as in Step 2) and tap <b>Shelf sync</b>.</p></li>
+<li><p>A dark box appears at the bottom of the Amazon page and reads your books, dates and prices. Leave the page open while it works.</p></li>
+<li><p>When it says <b>Ready</b>, tap <b>Send to Shelf of Shame</b>.</p></li>
+<li><p>The calculator opens in a new tab with your library on it. You're done.</p></li>
+</ol>
+<p>Each sync also looks up genres and page counts for up to 80 more books. If you have a big library, sync again later (an hour or a day later is fine) to fill in the rest.</p>
+
+<h2>Step 4 (optional): Connect Google Drive</h2>
+<div class="box">
+<p><b>What it's for:</b> Google Drive is not how your books get from Amazon; the bookmark does that. Drive keeps a <b>copy of your library in your own Google Drive</b>, for two reasons:</p>
+<ul>
+<li><b>A safety copy.</b> Safari can clear a website's saved data if you don't open that site for about a week, or when you clear your history. With Drive connected, your library comes back as soon as you reconnect.</li>
+<li><b>Other devices.</b> Your iPad, another phone or a computer can show the same library, including any page counts or prices you typed in by hand.</li>
+</ul>
+<p style="margin:0">The calculator can only see the one file it creates in your Drive (<i>Shelf of Shame.json</i>), nothing else. Your library goes straight between your phone and Google; no one else's server sees it.</p>
+</div>
+<p>While the calculator is in testing, Google only lets in accounts that have been added as testers. <b>Before you connect, send me the Gmail address you'll use and I'll add you.</b> If you skip this, Google shows an error and nothing else happens.</p>
+<p>To connect:</p>
+<ol class="steps">
+<li><p>On the calculator, tap <b>Settings</b>.</p></li>
+<li><p>Under <b>Google Drive</b>, tap <b>Connect Google Drive</b>.</p></li>
+<li><p>Sign in to Google and tap <b>Allow</b>.</p></li>
+<li><p>After that it saves by itself while you use the calculator. When you come back another day, tap <b>Google Drive: tap to sync</b> near the top to pick up where you left off.</p></li>
+</ol>
+
+<h2>If something goes wrong</h2>
+<table>
+<thead><tr><th>What happens</th><th>What to do</th></tr></thead>
+<tbody>
+<tr><td>Tapping Shelf sync does nothing</td><td>Check that the bookmark's address starts with <code>javascript:</code> (Step 2). Make sure you're on amazon.com in Safari, not the Amazon app.</td></tr>
+<tr><td>It asks you to go to amazon.com</td><td>Tap OK, let amazon.com load, then tap Shelf sync again.</td></tr>
+<tr><td>It says Amazon wants you to sign in</td><td>Tap the Content &amp; Devices link it shows, sign in, then tap Shelf sync again.</td></tr>
+<tr><td>Send to Shelf of Shame does nothing, or says pop-ups are blocked</td><td>Open the <b>Settings</b> app, then <b>Apps › Safari</b> (or just <b>Safari</b>), turn off <b>Block Pop-ups</b>, and tap Send again.</td></tr>
+<tr><td>Your library is gone</td><td>Tap Shelf sync on amazon.com again. If you connected Google Drive, tap <b>Google Drive: tap to sync</b> instead.</td></tr>
+<tr><td>Some books show no genre or pages</td><td>Sync again later; each sync fills in up to 80 more.</td></tr>
+</tbody>
+</table>
+<p style="margin-top:16px">Syncing on iPhone is new, so you may be one of the first to try it. If a step doesn't match what you see, or something here doesn't work, send me a screenshot and I'll sort it out.</p>
+<p class="muted"><a href="privacy.html">Privacy</a></p>
+</main>
+</body>
+</html>
