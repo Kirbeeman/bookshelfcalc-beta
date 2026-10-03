@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Shelf of Shame (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      2.0.0.0.4
+// @version      2.0.0.0.5
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -2248,7 +2248,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.0.0.0.4';
+const LATEST_SCRIPT = '2.0.0.0.5';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2294,6 +2294,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.5', ['A bolder Halloween icon: a jack-o\'-lantern book with a glowing carved face']],
   ['2.0.0.0.4', ['A Shelf of Shame icon in your browser tab and on your home screen: a book with its price tag still on, or a cobwebbed book in the Halloween theme', 'Sending someone a link to the site shows a picture and a short description']],
   ['2.0.0.0.3', ['The calculator is now called Shelf of Shame everywhere, including the sync script and your Google Drive file']],
   ['2.0.0.0.2', ['Set up the bookmark: one tap copies the sync code and opens a page that walks you through saving it, already named Shelf sync', 'The sync script also works in Userscripts, the free script app for iPhone and iPad']],

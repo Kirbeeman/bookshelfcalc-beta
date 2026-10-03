@@ -6,17 +6,17 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 4 (latest)
+## 2.0 beta 5 (latest)
 
-**An icon of its own**
+**A bolder Halloween icon**
 
-- A **Shelf of Shame icon** in your browser tab, bookmarks and phone home screen: a book with its price tag still on. In the **Halloween** theme it becomes a cobwebbed book, and it switches back when you change theme.
-- **Link previews:** texting or posting a link to the site (or the iPhone guide) shows a picture and a short description instead of a bare address.
+- In the **Halloween** theme, the tab and home-screen icon is now a **jack-o'-lantern book**: an orange cover with pumpkin ribs, a green stem and a carved face glowing from inside, on a dark background. The cobwebbed book was too faint to make out at tab size.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 4** An icon of its own
 - **2.0 beta 3** Now called Shelf of Shame
 - **2.0 beta 2** Easier bookmark setup, and a free script app on iPhone and iPad
 - **2.0 beta 1** Version numbers in Settings, and tap outside to close
