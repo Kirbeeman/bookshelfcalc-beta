@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kindle Library Calculator
 // @namespace    kindle-library-calculator
-// @version      2.0.0.0.1
+// @version      2.0.0.0.2
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -17,6 +17,11 @@
 // @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
 // @grant        GM_info
+// @grant        GM.getValue
+// @grant        GM.setValue
+// @grant        GM.listValues
+// @grant        GM.xmlHttpRequest
+// @grant        GM.info
 // @connect      goodreads.com
 // @connect      amazon.com
 // @connect      amazon.co.uk
@@ -25,7 +30,22 @@
 // @run-at       document-end
 // ==/UserScript==
 
-(function () {
+// Userscripts, the free script app for iPhone and iPad, only has GM.getValue and friends, which make you wait for an answer.
+// This loads the saved values first, then hands the script the same GM_ functions Tampermonkey has.
+// In Tampermonkey the real functions pass straight through and nothing waits.
+(async () => {
+const TM = typeof GM_getValue === 'function' && typeof GM_setValue === 'function';
+const cache = {};
+if (!TM && typeof GM !== 'undefined' && GM.getValue) {
+  let keys = ['grUser', 'kindle', 'kindleHost', 'owned', 'prices'];
+  try { if (GM.listValues) keys = [...new Set([...keys, ...await GM.listValues()])]; } catch {}
+  for (const k of keys) { try { const v = await GM.getValue(k); if (v !== undefined) cache[k] = v; } catch {} }
+}
+const api = TM ? [GM_getValue, GM_setValue] : [(k, d) => k in cache ? cache[k] : d, (k, v) => { cache[k] = v; try { GM.setValue(k, v); } catch {} }];
+api.push(typeof GM_addStyle === 'function' ? GM_addStyle : css => { const st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st); return st; });
+api.push(typeof GM_xmlhttpRequest === 'function' ? GM_xmlhttpRequest : d => GM.xmlHttpRequest(d));
+api.push(typeof GM_info !== 'undefined' ? GM_info : GM.info);
+(function (GM_getValue, GM_setValue, GM_addStyle, GM_xmlhttpRequest, GM_info) {
 'use strict';
 const SITE_URL = 'https://bookshelf.kirbee213.tv/';
 const host = location.hostname;
@@ -327,4 +347,5 @@ document.body.innerHTML = `/*BODY*/`;
 GM_addStyle(`/*CSS*/`);
 
 /*CALC*/
+})(...api);
 })();

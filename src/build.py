@@ -32,7 +32,7 @@ _bm=open('bookmarklet.src.js').read().replace('/*CORE*/', _core)
 open('/tmp/klc-bm.js','w').write(_bm)
 _min=subprocess.run(['terser','/tmp/klc-bm.js','--compress','--mangle','--ecma','2020'],capture_output=True,text=True,check=True).stdout.strip()
 open('../bm.js','w').write(_min + '\n')
-import shutil; shutil.copy('privacy.html', '../privacy.html')  # served next to the page; the bookmark itself just loads this file
+import shutil; shutil.copy('privacy.html', '../privacy.html'); shutil.copy('bookmark.html', '../bookmark.html')  # served next to the page; the bookmark itself just loads this file
 _sync=(open('sync.js').read() + '\n' + open('drive.js').read()).replace('__SCRIPT_VERSION__', VER)
 src=R(src,"// ---------- export ----------", _sync+"\n// ---------- export ----------")
 standalone=src.replace('<label class="check full" data-us>','<label class="check full" data-us hidden>')

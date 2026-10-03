@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- The page title is the bookmark's name: saving a bookmark here names it "Shelf sync" with no typing -->
+<title>Shelf sync</title>
+<style>
+:root{--bg:#f7f8f5;--paper:#ffffff;--ink:#1b1e20;--muted:#5d6560;--rule:#cfd4ce;--accent:#27408b;--btn:#1b1e20;--btnink:#f7f8f5;--ok:#2f6b3a}
+@media (prefers-color-scheme:dark){:root{--bg:#121517;--paper:#1a1e21;--ink:#e7e8e3;--muted:#9aa29c;--rule:#2d3336;--accent:#9fb0ff;--btn:#e7e8e3;--btnink:#121517;--ok:#7fc48a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.5 Georgia,"Times New Roman",serif;padding:24px 16px 48px}
+main{max-width:560px;margin:0 auto}
+h1{font-size:1.6rem;line-height:1.2;margin:0 0 6px}
+.lead{color:var(--muted);margin:0 0 20px;font-size:1rem}
+.copied{background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;margin:0 0 20px;font-size:1rem}
+.copied b{color:var(--ok)}
+ol{list-style:none;counter-reset:s;padding:0;margin:0}
+ol>li{counter-increment:s;position:relative;background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:14px 16px 14px 60px;margin:0 0 12px}
+ol>li::before{content:counter(s);position:absolute;left:14px;top:12px;width:32px;height:32px;border-radius:50%;background:var(--btn);color:var(--btnink);font:700 17px/32px system-ui,sans-serif;text-align:center}
+ol>li p{margin:0}ol>li p+p{margin-top:6px;font-size:.95rem;color:var(--muted)}
+button{all:unset;cursor:pointer;display:inline-block;background:var(--btn);color:var(--btnink);font:700 16px/1 system-ui,sans-serif;padding:13px 18px;border-radius:9px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:20px 0 0}
+a{color:var(--accent)}
+code{font-size:.9em}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Add the Shelf sync bookmark</h1>
+<p class="lead">You only do this once. This page is already named <b>Shelf sync</b>, so the bookmark you save here gets the right name by itself.</p>
+<p class="copied" id="copied"><b>✓ The sync code is copied.</b> You'll paste it in step 2.</p>
+
+<ol id="ios" hidden>
+  <li><p>Tap <b>Share</b>, then <b>Add Bookmark</b>, then <b>Save</b>.</p><p>On iOS 26, tap <b>•••</b> next to the address bar first to find Share.</p></li>
+  <li><p>Open your bookmarks: tap the <b>open book</b> button (or <b>••• › Bookmarks</b>). <b>Press and hold Shelf sync</b> and tap <b>Edit</b>. Clear the address, paste, and tap <b>Done</b>.</p><p>The address should now start with <code>javascript:</code></p></li>
+  <li><p>Go to <b>amazon.com</b> in Safari and sign in. Open your bookmarks and tap <b>Shelf sync</b>.</p><p>When it says <b>Ready</b>, tap <b>Send to Shelf of Shame</b>.</p></li>
+</ol>
+
+<ol id="android" hidden>
+  <li><p>Tap <b>⋮</b> (top right), then the <b>☆</b> star.</p></li>
+  <li><p>Tap <b>⋮ › Bookmarks</b>. Tap the <b>⋮</b> next to <b>Shelf sync</b>, then <b>Edit</b>. Clear the URL, paste, and go back to save.</p><p>The URL should now start with <code>javascript:</code></p></li>
+  <li><p>Go to <b>amazon.com</b> and sign in. Tap the address bar, type <b>Shelf sync</b>, and tap the bookmark (with the star) in the list.</p><p>When it says <b>Ready</b>, tap <b>Send to Shelf of Shame</b>.</p></li>
+</ol>
+
+<ol id="other" hidden>
+  <li><p>Bookmark this page.</p></li>
+  <li><p>Edit the bookmark: clear its address, paste, and save.</p><p>The address should now start with <code>javascript:</code> On a computer you can also drag <b>Shelf sync</b> from the calculator's Settings to your bookmarks bar instead.</p></li>
+  <li><p>Go to <b>amazon.com</b>, sign in, and click the <b>Shelf sync</b> bookmark.</p><p>When it says <b>Ready</b>, click <b>Send to Shelf of Shame</b>.</p></li>
+</ol>
+
+<div class="row"><button type="button" id="again">Copy the sync code again</button><a href="./">Back to the calculator</a></div>
+<p class="lead" style="margin-top:20px">If tapping <b>Shelf sync</b> brings you back to this page, the paste in step 2 didn't take. Tap <b>Copy the sync code again</b> and redo step 2.</p>
+</main>
+<script>
+(() => {
+  const ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  document.getElementById(ios ? 'ios' : /Android/.test(ua) ? 'android' : 'other').hidden = false;
+  // The calculator copies the code before sending people here; #c says it did
+  if (location.hash !== '#c') document.getElementById('copied').hidden = true;
+  history.replaceState(null, '', location.pathname); // so the saved bookmark is the plain page, not #c
+  const code = `javascript:(()=>{const s=document.createElement('script');s.src='${location.origin}/bm.js?'+Date.now();document.body.appendChild(s)})()`;
+  const btn = document.getElementById('again');
+  btn.onclick = async () => {
+    try { await navigator.clipboard.writeText(code); }
+    catch { const t = document.createElement('textarea'); t.value = code; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch {} t.remove(); }
+    const c = document.getElementById('copied'); c.hidden = false;
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.textContent = 'Copy the sync code again'; }, 2000);
+  };
+})();
+</script>
+</body>
+</html>
