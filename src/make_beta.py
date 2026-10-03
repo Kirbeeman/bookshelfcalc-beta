@@ -28,6 +28,7 @@ shutil.copy(G+'/bm.js', O+'/bm.js')
 shutil.copy(G+'/privacy.html', O+'/privacy.html')
 shutil.copy(G+'/bookmark.html', O+'/bookmark.html')
 shutil.copy(G+'/iphone.html', O+'/iphone.html')
+os.makedirs(O+'/ioshelp', exist_ok=True); shutil.copy(G+'/iphone.html', O+'/ioshelp/index.html')  # the same guide at /ioshelp
 for f in ['icon-tag.png', 'icon-tag-180.png', 'icon-web.png', 'icon-web-180.png', 'og.png']: shutil.copy(G+'/'+f, O+'/'+f)
 open(O+'/CNAME','w').write('betabookshelf.kirbee213.tv\n')
 open(O+'/README.md','w').write("""# Shelf of Shame: beta
