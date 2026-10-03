@@ -261,6 +261,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['1.55', ['Faster on phones with big libraries: the library table loads 40 books at a time, scrolling no longer redraws the page, and search waits for a pause in typing']],
   ['1.54', ['On a phone, getting started offers three ways in: sync from Amazon with the bookmark, load from Google Drive, or import a file', 'Picking a file to import brings it in straight away', "Connecting a Google account whose Drive has no library yet says so"]],
   ['1.53', ['Books with no Amazon store page get a genre guessed from their title, marked "guessed"']],
   ['1.52', ['Keep your library in your own Google Drive and share it between your phone and computer (Settings › Google Drive)', 'A 10-book shelf on phones, with a globe (or cauldron) and a comic for the smallest genres']],

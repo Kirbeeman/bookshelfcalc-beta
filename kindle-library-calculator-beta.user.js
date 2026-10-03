@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kindle Library Calculator (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      1.54
+// @version      1.55
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -743,6 +743,8 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .files h4{margin:0;font-size:.9rem}
 .files .note{margin:0}
 .statlist{display:flex;flex-direction:column;gap:6px;font-size:.88rem}
+/* Sections below the first screen aren't laid out until they're scrolled near, which keeps big libraries quick on phones */
+section.shelf,.grid3{content-visibility:auto;contain-intrinsic-size:auto 1200px}
 /* This year: a slim strip above the summary, for anyone keeping a yearly book budget. It starts over every January 1. */
 .yearstrip{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));align-items:center;gap:6px 22px;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:10px 18px;margin-bottom:-14px}
 .yearstrip h3{margin:0;white-space:nowrap}.yearstrip .ys{display:flex;flex-direction:column;min-width:0;border-left:1px solid var(--rule);padding-left:14px}
@@ -918,7 +920,9 @@ const QUIP = (() => {
 })();
 const PACES = {slow: 35, average: 55, fast: 90};
 const DEFAULTS = {defPages:320, defPrice:7.99, minPerPage:1.1, pagesPerDay:55, currency:'USD', doneAt:90, borrowed:false, samples:false, grAll:false};
-const S = {showMoney:false, books: DEMO.map(b => ({...b})), settings:{...DEFAULTS}, demo:true, mode:'demo', filter:'all', q:'', tag:'', sort:{k:'date', dir:-1}, limit:150};
+// Phones draw the library table in smaller pages, so the page stays quick with a big library
+const PAGE_ROWS = window.matchMedia('(max-width: 640px)').matches ? 40 : 150;
+const S = {showMoney:false, books: DEMO.map(b => ({...b})), settings:{...DEFAULTS}, demo:true, mode:'demo', filter:'all', q:'', tag:'', sort:{k:'date', dir:-1}, limit:PAGE_ROWS};
 
 // ---------- persistence ----------
 let db = null, col = null, saved = {}, saveTimer = null, savedMeta = '';
@@ -1156,7 +1160,8 @@ document.querySelectorAll('[data-pace]').forEach(b => b.onclick = () => {
   try { if (localStorage.getItem(KEY)) $('#notice').hidden = true; } catch {}
   $('#noticeClose').onclick = () => { $('#notice').hidden = true; try { localStorage.setItem(KEY, '1'); } catch {} };
 })();
-let resizeT; window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => { renderStats(); decorShelf(); }, 150); });
+// Only redraw when the width really changes: phones fire resize whenever the address bar slides in or out while scrolling
+let resizeT, lastW = window.innerWidth; window.addEventListener('resize', () => { if (window.innerWidth === lastW) return; lastW = window.innerWidth; clearTimeout(resizeT); resizeT = setTimeout(() => { renderStats(); decorShelf(); }, 150); });
 // ---------- shelf decorations: whatever space is left on the last shelf gets a bookend and a few knick-knacks ----------
 // Items are added one by one until the space runs out, so a wider gap gets more of them and a nearly full shelf gets none.
 // Drawn like the books: flat colors with an ink outline. Sizes are [width, height, svg]; leaves may hang over the shelf's front edge.
@@ -1387,7 +1392,7 @@ function renderStats() {
   $('#fReading').textContent = fmtInt(by.reading.length);
   const stalled = by.reading.filter(isStalled).length;
   $('#fReadingL').innerHTML = 'started but not finished' + (stalled ? ` · <button type="button" class="linkbtn" id="stalledLink">${stalled} stalled for over a year, sort them</button>` : '');
-  if (stalled) $('#stalledLink').onclick = () => { S.filter = 'stalled'; S.limit = 150; renderShelf(); document.querySelector('#shelfH').scrollIntoView({behavior: 'smooth'}); };
+  if (stalled) $('#stalledLink').onclick = () => { S.filter = 'stalled'; S.limit = PAGE_ROWS; renderShelf(); document.querySelector('#shelfH').scrollIntoView({behavior: 'smooth'}); };
   const yr = Date.now() - 3.156e10;
   const boughtYr = bs.filter(b => b.date && new Date(b.date) >= yr).length;
   const doneYr = bs.filter(b => b.status === 'finished' && b.date && new Date(b.date) >= yr).length;
@@ -1584,7 +1589,7 @@ function renderShelf() {
     const pr = hasPaid(b) ? fmtMoney(+b.price) : b.kp != null && b.source !== 'free' ? `<span class="est" title="Today's Kindle price (not what you paid)">now ${fmtMoney(b.kp)}</span>` : (b.source === 'purchase' ? `<span class="est" title="Guess from Settings">~${fmtMoney(S.settings.defPrice)}</span>` : '—');
     const pg = b.pages > 0 ? fmtInt(b.pages) : `<span class="est">~${S.settings.defPages}</span>`;
     return `<tr data-id="${esc(b.id)}">
-      <td style="min-width:220px"><div class="t-title" data-edit="${esc(b.id)}" tabindex="0">${esc(b.title)}${src}</div><div class="t-author">${esc(b.author || '')}</div>${b.genre && b.genre !== 'unknown' ? `<div class="t-genre"><span class="gsw"><i style="background:var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})"></i>${esc(genreLabel(b))}${b.genreSrc === 'guess' ? '<span class="guessed" title="No Amazon store page for this book, so the genre is guessed from its title. Click the title to change it.">guessed</span>' : ''}</span>${b.genre2 && GENRES[b.genre2] ? `<span class="plus">+</span><span class="gsw"><i style="background:var(--g-${b.genre2})"></i>${esc(GENRES[b.genre2])}</span>` : ''}${tagsShown(b).map(t => `<button type="button" class="tag${t === S.tag ? ' on' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</td>
+      <td style="min-width:220px"><div class="t-title" data-edit="${esc(b.id)}" tabindex="0">${esc(b.title)}${src}</div><div class="t-author">${esc(b.author || '')}</div>${b.genre && b.genre !== 'unknown' ? `<div class="t-genre"><span class="gsw"><i style="background:var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})"></i>${esc(genreLabel(b))}${b.genreSrc === 'guess' ? '<span class="guessed" title="No Amazon store page for this book, so the genre is guessed from its title. Click the title to change it.">guessed</span>' : ''}</span>${b.genre2 && GENRES[b.genre2] && b.genre2 !== b.genre ? `<span class="plus">+</span><span class="gsw"><i style="background:var(--g-${b.genre2})"></i>${esc(GENRES[b.genre2])}</span>` : ''}${tagsShown(b).map(t => `<button type="button" class="tag${t === S.tag ? ' on' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</td>
       <td><select class="st ${b.status}" data-st="${esc(b.id)}" aria-label="Status">${Object.entries(STATUS).map(([v,l]) => `<option value="${v}"${v === b.status ? ' selected' : ''}>${l}</option>`).join('')}</select></td>
       <td><div class="prog"><div class="track"><i style="width:${b.progress || 0}%"></i></div><span class="num muted" style="font-size:.75rem">${Math.round(b.progress || 0)}%</span></div></td>
       <td class="r num">${pg}</td>
@@ -1602,12 +1607,12 @@ $('#revealValue').onclick = toggleMoney;
 document.querySelectorAll('[data-reveal]').forEach(b => b.onclick = toggleMoney);
 
 // ---------- shelf interactions ----------
-$('#libTabs').addEventListener('click', e => { const t = e.target.closest('[data-t]'); if (!t) return; S.libTab = t.dataset.t; S.filter = 'all'; S.limit = 150; renderShelf(); });
-$('#chips').addEventListener('click', e => { const c = e.target.closest('[data-f]'); if (!c) return; S.filter = c.dataset.f; S.limit = 150; renderShelf(); });
-$('#q').addEventListener('input', e => { S.q = e.target.value; S.limit = 150; renderShelf(); });
-$('#tagSel').addEventListener('change', e => { S.tag = e.target.value; S.limit = 150; renderShelf(); });
+$('#libTabs').addEventListener('click', e => { const t = e.target.closest('[data-t]'); if (!t) return; S.libTab = t.dataset.t; S.filter = 'all'; S.limit = PAGE_ROWS; renderShelf(); });
+$('#chips').addEventListener('click', e => { const c = e.target.closest('[data-f]'); if (!c) return; S.filter = c.dataset.f; S.limit = PAGE_ROWS; renderShelf(); });
+let qT; $('#q').addEventListener('input', e => { S.q = e.target.value; S.limit = PAGE_ROWS; clearTimeout(qT); qT = setTimeout(renderShelf, 180); }); // redraw after a short pause in typing
+$('#tagSel').addEventListener('change', e => { S.tag = e.target.value; S.limit = PAGE_ROWS; renderShelf(); });
 document.querySelector('thead').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (!b) return; const k = b.dataset.k; S.sort = {k, dir: S.sort.k === k ? -S.sort.dir : (k === 'title' ? 1 : -1)}; renderShelf(); });
-$('#showMore').addEventListener('click', () => { S.limit += 300; renderShelf(); });
+$('#showMore').addEventListener('click', () => { S.limit += PAGE_ROWS * 2; renderShelf(); });
 $('#rows').addEventListener('change', e => {
   const id = e.target.dataset.st; if (!id) return;
   const b = S.books.find(x => x.id === id); if (!b) return;
@@ -1617,7 +1622,7 @@ $('#rows').addEventListener('change', e => {
   if (b.status === 'unread') b.progress = 0;
   leaveDemoForEdit(); renderAll(); scheduleSave();
 });
-$('#rows').addEventListener('click', e => { const g = e.target.closest('[data-tag]'); if (g) { S.tag = S.tag === g.dataset.tag ? '' : g.dataset.tag; S.limit = 150; renderShelf(); return; } const t = e.target.closest('[data-edit]'); if (t) openEdit(t.dataset.edit); });
+$('#rows').addEventListener('click', e => { const g = e.target.closest('[data-tag]'); if (g) { S.tag = S.tag === g.dataset.tag ? '' : g.dataset.tag; S.limit = PAGE_ROWS; renderShelf(); return; } const t = e.target.closest('[data-edit]'); if (t) openEdit(t.dataset.edit); });
 $('#rows').addEventListener('keydown', e => { const t = e.target.closest('[data-edit]'); if (t && e.key === 'Enter') openEdit(t.dataset.edit); });
 function leaveDemoForEdit() { /* edits to the example library stay on this page only */ }
 
@@ -2212,7 +2217,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '1.54';
+const LATEST_SCRIPT = '1.55';
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
 const verLess = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); } return false; };
 let scriptVer = '';
@@ -2251,6 +2256,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['1.55', ['Faster on phones with big libraries: the library table loads 40 books at a time, scrolling no longer redraws the page, and search waits for a pause in typing']],
   ['1.54', ['On a phone, getting started offers three ways in: sync from Amazon with the bookmark, load from Google Drive, or import a file', 'Picking a file to import brings it in straight away', "Connecting a Google account whose Drive has no library yet says so"]],
   ['1.53', ['Books with no Amazon store page get a genre guessed from their title, marked "guessed"']],
   ['1.52', ['Keep your library in your own Google Drive and share it between your phone and computer (Settings › Google Drive)', 'A 10-book shelf on phones, with a globe (or cauldron) and a comic for the smallest genres']],
@@ -2695,8 +2701,9 @@ async function syncDrive(interactive) {
 }
 // After any change saved in this browser, send it to Drive a few seconds later (if the hour-long sign-in is still good)
 function driveQueue() {
-  if (!gdOn() || gdApplying || S.demo || libHash(S.books) === gd.lastHash) return;
-  clearTimeout(gd.timer); gd.timer = setTimeout(() => syncDrive(false), 4000);
+  if (!gdOn() || gdApplying || S.demo) return;
+  // Comparing the whole library is slow on a phone, so it's done once, when the few seconds' wait is over
+  clearTimeout(gd.timer); gd.timer = setTimeout(() => { if (libHash(S.books) !== gd.lastHash) syncDrive(false); }, 4000);
 }
 function gdStatus(state) {
   gd.state = state;
