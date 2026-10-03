@@ -6,16 +6,18 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 8 (latest)
+## 2.0 beta 9 (latest)
 
-**Behind-the-scenes cleanup**
+**New theme: Fruit**
 
-- Leftover code from an older way of hosting the page (saving to an online account, and a different way of downloading files) has been removed. It never ran on this site, so nothing changes for you.
+- **Fruit** in Settings › Theme: frosted glass panels floating over a soft, colorful background, the device's own system font, pill-shaped buttons and bright colors (blue buttons, red for the unread count). It follows your device's light or dark setting.
+- The theme picker in Settings fits all six themes in one row on a computer.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 8** Behind-the-scenes cleanup
 - **2.0 beta 7** Script updates are required when the script changes
 - **2.0 beta 6** New icons show up straight away
 - **2.0 beta 5** A bolder Halloween icon (the jack-o'-lantern book)
