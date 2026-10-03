@@ -6,16 +6,20 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 6 (latest)
+## 2.0 beta 7 (latest)
 
-**New icons show up straight away**
+**Script updates are required when the script changes**
 
-- The tab and home-screen icon addresses carry the version number, so when an icon changes, browsers fetch the new one instead of holding on to the old one. The link preview picture works the same way.
+- When a release changes the **sync script itself**, the page stops and asks you to update the script before it syncs, the same way required updates already worked. The build notices a script change by itself, so it never gets forgotten.
+- Releases that only change the page (like a new icon) no longer ask you to update the script at all, because the script you have is still current.
+- If an update leaves two Shelf of Shame scripts in Tampermonkey, the page goes by the newer one, and the update screen says to delete the older one.
+- The "Almost there" screen (for coming back without having updated) is now "Hold up, wait a minute…".
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 6** New icons show up straight away
 - **2.0 beta 5** A bolder Halloween icon (the jack-o'-lantern book)
 - **2.0 beta 4** An icon of its own
 - **2.0 beta 3** Now called Shelf of Shame

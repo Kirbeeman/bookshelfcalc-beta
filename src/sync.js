@@ -230,13 +230,14 @@ const verLess = (a, b) => { const x = String(a).split('.').map(Number), y = Stri
 let scriptVer = '';
 // The oldest sync script this page works with. Raise it only when a release changes the script itself;
 // page-only releases leave it alone, so people aren't stopped for updates that don't touch their script.
-const REQUIRED_SCRIPT = '1.43';
+const REQUIRED_SCRIPT = '__REQUIRED_SCRIPT__'; // filled in by build.py: the version where the script's code last changed
 function renderVerLine() {
   const el = document.getElementById('verLine'); if (!el) return;
-  const sv = scriptVer ? 'v' + verLabel(scriptVer) + (verLess(scriptVer, LATEST_SCRIPT) ? ' (v' + verLabel(LATEST_SCRIPT) + ' available)' : '') : 'not installed';
+  const sv = scriptVer ? 'v' + verLabel(scriptVer) + (verLess(scriptVer, REQUIRED_SCRIPT) ? ' (update needed)' : '') : 'not installed';
   el.textContent = 'App v' + verLabel(LATEST_SCRIPT) + ' · Sync script ' + sv;
 }
-function checkScriptVersion(v) { scriptVer = v || ''; renderScriptSect(); renderVerLine(); refreshDot(); if (v && verLess(v, REQUIRED_SCRIPT)) forceUpdate(v); else if (v && document.getElementById('dlgForce')?.open) { document.getElementById('dlgForce').close(); ssSet('klc-updating', ''); } }
+function checkScriptVersion(v) { if (v && scriptVer && verLess(v, scriptVer)) return; scriptVer = v || ''; // two copies installed: go by the newer one
+  renderScriptSect(); renderVerLine(); refreshDot(); if (v && verLess(v, REQUIRED_SCRIPT)) forceUpdate(v); else if (v && document.getElementById('dlgForce')?.open) { document.getElementById('dlgForce').close(); ssSet('klc-updating', ''); } }
 // An out-of-date script blocks the page until it's updated: no close button, Esc does nothing, clicks outside do nothing
 function forceUpdate(v) {
   let d = $('#dlgForce');
@@ -248,9 +249,9 @@ function forceUpdate(v) {
   const back = ssGet('klc-updating');
   d.innerHTML = `<div class="dlg wiz">
     <div class="forceicon" aria-hidden="true">⟳</div>
-    <h2>${back ? 'Almost there' : 'Update needed'}</h2>
-    <p>${back ? `This page still sees version <b>${esc(v)}</b>. In the Tampermonkey tab that opened, press <b>Update</b>, then come back here.`
-      : `Your sync script is version <b>${esc(v)}</b>, and this page needs <b>${REQUIRED_SCRIPT}</b> or newer to sync correctly. It takes about ten seconds and keeps all your books and settings.`}</p>
+    <h2>${back ? 'Hold up, wait a minute…' : 'Update needed'}</h2>
+    <p>${back ? `This page still sees version <b>${esc(verLabel(v))}</b>. In the Tampermonkey tab that opened, press <b>Update</b>, then come back here. If Tampermonkey now lists two Shelf of Shame scripts, delete the older one.`
+      : `Your sync script is version <b>${esc(verLabel(v))}</b>, and this page needs <b>${verLabel(REQUIRED_SCRIPT)}</b> or newer to sync correctly. It takes about ten seconds and keeps all your books and settings.`}</p>
     <ol class="wlist"><li>Click <b>Update script</b>. Tampermonkey opens in a new tab.</li><li>Press <b>Update</b> there.</li><li>Come back to this tab. It reloads by itself.</li></ol>
     <div class="row" style="justify-content:center;gap:10px"><a class="btn primary" href="${SCRIPT_URL}" target="_blank" rel="noopener" id="forceGo">Update script</a>${back ? '<button type="button" class="btn" id="forceRe">Check again</button>' : ''}</div>
     <details class="news"><summary>Tampermonkey didn't open?</summary><p>Click the Tampermonkey icon in your browser's toolbar → <b>Utilities</b> → <b>Check for userscript updates</b>, then reload this page.</p></details>
@@ -268,6 +269,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.7', ['When the sync script itself changes, the page asks you to update it before syncing. Page-only updates no longer ask you to update the script']],
   ['2.0.0.0.6', ['A changed icon now shows up straight away, instead of the browser holding on to the old one']],
   ['2.0.0.0.5', ['A bolder Halloween icon: a jack-o\'-lantern book with a glowing carved face']],
   ['2.0.0.0.4', ['A Shelf of Shame icon in your browser tab and on your home screen: a book with its price tag still on, or a cobwebbed book in the Halloween theme', 'Sending someone a link to the site shows a picture and a short description']],
@@ -323,7 +325,7 @@ function tryReload() {
 // The dot on Settings means something new is waiting there. It goes once you've opened Settings and pointed at (or tapped) the new part.
 const dotSeen = () => { try { return localStorage.getItem('klc-dot-seen') === LATEST_SCRIPT; } catch { return false; } };
 function refreshDot() {
-  const need = !dotSeen() && ((scriptVer && verLess(scriptVer, LATEST_SCRIPT)) || lsFlag('klc-unseen'));
+  const need = !dotSeen() && ((scriptVer && verLess(scriptVer, REQUIRED_SCRIPT)) || lsFlag('klc-unseen'));
   $('#btnSettings').classList.toggle('dot', !!need);
 }
 function renderScriptSect() {
@@ -333,10 +335,10 @@ function renderScriptSect() {
     sec = document.createElement('div'); sec.className = 'files'; sec.id = 'scriptSect';
     const files = document.querySelector('#dlgSettings .files'); files.before(sec);
   }
-  const out = scriptVer && verLess(scriptVer, LATEST_SCRIPT);
+  const out = scriptVer && verLess(scriptVer, REQUIRED_SCRIPT);
   const st = !syncOn ? `<p class="note">Not connected. The free sync script brings in your Kindle library, purchase dates and prices by itself.</p><div class="row"><button type="button" class="btn primary" id="sSetup">Set up sync</button></div>`
-    : out ? `<p class="note"><b>Update ready.</b> You have version ${esc(verLabel(scriptVer))}; version ${verLabel(LATEST_SCRIPT)} is out. Click Update, press <b>Update</b> in the Tampermonkey tab that opens, then come back. This page finishes by itself.</p><div class="row"><button type="button" class="btn primary" id="sUpdate">Update</button></div>`
-    : `<p class="note" style="color:var(--ok)">✓ Sync script ${esc(verLabel(scriptVer || LATEST_SCRIPT))}, up to date.</p>`;
+    : out ? `<p class="note"><b>Update ready.</b> You have version ${esc(verLabel(scriptVer))}; version ${verLabel(REQUIRED_SCRIPT)} is needed. Click Update, press <b>Update</b> in the Tampermonkey tab that opens, then come back. This page finishes by itself.</p><div class="row"><button type="button" class="btn primary" id="sUpdate">Update</button></div>`
+    : `<p class="note" style="color:var(--ok)">✓ Sync script ${esc(verLabel(scriptVer || REQUIRED_SCRIPT))}, up to date.</p>`;
   const unseen = lsFlag('klc-unseen');
   sec.classList.toggle('fresh', !dotSeen() && (!!out || unseen));
   if (!sec.dataset.w) { sec.dataset.w = '1'; const seen = () => { if (!sec.classList.contains('fresh')) return; try { localStorage.setItem('klc-dot-seen', LATEST_SCRIPT); } catch {} lsSet1('klc-unseen', ''); sec.classList.remove('fresh'); refreshDot(); }; ['pointerenter', 'focusin', 'click'].forEach(ev => sec.addEventListener(ev, seen)); }

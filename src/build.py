@@ -25,6 +25,16 @@ src=R(src,"renderAll();\ninitStore();","renderAll();\nstoreReady = initStore();\
 import re as _re
 VER=_re.search(r'@version\s+(\S+)', open('template.user.js').read()).group(1)
 src=src.replace('__SCRIPT_VERSION__', VER)  # icon addresses carry the version, so browsers fetch a changed icon
+# The page requires the newest sync script only when the script's code changed. script-version.json remembers the code's
+# fingerprint (everything but the @version line) and the version where it last changed; a new fingerprint makes this version required.
+import hashlib as _hl, json as _js
+_code=''.join(l for l in open('template.user.js').read().splitlines(True) if '@version' not in l)
+_hash=_hl.sha256(_code.encode()).hexdigest()
+_sv=_js.load(open('script-version.json'))
+if _sv['hash'] != _hash:
+    _sv={'hash': _hash, 'required': VER}; open('script-version.json','w').write(_js.dumps(_sv) + '\n')
+    print('sync script changed: version', VER, 'is now required')
+REQ=_sv['required']
 # The phone sync bookmark: the shared Amazon readers from the userscript, wrapped and minified, kept in the page as a string
 import json, subprocess
 _tpl=open('template.user.js').read()
@@ -35,7 +45,7 @@ _min=subprocess.run(['terser','/tmp/klc-bm.js','--compress','--mangle','--ecma',
 open('../bm.js','w').write(_min + '\n')
 import shutil; shutil.copy('privacy.html', '../privacy.html'); shutil.copy('bookmark.html', '../bookmark.html'); shutil.copy('iphone.html', '../iphone.html')
 for _f in ['icon-tag.png', 'icon-tag-180.png', 'icon-web.png', 'icon-web-180.png', 'og.png']: shutil.copy(_f, '../' + _f)  # drawn by icons/make_icons.js  # served next to the page; the bookmark itself just loads this file
-_sync=(open('sync.js').read() + '\n' + open('drive.js').read()).replace('__SCRIPT_VERSION__', VER)
+_sync=(open('sync.js').read() + '\n' + open('drive.js').read()).replace('__SCRIPT_VERSION__', VER).replace('__REQUIRED_SCRIPT__', REQ)
 src=R(src,"// ---------- export ----------", _sync+"\n// ---------- export ----------")
 standalone=src.replace('<label class="check full" data-us>','<label class="check full" data-us hidden>')
 for out_path in ('../index.html', '../BookshelfCalc/index.html'):
