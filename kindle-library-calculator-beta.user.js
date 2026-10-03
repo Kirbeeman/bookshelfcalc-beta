@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Shelf of Shame (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      2.0.0.0.7
+// @version      2.0.0.0.8
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -953,27 +953,6 @@ const lsGet = () => { try { return JSON.parse(GM_getValue(LS, 'null')); } catch 
 const lsSet = v => { try { GM_setValue(LS, JSON.stringify(v)); return true; } catch { return false; } };
 
 async function initStore() {
-  try {
-    if (window.pageHost?.use) {
-      db = await window.pageHost.use('db');
-      const user = db ? await window.pageHost.use('user') : null;
-      const id = user ? await user.id() : null;
-      const canWrite = user ? await user.can('data.write') : null;
-      if (db && id && canWrite !== false) {
-        col = db.collection('data/users/' + id);
-        const snap = await col.get();
-        const docs = {}; snap.docs.forEach(d => docs[d.id] = d.data());
-        if (docs.meta?.settings) S.settings = migrateSettings({...DEFAULTS, ...docs.meta.settings});
-        savedMeta = JSON.stringify(docs.meta || {});
-        const chunks = Object.keys(docs).filter(k => /^c\d+$/.test(k)).sort((a,b) => +a.slice(1) - +b.slice(1));
-        const books = [];
-        chunks.forEach(k => { saved[k] = JSON.stringify(docs[k].books || []); books.push(...(docs[k].books || [])); });
-        S.mode = 'db';
-        if (books.length || docs.meta?.started) { S.books = books; S.demo = false; }
-        renderAll(); return;
-      }
-    }
-  } catch (e) { console.warn('db unavailable', e); db = null; col = null; }
   const local = lsGet();
   S.mode = 'local';
   if (local) { S.books = local.books || []; S.settings = migrateSettings({...DEFAULTS, ...(local.settings || {})}); S.demo = false; }
@@ -1023,7 +1002,7 @@ function setStore(state, msg) {
   if (S.demo) sp.textContent = 'Example library · not saved';
   else if (state === 'saving') sp.textContent = 'Saving…';
   else if (state === 'error') { sp.textContent = msg; el.className = 'store local'; }
-  else sp.textContent = S.mode === 'db' ? `Saved to your online account · ${S.books.length} books` : 'Saved in this browser only';
+  else sp.textContent = 'Saved in this browser only';
   $('#demoBanner').hidden = !S.demo;
 }
 function leaveDemo(clear) {
@@ -1721,7 +1700,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.0.0.0.7`], ['touchicon', `icon-${ico}-180.png?v=2.0.0.0.7`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.0.0.0.8`], ['touchicon', `icon-${ico}-180.png?v=2.0.0.0.8`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2012,10 +1991,6 @@ function libraryXlsx() {
   return buildXlsx(header, rows, [46, 24, 11, 11, 8, 11, 13, 14, 18, 20, 16, 40, 8, 10, 13]);
 }
 async function saveFile(name, data, mime, okMsg) {
-  try {
-    const dl = window.pageHost?.use ? await window.pageHost.use('downloads') : null;
-    if (dl) { await dl.save({filename: name, data}); toast(okMsg); return; }
-  } catch (e) { if (e?.code === 'declined') return; }
   try { const u = URL.createObjectURL(new Blob([data], {type: mime})); const l = document.createElement('a'); l.href = u; l.download = name; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000); toast(okMsg); }
   catch { toast('Downloads are not available here'); }
 }
@@ -2248,7 +2223,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.0.0.0.7';
+const LATEST_SCRIPT = '2.0.0.0.8';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2295,6 +2270,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.8', ['Behind-the-scenes cleanup: leftover code from an older way of hosting the page is gone. Nothing changes for you']],
   ['2.0.0.0.7', ['When the sync script itself changes, the page asks you to update it before syncing. Page-only updates no longer ask you to update the script']],
   ['2.0.0.0.6', ['A changed icon now shows up straight away, instead of the browser holding on to the old one']],
   ['2.0.0.0.5', ['A bolder Halloween icon: a jack-o\'-lantern book with a glowing carved face']],
@@ -2795,10 +2771,6 @@ function initDrive() {
 $('#btnExport').onclick = async () => {
   const data = JSON.stringify({app:'kindle-library-calculator', exported:new Date().toISOString(), settings:S.settings, books:S.books}, null, 1);
   const name = `kindle-library-${new Date().toISOString().slice(0,10)}.json`;
-  try {
-    const dl = window.pageHost?.use ? await window.pageHost.use('downloads') : null;
-    if (dl) { await dl.save({filename:name, data}); toast('Backup saved'); return; }
-  } catch (e) { if (e?.code === 'declined') return; }
   try { const u = URL.createObjectURL(new Blob([data], {type:'application/json'})); const l = document.createElement('a'); l.href = u; l.download = name; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000); toast('Backup downloaded'); return; } catch {}
   try { await navigator.clipboard.writeText(data); toast('Backup copied to clipboard'); } catch { toast('Downloads are not available here'); }
 };

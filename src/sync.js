@@ -269,6 +269,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.8', ['Behind-the-scenes cleanup: leftover code from an older way of hosting the page is gone. Nothing changes for you']],
   ['2.0.0.0.7', ['When the sync script itself changes, the page asks you to update it before syncing. Page-only updates no longer ask you to update the script']],
   ['2.0.0.0.6', ['A changed icon now shows up straight away, instead of the browser holding on to the old one']],
   ['2.0.0.0.5', ['A bolder Halloween icon: a jack-o\'-lantern book with a glowing carved face']],
