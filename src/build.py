@@ -38,7 +38,7 @@ REQ=_sv['required']
 # The phone sync bookmark: the shared Amazon readers from the userscript, wrapped and minified, kept in the page as a string
 import json, subprocess
 _tpl=open('template.user.js').read()
-_core=_tpl[_tpl.index("// Purchase dates (and Kindle"):_tpl.index("const KLC_CORE = {")]
+_core=_tpl[_tpl.index("// Amazon sends some titles and authors"):_tpl.index("const KLC_CORE = {")]  # from the title clean-up helper to the end of the shared readers
 _bm=open('bookmarklet.src.js').read().replace('/*CORE*/', _core)
 open('/tmp/klc-bm.js','w').write(_bm)
 _min=subprocess.run(['terser','/tmp/klc-bm.js','--compress','--mangle','--ecma','2020'],capture_output=True,text=True,check=True).stdout.strip()

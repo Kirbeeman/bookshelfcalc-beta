@@ -6,17 +6,17 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 14 (latest)
+## 2.0 beta 15 (latest)
 
-**Cleaner titles from the sync script (script update required)**
+**Phone sync bookmark fixed**
 
-- The sync script and the phone bookmark now clean up titles and authors as they read them from Amazon, so codes like **&amp;** never reach your library.
-- Because the script itself changed, the page asks you to **update the sync script** before it syncs again. Click **Update script**, press **Update** in Tampermonkey, then come back.
+- The phone sync bookmark stopped straight away with "Can't find variable: unHtml" after beta 14. The title clean-up that beta 14 added to the sync script never made it into the bookmark. It's in now. No script update is needed.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 14** Cleaner titles from the sync script (script update required)
 - **2.0 beta 13** Truer library value
 - **2.0 beta 12** Computers build the library like phones do
 - **2.0 beta 11** iPads get the phone setup
