@@ -975,7 +975,7 @@ function decorShelf() {
   bc.insertAdjacentHTML('beforeend', picks.map(k => `<span class="decor" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px;margin-left:${Math.floor(22 + extra)}px">${DECOR[k][2]}</span>`).join(''));
 }
 
-function renderAll() { if (S.settings.theme && typeof applyTheme === 'function') applyTheme(S.settings.theme); trackReading(); fillGuesses(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
+function renderAll() { if (S.settings.theme && typeof applyTheme === 'function') { applyTheme(S.settings.theme); try { localStorage.setItem('klc-theme-picked', '1'); } catch {} } trackReading(); fillGuesses(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
 
 function renderStats() {
   const bs = S.books.filter(counted);
@@ -1440,8 +1440,11 @@ function applyTheme(t) {
   const p = document.getElementById('themePick'); if (p) p.querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', b.dataset.t === (t || 'default')));
 }
 $('#themePick').innerHTML = THEMES.map(([k, n, d, sw]) => `<button type="button" role="radio" aria-checked="false" data-t="${k}"><span class="sw">${sw.map(c => `<i style="background:${c}"></i>`).join('')}</span>${n}<small>${d}</small></button>`).join('');
-try { applyTheme(localStorage.getItem('klc-theme') || 'default'); } catch {} // before the library loads, so there's no flash
-$('#themePick').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; S.settings.theme = b.dataset.t; applyTheme(b.dataset.t); scheduleSave(); });
+// Until someone picks a theme, it follows their device: Fruit on iPhone, iPad and Mac, Default everywhere else
+const deviceTheme = () => /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) ? 'fruit' : 'default';
+const themePicked = () => { try { return !!localStorage.getItem('klc-theme-picked'); } catch { return false; } };
+try { applyTheme(themePicked() ? (localStorage.getItem('klc-theme') || 'default') : deviceTheme()); } catch {} // before the library loads, so there's no flash
+$('#themePick').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; try { localStorage.setItem('klc-theme-picked', '1'); } catch {} S.settings.theme = b.dataset.t; applyTheme(b.dataset.t); scheduleSave(); });
 $('#setClose').onclick = () => $('#dlgSettings').close();
 // Clicking the dimmed area around Settings closes it, like the ×. A press that starts inside (e.g. selecting text) doesn't count.
 { const d = $('#dlgSettings'); let downOut = false; d.addEventListener('pointerdown', e => { downOut = e.target === d; }); d.addEventListener('click', e => { if (downOut && e.target === d) d.close(); downOut = false; }); }

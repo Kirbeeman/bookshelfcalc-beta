@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Shelf of Shame (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      2.0.0.0.9
+// @version      2.0.0.0.10
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -1299,7 +1299,7 @@ function decorShelf() {
   bc.insertAdjacentHTML('beforeend', picks.map(k => `<span class="decor" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px;margin-left:${Math.floor(22 + extra)}px">${DECOR[k][2]}</span>`).join(''));
 }
 
-function renderAll() { if (S.settings.theme && typeof applyTheme === 'function') applyTheme(S.settings.theme); trackReading(); fillGuesses(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
+function renderAll() { if (S.settings.theme && typeof applyTheme === 'function') { applyTheme(S.settings.theme); try { localStorage.setItem('klc-theme-picked', '1'); } catch {} } trackReading(); fillGuesses(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
 
 function renderStats() {
   const bs = S.books.filter(counted);
@@ -1757,15 +1757,18 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.0.0.0.9`], ['touchicon', `icon-${ico}-180.png?v=2.0.0.0.9`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.0.0.0.10`], ['touchicon', `icon-${ico}-180.png?v=2.0.0.0.10`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
   const p = document.getElementById('themePick'); if (p) p.querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', b.dataset.t === (t || 'default')));
 }
 $('#themePick').innerHTML = THEMES.map(([k, n, d, sw]) => `<button type="button" role="radio" aria-checked="false" data-t="${k}"><span class="sw">${sw.map(c => `<i style="background:${c}"></i>`).join('')}</span>${n}<small>${d}</small></button>`).join('');
-try { applyTheme(localStorage.getItem('klc-theme') || 'default'); } catch {} // before the library loads, so there's no flash
-$('#themePick').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; S.settings.theme = b.dataset.t; applyTheme(b.dataset.t); scheduleSave(); });
+// Until someone picks a theme, it follows their device: Fruit on iPhone, iPad and Mac, Default everywhere else
+const deviceTheme = () => /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) ? 'fruit' : 'default';
+const themePicked = () => { try { return !!localStorage.getItem('klc-theme-picked'); } catch { return false; } };
+try { applyTheme(themePicked() ? (localStorage.getItem('klc-theme') || 'default') : deviceTheme()); } catch {} // before the library loads, so there's no flash
+$('#themePick').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; try { localStorage.setItem('klc-theme-picked', '1'); } catch {} S.settings.theme = b.dataset.t; applyTheme(b.dataset.t); scheduleSave(); });
 $('#setClose').onclick = () => $('#dlgSettings').close();
 // Clicking the dimmed area around Settings closes it, like the ×. A press that starts inside (e.g. selecting text) doesn't count.
 { const d = $('#dlgSettings'); let downOut = false; d.addEventListener('pointerdown', e => { downOut = e.target === d; }); d.addEventListener('click', e => { if (downOut && e.target === d) d.close(); downOut = false; }); }
@@ -2280,7 +2283,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.0.0.0.9';
+const LATEST_SCRIPT = '2.0.0.0.10';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2327,6 +2330,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.10', ['Until you pick a theme, the page starts in Fruit on iPhone, iPad and Mac, and in Default everywhere else. A theme you pick always sticks']],
   ['2.0.0.0.9', ['New theme in Settings: Fruit. Frosted glass panels over a soft, colorful background, rounded pill buttons and bright colors. It follows your device\'s light or dark setting']],
   ['2.0.0.0.8', ['Behind-the-scenes cleanup: leftover code from an older way of hosting the page is gone. Nothing changes for you']],
   ['2.0.0.0.7', ['When the sync script itself changes, the page asks you to update it before syncing. Page-only updates no longer ask you to update the script']],

@@ -6,17 +6,18 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 9 (latest)
+## 2.0 beta 10 (latest)
 
-**New theme: Fruit**
+**The starting theme follows your device**
 
-- **Fruit** in Settings › Theme: frosted glass panels floating over a soft, colorful background, the device's own system font, pill-shaped buttons and bright colors (blue buttons, red for the unread count). It follows your device's light or dark setting.
-- The theme picker in Settings fits all six themes in one row on a computer.
+- Until you pick a theme, the page starts in **Fruit** on iPhone, iPad and Mac, and in **Default** everywhere else (Android, Windows and the rest).
+- A theme you pick in Settings always sticks, on every device. If you'd picked one before this update, it stays.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 9** New theme: Fruit
 - **2.0 beta 8** Behind-the-scenes cleanup
 - **2.0 beta 7** Script updates are required when the script changes
 - **2.0 beta 6** New icons show up straight away
