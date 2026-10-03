@@ -6,17 +6,17 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 10 (latest)
+## 2.0 beta 11 (latest)
 
-**The starting theme follows your device**
+**iPads get the phone setup**
 
-- Until you pick a theme, the page starts in **Fruit** on iPhone, iPad and Mac, and in **Default** everywhere else (Android, Windows and the rest).
-- A theme you pick in Settings always sticks, on every device. If you'd picked one before this update, it stays.
+- iPads ask websites for the computer version and say they're a Mac, so setup told iPad users to switch to Chrome on a computer. iPads are now recognized and get the same start as a phone: sync from Amazon with the bookmark, load from Google Drive, or import a file.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 10** The starting theme follows your device
 - **2.0 beta 9** New theme: Fruit
 - **2.0 beta 8** Behind-the-scenes cleanup
 - **2.0 beta 7** Script updates are required when the script changes

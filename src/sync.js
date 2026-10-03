@@ -269,6 +269,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.11', ['iPads get the phone setup (the sync bookmark, Google Drive or a file) instead of being told to use a computer']],
   ['2.0.0.0.10', ['Until you pick a theme, the page starts in Fruit on iPhone, iPad and Mac, and in Default everywhere else. A theme you pick always sticks']],
   ['2.0.0.0.9', ['New theme in Settings: Fruit. Frosted glass panels over a soft, colorful background, rounded pill buttons and bright colors. It follows your device\'s light or dark setting']],
   ['2.0.0.0.8', ['Behind-the-scenes cleanup: leftover code from an older way of hosting the page is gone. Nothing changes for you']],
@@ -469,7 +470,8 @@ function cardMaybeDone() {
 const UA = navigator.userAgent;
 const BR = /OPR\//.test(UA) ? 'opera' : /Edg\//.test(UA) ? 'edge' : /Firefox\//.test(UA) ? 'firefox' : /Chrome\//.test(UA) ? 'chrome' : 'other';
 const BRNAME = {opera: 'Opera', edge: 'Edge', firefox: 'Firefox', chrome: 'Chrome', other: 'your browser'}[BR];
-const MOBILE = /Mobi|Android|iPhone|iPad/i.test(UA);
+// iPads ask for the desktop version of sites and call themselves a Mac, so a touch screen on a "Mac" means an iPad
+const MOBILE = /Mobi|Android|iPhone|iPad/i.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 0); // Macs have no touch screen
 const EXT_PAGE = {opera: 'opera://extensions', edge: 'edge://extensions', chrome: 'chrome://extensions'}[BR];
 const WSTEPS = ['welcome', 'tm', ...(EXT_PAGE ? ['allow'] : []), 'script', 'done'];
 let wizAt = 'welcome';
