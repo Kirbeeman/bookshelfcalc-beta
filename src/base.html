@@ -994,7 +994,8 @@ function renderStats() {
       // A phone's 10 spines are 10% each, too coarse for small genres: under 5% they're the lands on a spinning globe, under 3% a comic lying on the shelf
       if (SHELF <= 10 && pile.length > SHELF) {
         const share = g => groups[g].length / pile.length;
-        comicG = keys.filter(g => share(g) < 0.03); globeG = keys.filter(g => share(g) >= 0.03 && share(g) < 0.05);
+        // Unknown isn't a genre, so it never becomes globe land or comic panels (it stays in the key below)
+        comicG = keys.filter(g => g !== 'unknown' && share(g) < 0.03); globeG = keys.filter(g => g !== 'unknown' && share(g) >= 0.03 && share(g) < 0.05);
         keys = keys.filter(g => share(g) >= 0.05);
         if (globeG.length) slots--;
       }
