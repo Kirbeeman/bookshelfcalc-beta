@@ -133,6 +133,7 @@ function normGoodreads(list) {
   })).filter(b => b.title);
 }
 
+const DEVICE_EXTRA = /dictionar|diccionario|dictionnaire|dicion[aá]rio|w[oö]rterbuch|woordenboek|vocabolario|shabd|kosh|lingvo|词典|辞典|辞泉|daijisen|zingarelli|priberam|duden|munjid|user'?s guide|benutzerhandbuch|gu[ií]a del usuario|guide d.utilisation|gebruikershandleiding|guia do usu[aá]rio|guida all.uso|用户指南|yuza gaido/i;
 const ORIGIN = {purchase:'purchase', sharing:'shared', kindleunlimited:'ku', prime:'prime', primereading:'prime', sample:'sample', publiclibrarylending:'other', personallending:'other', rental:'other', koll:'other', freetrial:'free', comicsunlimited:'ku'};
 // Real purchase dates from Amazon replace missing or estimated ones; Kindle's "Mark as read" marks a book finished
 function applyOwnership(items) {
@@ -148,6 +149,8 @@ function applyOwnership(items) {
     // How the book was obtained, from Amazon's own record (a source you picked by hand wins)
     const src = ORIGIN[String(o.originType || '').toLowerCase()];
     if (src && !b.sourceManual) b.source = src;
+    // A "purchase" with no order behind it wasn't bought: dictionaries and user guides come with the Kindle, anything else was free
+    if (src === 'purchase' && !o.orderDetailURL && !o.orderId && !b.sourceManual && !(hasPaid(b) && b.priceSrc !== 'order')) b.source = DEVICE_EXTRA.test(b.title) ? 'device' : 'free';
     if (/^READ$/i.test(o.readStatus || '') && !b.lock && b.status !== 'finished') { b.status = 'finished'; b.progress = 100; }
   }
   return n;
@@ -221,7 +224,7 @@ function applyBookInfo(b, inf, now) {
 async function lookupBookInfo() {
   if (kpRunning || !syncOn || S.demo) return;
   const MONTH = 30 * 864e5, now = Date.now();
-  const needsPrice = b => !hasPaid(b) && b.source !== 'free' && b.source !== 'sample' && (!b.kpTime || now - b.kpTime > MONTH);
+  const needsPrice = b => !hasPaid(b) && b.source !== 'free' && b.source !== 'device' && b.source !== 'sample' && (!b.kpTime || now - b.kpTime > MONTH);
   const todo = S.books.filter(b => b.asin && (!b.infoTime || needsPrice(b) || needsGenre(b)))
     .sort((a, b) => (a.status === 'unread' ? 0 : 1) - (b.status === 'unread' ? 0 : 1) || (counted(a) ? 0 : 1) - (counted(b) ? 0 : 1));
   if (!todo.length) { genreStatus(''); stage('details', 'ok', 'up to date'); cardMaybeDone(); return; }
@@ -299,6 +302,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.13', ['Dictionaries and user guides that came with your Kindle are no longer counted as unread books worth $7.99 each (Settings can count them again)', 'A book Amazon lists as bought but with no order behind it counts as free instead of a guessed price', 'Titles show & instead of &amp;', 'Fruit theme: pop-ups like How this adds up are no longer hidden under the next panel']],
   ['2.0.0.0.12', ['On a computer, your library now comes from Amazon\'s Content & Devices list, like on a phone, so prices paid land on the right books. The Kindle reader still adds reading progress and brand-new books', 'A book that was in your library twice (once from the computer, once from the phone) becomes one again, keeping your edits']],
   ['2.0.0.0.11', ['iPads get the phone setup (the sync bookmark, Google Drive or a file) instead of being told to use a computer']],
   ['2.0.0.0.10', ['Until you pick a theme, the page starts in Fruit on iPhone, iPad and Mac, and in Default everywhere else. A theme you pick always sticks']],

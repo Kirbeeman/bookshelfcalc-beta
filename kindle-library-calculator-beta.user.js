@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Shelf of Shame (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      2.0.0.0.12
+// @version      2.0.0.0.13
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -476,7 +476,7 @@ document.body.innerHTML = `<div class="wrap">
       <label>Pages<input type="number" id="ePages" min="0" step="1" placeholder="unknown"></label>
       <label>Price paid<input type="number" id="ePrice" min="0" step="0.01" placeholder="unknown"></label>
       <label>Added on<input type="date" id="eDate"></label>
-      <label>How you got it<select id="eSource"><option value="purchase">Bought</option><option value="free">Free</option><option value="ku">Kindle Unlimited</option><option value="prime">Prime Reading</option><option value="sample">Sample</option><option value="shared">Shared with me (Family Library)</option><option value="other">Borrowed / other</option></select></label>
+      <label>How you got it<select id="eSource"><option value="purchase">Bought</option><option value="free">Free</option><option value="ku">Kindle Unlimited</option><option value="prime">Prime Reading</option><option value="sample">Sample</option><option value="device">Came with my Kindle (dictionary or guide)</option><option value="shared">Shared with me (Family Library)</option><option value="other">Borrowed / other</option></select></label>
       <label>Genre<select id="eGenre"></select></label>
       <label>Second genre<select id="eGenre2"></select></label>
       <p class="etags" id="eTags" hidden></p>
@@ -505,6 +505,7 @@ document.body.innerHTML = `<div class="wrap">
       <label class="check full"><input type="checkbox" id="sSharedTab"> Show shared and borrowed books on their own tab under Your library</label>
       <label class="check full"><input type="checkbox" id="sSamples"> Count samples</label>
       <label class="check full"><input type="checkbox" id="sGrAll"> Include Goodreads books that aren't in my Kindle library</label>
+      <label class="check full"><input type="checkbox" id="sExtras"> Count the dictionaries and user guides that came with your Kindle</label>
     </div>
     <p class="note">Kindle doesn't report page counts or prices, so unknown values use the numbers above. Values you enter per book always win. About one minute per page is typical for adult fiction.</p>
     <div class="files"><h4>Files and backups</h4><p class="note">Only needed if you don't use the sync script, or to move your library to another browser.</p><div class="row"><button type="button" class="btn" id="btnImport">Import a file</button><button type="button" class="btn" id="btnExport">Back up library</button></div></div>
@@ -661,6 +662,9 @@ GM_addStyle(`
   radial-gradient(60% 50% at 0% 92%, rgba(48,209,88,.18), transparent 70%), var(--bg);background-attachment:fixed}}
 :root[data-theme="fruit"] .card,:root[data-theme="fruit"] .tiles,:root[data-theme="fruit"] .yearstrip,:root[data-theme="fruit"] .pile,:root[data-theme="fruit"] .tablewrap,:root[data-theme="fruit"] .notice{background:var(--glass);-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--glass-edge);border-radius:22px;box-shadow:0 0 0 .5px var(--glass-shade), 0 14px 36px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.35)}
 :root[data-theme="fruit"] .tiles{gap:0}
+/* each glass panel is its own layer, so the one being hovered comes to the front and its pop-up isn't hidden under the next */
+:root[data-theme="fruit"] :is(.card,.tiles,.yearstrip,.pile,.tablewrap,.notice,.banner){position:relative}
+:root[data-theme="fruit"] :is(.card,.tiles,.yearstrip,.pile,.tablewrap,.notice,.banner):is(:hover,:focus-within){z-index:4}
 :root[data-theme="fruit"] .banner{border-radius:22px;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);background:color-mix(in srgb,var(--accent-soft) 80%,transparent);-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%)}
 :root[data-theme="fruit"] .notice{border-left-width:4px}
 :root[data-theme="fruit"] .tile{background:transparent}
@@ -997,7 +1001,7 @@ const QUIP = (() => {
   return QUIPS[i];
 })();
 const PACES = {slow: 35, average: 55, fast: 90};
-const DEFAULTS = {defPages:320, defPrice:7.99, minPerPage:1.1, pagesPerDay:55, currency:'USD', doneAt:90, borrowed:false, samples:false, grAll:false};
+const DEFAULTS = {defPages:320, defPrice:7.99, minPerPage:1.1, pagesPerDay:55, currency:'USD', doneAt:90, extras:false, borrowed:false, samples:false, grAll:false};
 // Phones draw the library table in smaller pages, so the page stays quick with a big library
 const PAGE_ROWS = window.matchMedia('(max-width: 640px)').matches ? 40 : 150;
 const S = {showMoney:false, books: DEMO.map(b => ({...b})), settings:{...DEFAULTS}, demo:true, mode:'demo', filter:'all', q:'', tag:'', sort:{k:'date', dir:-1}, limit:PAGE_ROWS};
@@ -1073,13 +1077,14 @@ const fmtInt = v => Math.round(v).toLocaleString();
 const fmtHours = h => h < 1 ? Math.round(h * 60) + ' min' : fmtInt(h) + ' h';
 const counted = b => {
   if (b.source === 'sample' && !S.settings.samples) return false;
+  if (b.source === 'device' && !S.settings.extras) return false;
   if ((b.source === 'ku' || b.source === 'prime' || b.source === 'other' || b.source === 'shared') && !S.settings.borrowed) return false;
   return true;
 };
 const pagesOf = b => b.pages > 0 ? b.pages : S.settings.defPages;
 const hasPaid = b => b.price != null && b.price !== '';
 // Value: what you paid, else today's Kindle price, else the default guess (bought books only)
-const valueOf = b => b.source === 'free' ? 0 : hasPaid(b) ? +b.price : b.kp != null ? b.kp : b.source === 'purchase' ? S.settings.defPrice : 0;
+const valueOf = b => b.source === 'free' || b.source === 'device' ? 0 : hasPaid(b) ? +b.price : b.kp != null ? b.kp : b.source === 'purchase' ? S.settings.defPrice : 0;
 const hoursFor = p => p * S.settings.minPerPage / 60;
 const remainingPages = b => b.status === 'unread' ? pagesOf(b) : b.status === 'reading' ? pagesOf(b) * (1 - (b.progress || 0) / 100) : 0;
 const recentCutoff = () => new Date(Date.now() - 5 * 864e5).toISOString().slice(0,10);
@@ -1096,7 +1101,7 @@ function trackReading() { // remember when each book became "Reading"; existing 
 }
 const STATUS = {unread:'Unread', reading:'Reading', finished:'Finished', abandoned:'DNF'};
 const STATUS_COLOR = {finished:'var(--ok)', reading:'var(--accent)', unread:'var(--shame)', abandoned:'var(--muted)'};
-const SOURCE = {purchase:'', free:'free', ku:'KU', prime:'Prime', sample:'sample', other:'borrowed', shared:'shared'};
+const SOURCE = {purchase:'', device:'came with Kindle', free:'free', ku:'KU', prime:'Prime', sample:'sample', other:'borrowed', shared:'shared'};
 const hash = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
 const yearsAgo = d => { const ms = Date.now() - new Date(d).getTime(); return ms / 3.156e10; };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -1299,7 +1304,7 @@ function decorShelf() {
   bc.insertAdjacentHTML('beforeend', picks.map(k => `<span class="decor" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px;margin-left:${Math.floor(22 + extra)}px">${DECOR[k][2]}</span>`).join(''));
 }
 
-function renderAll() { if (S.settings.theme && typeof applyTheme === 'function') { applyTheme(S.settings.theme); try { localStorage.setItem('klc-theme-picked', '1'); } catch {} } trackReading(); fillGuesses(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
+function renderAll() { fixEntities(); if (S.settings.theme && typeof applyTheme === 'function') { applyTheme(S.settings.theme); try { localStorage.setItem('klc-theme-picked', '1'); } catch {} } trackReading(); fillGuesses(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
 
 function renderStats() {
   const bs = S.books.filter(counted);
@@ -1319,7 +1324,7 @@ function renderStats() {
 
   $('#tBooks').textContent = fmtInt(n);
   const hidden = S.books.length - n;
-  const why = {shared:['shared with you (Family Library)'], ku:['Kindle Unlimited'], prime:['Prime Reading'], other:['borrowed or library loan', 'borrowed or library loans'], sample:['sample', 'samples']};
+  const why = {shared:['shared with you (Family Library)'], ku:['Kindle Unlimited'], prime:['Prime Reading'], other:['borrowed or library loan', 'borrowed or library loans'], sample:['sample', 'samples'], device:['dictionary or user guide that came with your Kindle', 'dictionaries and user guides that came with your Kindle']};
   const nc = {}; S.books.forEach(b => { if (!counted(b)) nc[b.source] = (nc[b.source] || 0) + 1; });
   const tip = `<span class="tipbox" role="tooltip"><strong>Not counted</strong> means books you didn't buy yourself. They stay in your library but are left out of the totals, value, charts and Shelf of Shame:<ul>${Object.keys(why).filter(k => nc[k]).map(k => `<li>${nc[k]} ${why[k][nc[k] === 1 ? 0 : why[k].length - 1]}</li>`).join('')}</ul>See them with the <strong>Not counted</strong> button under Your library. To include them, turn them on in <strong>Settings</strong>, or click a book and change <strong>How you got it</strong>.</span>`;
   $('#tBooksSub').innerHTML = `${fmtInt(by.finished.length)} finished` + (hidden ? ` · <span class="tip" tabindex="0">${hidden} not counted${tip}</span>` : '');
@@ -1328,7 +1333,7 @@ function renderStats() {
   $('#tValue').classList.toggle('masked', !S.showMoney);
   // Where the value comes from, so nobody has to guess what "guessed" means
   const vg = {paid:[0,0], now:[0,0], guess:[0,0], zero:[0,0]};
-  bs.forEach(b => { const k = b.source === 'free' ? 'zero' : hasPaid(b) ? 'paid' : b.kp != null ? 'now' : b.source === 'purchase' ? 'guess' : 'zero'; vg[k][0]++; vg[k][1] += valueOf(b); });
+  bs.forEach(b => { const k = b.source === 'free' || b.source === 'device' ? 'zero' : hasPaid(b) ? 'paid' : b.kp != null ? 'now' : b.source === 'purchase' ? 'guess' : 'zero'; vg[k][0]++; vg[k][1] += valueOf(b); });
   const vrow = (k, label, note) => vg[k][0] ? `<li><b>${fmtInt(vg[k][0])}</b> ${label}: ${fmtMoney(vg[k][1])}${note ? ` <span style="opacity:.75">(${note})</span>` : ''}</li>` : '';
   const vtip = `<span class="tipbox" role="tooltip"><strong>How this adds up</strong> across your ${fmtInt(n)} counted books:<ul>${vrow('paid', 'price you paid', 'from your Amazon orders or typed in')}${vrow('now', "today's Kindle price", "used until the price you paid is found")}${vrow('guess', 'guessed', `${fmtMoney(S.settings.defPrice)} each, from Settings`)}${vg.zero[0] ? `<li><b>${fmtInt(vg.zero[0])}</b> free: $0</li>` : ''}</ul>Prices paid are read from up to 150 orders per sync, so this gets more exact with every sync. Click a book's title to type in a price.</span>`;
   $('#tValueSub').innerHTML = !S.showMoney ? 'Hidden' : `<span class="tip" tabindex="0">${[vg.paid[0] ? `${fmtInt(vg.paid[0])} paid` : '', vg.now[0] ? `${fmtInt(vg.now[0])} at today's price` : '', vg.guess[0] ? `${fmtInt(vg.guess[0])} guessed` : '', vg.zero[0] ? `${fmtInt(vg.zero[0])} free` : ''].filter(Boolean).join(' · ') || 'no books yet'}${vtip}</span>`;
@@ -1643,7 +1648,7 @@ function renderShelf() {
   const shown = list.slice(0, S.limit);
   $('#rows').innerHTML = shown.length ? shown.map(b => {
     const src = (SOURCE[b.source] ? `<span class="pill">${SOURCE[b.source]}</span>` : '') + (isNew(b) ? '<span class="pill new">new</span>' : '') + (isStalled(b) ? `<span class="pill stalled" title="Started ${b.readingSince} and still not finished. Mark it Finished, or DNF if you've given up on it.">stalled 1 yr+</span>` : '');
-    const pr = hasPaid(b) ? fmtMoney(+b.price) : b.kp != null && b.source !== 'free' ? `<span class="est" title="Today's Kindle price (not what you paid)">now ${fmtMoney(b.kp)}</span>` : (b.source === 'purchase' ? `<span class="est" title="Guess from Settings">~${fmtMoney(S.settings.defPrice)}</span>` : '—');
+    const pr = hasPaid(b) ? fmtMoney(+b.price) : b.kp != null && b.source !== 'free' && b.source !== 'device' ? `<span class="est" title="Today's Kindle price (not what you paid)">now ${fmtMoney(b.kp)}</span>` : (b.source === 'purchase' ? `<span class="est" title="Guess from Settings">~${fmtMoney(S.settings.defPrice)}</span>` : '—');
     const pg = b.pages > 0 ? fmtInt(b.pages) : `<span class="est">~${S.settings.defPages}</span>`;
     return `<tr data-id="${esc(b.id)}">
       <td style="min-width:220px"><div class="t-title" data-edit="${esc(b.id)}" tabindex="0">${esc(b.title)}${src}</div><div class="t-author">${esc(b.author || '')}</div>${b.genre && b.genre !== 'unknown' ? `<div class="t-genre"><span class="gsw"><i style="background:var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})"></i>${esc(genreLabel(b))}${b.genreSrc === 'guess' ? '<span class="guessed" title="No Amazon store page for this book, so the genre is guessed from its title. Click the title to change it.">guessed</span>' : ''}</span>${b.genre2 && GENRES[b.genre2] && b.genre2 !== b.genre ? `<span class="plus">+</span><span class="gsw"><i style="background:var(--g-${b.genre2})"></i>${esc(GENRES[b.genre2])}</span>` : ''}${tagsShown(b).map(t => `<button type="button" class="tag${t === S.tag ? ' on' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</td>
@@ -1737,7 +1742,7 @@ let wipeArmed = false;
 $('#btnSettings').onclick = () => {
   const s = S.settings;
   $('#sPages').value = s.defPages; $('#sPrice').value = s.defPrice; $('#sMin').value = s.minPerPage; $('#sDay').value = s.pagesPerDay;
-  $('#sCur').value = s.currency; $('#sDone').value = s.doneAt; $('#sBorrowed').checked = s.borrowed; $('#sSharedTab').checked = !!s.sharedTab; $('#sSamples').checked = s.samples; $('#sGrAll').checked = !!s.grAll;
+  $('#sCur').value = s.currency; $('#sDone').value = s.doneAt; $('#sBorrowed').checked = s.borrowed; $('#sSharedTab').checked = !!s.sharedTab; $('#sSamples').checked = s.samples; $('#sGrAll').checked = !!s.grAll; $('#sExtras').checked = !!s.extras;
   wipeArmed = false; $('#wipeConfirm').textContent = '';
   $('#dlgSettings').showModal();
 };
@@ -1757,7 +1762,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.0.0.0.12`], ['touchicon', `icon-${ico}-180.png?v=2.0.0.0.12`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.0.0.0.13`], ['touchicon', `icon-${ico}-180.png?v=2.0.0.0.13`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -1778,7 +1783,7 @@ $('#setForm').addEventListener('submit', e => {
     defPages: Math.max(1, +$('#sPages').value || DEFAULTS.defPages), defPrice: Math.max(0, +$('#sPrice').value || 0),
     minPerPage: Math.max(0.2, +$('#sMin').value || DEFAULTS.minPerPage), pagesPerDay: Math.max(1, +$('#sDay').value || DEFAULTS.pagesPerDay), paceSet: true,
     currency: $('#sCur').value, spineMode: S.settings.spineMode, theme: S.settings.theme, doneAt: Math.min(100, Math.max(50, +$('#sDone').value || 90)),
-    borrowed: $('#sBorrowed').checked, sharedTab: $('#sSharedTab').checked, samples: $('#sSamples').checked, grAll: $('#sGrAll').checked,
+    borrowed: $('#sBorrowed').checked, sharedTab: $('#sSharedTab').checked, samples: $('#sSamples').checked, grAll: $('#sGrAll').checked, extras: $('#sExtras').checked,
   };
   $('#dlgSettings').close(); renderAll(); scheduleSave(); toast('Settings saved');
 });
@@ -1819,6 +1824,9 @@ function parseCSV(text) {
   if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
   return rows.filter(r => r.some(x => x.trim() !== ''));
 }
+// Amazon sometimes sends titles with HTML codes left in ("Quick &amp; Easy"); turn them back into characters
+const unent = s => String(s ?? '').replace(/&(?:(amp)|(lt)|(gt)|(quot)|(#39|apos)|#(\d+)|#x([0-9a-f]+));/gi, (m, a, l, g, q, ap, d, x) => a ? '&' : l ? '<' : g ? '>' : q ? '"' : ap ? "'" : String.fromCodePoint(d ? +d : parseInt(x, 16)));
+const fixEntities = () => { for (const b of S.books) { if (/&#?\w+;/.test(b.title)) b.title = unent(b.title); if (/&#?\w+;/.test(b.author)) b.author = unent(b.author); } };
 const cleanAuthor = a => {
   if (!a) return '';
   if (Array.isArray(a)) a = a[0] || '';
@@ -1852,7 +1860,7 @@ function fromKindle(items) {
     const p = b.percentageRead ?? b.percentRead ?? b.readingProgress;
     const progress = p == null ? null : Math.max(0, Math.min(100, +p <= 1 && +p > 0 && !Number.isInteger(+p) ? +p * 100 : +p));
     return {
-      asin: b.asin || '', title: String(b.title || '').trim(), author: cleanAuthor(b.authors || b.author),
+      asin: b.asin || '', title: unent(b.title || '').trim(), author: unent(cleanAuthor(b.authors || b.author)),
       progress, status: statusFromProgress(progress), source: mapSource(b.originType || b.origin, b.resourceType),
       date: toDate(b.acquiredTime ?? b.acquiredDate ?? b.acquisitionDate ?? b.purchaseDate ?? ''),
     };
@@ -1892,7 +1900,7 @@ function fromRows(rows, kind) {
     out.push({
       title, author: cleanAuthor(g(c.author)), asin: g(c.asin), pages: toNum(g(c.pages)) || null,
       price: toNum(g(c.price)), date: toDate(g(c.date)), status, progress: progress ?? (status === 'finished' ? 100 : status === 'unread' ? 0 : null),
-      rating: rating ? Math.round(Math.min(5, rating)) : 0, source: src ? (['purchase','free','ku','prime','sample','other'].includes(src.toLowerCase()) ? src.toLowerCase() : mapSource(src)) : null,
+      rating: rating ? Math.round(Math.min(5, rating)) : 0, source: src ? (['purchase','free','ku','prime','sample','other','device'].includes(src.toLowerCase()) ? src.toLowerCase() : mapSource(src)) : null,
       shelfSet: status != null,
     });
   }
@@ -2042,7 +2050,7 @@ ${rows.map((row, i) => `<row r="${i + 2}">${row.map((v, c) => cell(v, i + 2, c))
     {name: 'xl/worksheets/sheet1.xml', data: X(sheet)},
   ]);
 }
-const SOURCE_NAME = {purchase:'Bought', free:'Free', ku:'Kindle Unlimited', prime:'Prime Reading', sample:'Sample', shared:'Family Library', other:'Borrowed / other'};
+const SOURCE_NAME = {purchase:'Bought', device:'Came with my Kindle', free:'Free', ku:'Kindle Unlimited', prime:'Prime Reading', sample:'Sample', shared:'Family Library', other:'Borrowed / other'};
 function libraryXlsx() {
   const header = ['Title', 'Author', 'Status', 'Progress %', 'Pages', 'Price paid', 'Kindle price today', 'Purchase date', 'How you got it', 'Genre', 'Second genre', 'Tags', 'Rating', 'Counted in totals', 'ASIN'];
   const rows = [...S.books].sort((a, b) => (a.title || '').localeCompare(b.title || '')).map(b => [
@@ -2196,6 +2204,7 @@ function normGoodreads(list) {
   })).filter(b => b.title);
 }
 
+const DEVICE_EXTRA = /dictionar|diccionario|dictionnaire|dicion[aá]rio|w[oö]rterbuch|woordenboek|vocabolario|shabd|kosh|lingvo|词典|辞典|辞泉|daijisen|zingarelli|priberam|duden|munjid|user'?s guide|benutzerhandbuch|gu[ií]a del usuario|guide d.utilisation|gebruikershandleiding|guia do usu[aá]rio|guida all.uso|用户指南|yuza gaido/i;
 const ORIGIN = {purchase:'purchase', sharing:'shared', kindleunlimited:'ku', prime:'prime', primereading:'prime', sample:'sample', publiclibrarylending:'other', personallending:'other', rental:'other', koll:'other', freetrial:'free', comicsunlimited:'ku'};
 // Real purchase dates from Amazon replace missing or estimated ones; Kindle's "Mark as read" marks a book finished
 function applyOwnership(items) {
@@ -2211,6 +2220,8 @@ function applyOwnership(items) {
     // How the book was obtained, from Amazon's own record (a source you picked by hand wins)
     const src = ORIGIN[String(o.originType || '').toLowerCase()];
     if (src && !b.sourceManual) b.source = src;
+    // A "purchase" with no order behind it wasn't bought: dictionaries and user guides come with the Kindle, anything else was free
+    if (src === 'purchase' && !o.orderDetailURL && !o.orderId && !b.sourceManual && !(hasPaid(b) && b.priceSrc !== 'order')) b.source = DEVICE_EXTRA.test(b.title) ? 'device' : 'free';
     if (/^READ$/i.test(o.readStatus || '') && !b.lock && b.status !== 'finished') { b.status = 'finished'; b.progress = 100; }
   }
   return n;
@@ -2284,7 +2295,7 @@ function applyBookInfo(b, inf, now) {
 async function lookupBookInfo() {
   if (kpRunning || !syncOn || S.demo) return;
   const MONTH = 30 * 864e5, now = Date.now();
-  const needsPrice = b => !hasPaid(b) && b.source !== 'free' && b.source !== 'sample' && (!b.kpTime || now - b.kpTime > MONTH);
+  const needsPrice = b => !hasPaid(b) && b.source !== 'free' && b.source !== 'device' && b.source !== 'sample' && (!b.kpTime || now - b.kpTime > MONTH);
   const todo = S.books.filter(b => b.asin && (!b.infoTime || needsPrice(b) || needsGenre(b)))
     .sort((a, b) => (a.status === 'unread' ? 0 : 1) - (b.status === 'unread' ? 0 : 1) || (counted(a) ? 0 : 1) - (counted(b) ? 0 : 1));
   if (!todo.length) { genreStatus(''); stage('details', 'ok', 'up to date'); cardMaybeDone(); return; }
@@ -2315,7 +2326,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.0.0.0.12';
+const LATEST_SCRIPT = '2.0.0.0.13';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2362,6 +2373,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.13', ['Dictionaries and user guides that came with your Kindle are no longer counted as unread books worth $7.99 each (Settings can count them again)', 'A book Amazon lists as bought but with no order behind it counts as free instead of a guessed price', 'Titles show & instead of &amp;', 'Fruit theme: pop-ups like How this adds up are no longer hidden under the next panel']],
   ['2.0.0.0.12', ['On a computer, your library now comes from Amazon\'s Content & Devices list, like on a phone, so prices paid land on the right books. The Kindle reader still adds reading progress and brand-new books', 'A book that was in your library twice (once from the computer, once from the phone) becomes one again, keeping your edits']],
   ['2.0.0.0.11', ['iPads get the phone setup (the sync bookmark, Google Drive or a file) instead of being told to use a computer']],
   ['2.0.0.0.10', ['Until you pick a theme, the page starts in Fruit on iPhone, iPad and Mac, and in Default everywhere else. A theme you pick always sticks']],

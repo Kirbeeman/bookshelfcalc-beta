@@ -6,18 +6,20 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 12 (latest)
+## 2.0 beta 13 (latest)
 
-**Computers build the library like phones do**
+**Truer library value**
 
-- On a computer, your library now comes from Amazon's **Content & Devices** list, the same list the phone bookmark uses. Prices paid and purchase dates are filed under that list's book IDs, so they now land on the right books instead of missing the ones whose ID differs in the Kindle reader.
-- The Kindle reader's list still adds **reading progress**, and any book bought since Content & Devices was last read (it's re-read once a day). A book already in your library is matched by its title, so it isn't added twice. If Content & Devices can't be read (for example, Amazon wants you to sign in again), the Kindle reader's list is used as before.
-- A book that ended up in your library **twice** (once from a computer sync, once from the phone through Google Drive) becomes one again. Anything only one copy had is kept, your own edits win, and the further reading progress wins.
+- **Dictionaries and Kindle user guides that came with your Kindle** are no longer counted. They used to show up as unread books worth $7.99 each. They're labeled "came with Kindle" in your library, and **Settings › Count the dictionaries and user guides that came with your Kindle** brings them back into the totals.
+- A book Amazon lists as bought, but with **no order behind it**, now counts as **free** instead of a guessed $7.99.
+- Titles that showed **&amp;** now show **&**.
+- **Fruit theme:** pop-ups such as "How this adds up" are no longer hidden under the next panel.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 12** Computers build the library like phones do
 - **2.0 beta 11** iPads get the phone setup
 - **2.0 beta 10** The starting theme follows your device
 - **2.0 beta 9** New theme: Fruit
