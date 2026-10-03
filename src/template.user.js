@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Shelf of Shame
 // @namespace    kindle-library-calculator
-// @version      2.0.0.0.13
+// @version      2.0.0.0.14
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -131,7 +131,7 @@ async function fetchKindle(progress) {
     const r = await gmGet(`https://${kHost}/kindle-library/search?query=&libraryType=BOOKS&sortType=recency&querySize=50` + (token ? '&paginationToken=' + encodeURIComponent(token) : ''));
     let j; try { j = JSON.parse(r.text); } catch { throw new Error(`sign in at ${kHost} first`); }
     if (r.status !== 200 || !j.itemsList) throw new Error(`sign in at ${kHost} first`);
-    for (const b of j.itemsList) items.push({asin: b.asin, title: b.title, authors: b.authors, percentageRead: b.percentageRead, originType: b.originType, resourceType: b.resourceType});
+    for (const b of j.itemsList) items.push({asin: b.asin, title: unHtml(b.title), authors: unHtml(b.authors), percentageRead: b.percentageRead, originType: b.originType, resourceType: b.resourceType});
     progress(`Reading your Kindle library… ${items.length} books`);
     if (!j.paginationToken) break;
     token = j.paginationToken;
@@ -147,6 +147,12 @@ function gmPost(url, body) {
     ontimeout: () => reject(new Error('timed out')),
   }));
 }
+// Amazon sends some titles and authors with HTML codes left in ("Quick &amp; Easy"); turn them back into characters
+function unHtml(s) {
+  if (s == null) return s;
+  if (Array.isArray(s)) return s.map(unHtml);
+  return String(s).replace(/&(?:(amp)|(lt)|(gt)|(quot)|(#39|apos)|#(\d+)|#x([0-9a-f]+));/gi, (m, a, l, g, q, ap, d, x) => a ? '&' : l ? '<' : g ? '>' : q ? '"' : ap ? "'" : String.fromCodePoint(d ? +d : parseInt(x, 16)));
+}
 // Purchase dates (and Kindle's own "Mark as read" flag) from Amazon's Content & Devices page
 async function fetchOwnership(progress) {
   const shop = GM_getValue('kindleHost', 'read.amazon.com').replace(/^read\./, 'www.');
@@ -161,7 +167,7 @@ async function fetchOwnership(progress) {
       'activity=GetContentOwnershipData&activityInput=' + encodeURIComponent(JSON.stringify(input)) + '&csrfToken=' + encodeURIComponent(token));
     let j; try { j = JSON.parse(r.text).GetContentOwnershipData; } catch { throw new Error('Amazon sent an unexpected reply'); }
     const batch = (j && j.items) || [];
-    for (const b of batch) items.push({asin: b.asin, title: b.title, authors: b.authors, acquiredTime: b.acquiredTime, acquiredDate: b.acquiredDate, readStatus: b.readStatus, originType: b.originType, orderId: b.orderId, orderDetailURL: b.orderDetailURL});
+    for (const b of batch) items.push({asin: b.asin, title: unHtml(b.title), authors: unHtml(b.authors), acquiredTime: b.acquiredTime, acquiredDate: b.acquiredDate, readStatus: b.readStatus, originType: b.originType, orderId: b.orderId, orderDetailURL: b.orderDetailURL});
     progress(`Reading purchase dates… ${items.length}${j && j.numberOfItems ? ' of ' + j.numberOfItems : ''}`);
     if (batch.length < BATCH || (j.numberOfItems && items.length >= j.numberOfItems)) break;
   }

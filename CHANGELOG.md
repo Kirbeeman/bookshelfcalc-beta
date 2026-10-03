@@ -6,19 +6,18 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 13 (latest)
+## 2.0 beta 14 (latest)
 
-**Truer library value**
+**Cleaner titles from the sync script (script update required)**
 
-- **Dictionaries and Kindle user guides that came with your Kindle** are no longer counted. They used to show up as unread books worth $7.99 each. They're labeled "came with Kindle" in your library, and **Settings › Count the dictionaries and user guides that came with your Kindle** brings them back into the totals.
-- A book Amazon lists as bought, but with **no order behind it**, now counts as **free** instead of a guessed $7.99.
-- Titles that showed **&amp;** now show **&**.
-- **Fruit theme:** pop-ups such as "How this adds up" are no longer hidden under the next panel.
+- The sync script and the phone bookmark now clean up titles and authors as they read them from Amazon, so codes like **&amp;** never reach your library.
+- Because the script itself changed, the page asks you to **update the sync script** before it syncs again. Click **Update script**, press **Update** in Tampermonkey, then come back.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 13** Truer library value
 - **2.0 beta 12** Computers build the library like phones do
 - **2.0 beta 11** iPads get the phone setup
 - **2.0 beta 10** The starting theme follows your device
