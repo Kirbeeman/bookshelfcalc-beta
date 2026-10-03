@@ -24,6 +24,7 @@ open(O+'/kindle-library-calculator-beta.user.js','w').write(us)
 shutil.copy(G+'/bm.js', O+'/bm.js')
 shutil.copy(G+'/privacy.html', O+'/privacy.html')
 shutil.copy(G+'/bookmark.html', O+'/bookmark.html')
+shutil.copy(G+'/iphone.html', O+'/iphone.html')
 open(O+'/CNAME','w').write('betabookshelf.kirbee213.tv\n')
 open(O+'/README.md','w').write("""# Shelf of Shame: beta
 
