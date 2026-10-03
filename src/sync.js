@@ -43,11 +43,35 @@ function initPhoneSync() {
   });
   window.opener.postMessage({klc: 1, type: 'bm-ready'}, '*'); // just "I'm here"; the data only comes from Amazon's own page
 }
+// The same book can sit in the library twice: once under the Kindle reader's ID (from a computer sync) and once under
+// Content & Devices' ID (from the phone, brought over by Google Drive). Keep the Content & Devices copy and fold the other
+// into it: anything only the other copy has comes across, edits made by hand win, and the further reading progress wins.
+function foldDuplicates(ownedItems) {
+  const cd = new Set((ownedItems || []).map(i => String(i.asin || '').toUpperCase()).filter(Boolean));
+  if (!cd.size) return 0;
+  const key = b => normTitle(b.title) + '|' + surname(b.author);
+  const keep = new Map();
+  for (const b of S.books) if (b.asin && cd.has(b.asin.toUpperCase())) keep.set(key(b), b);
+  let n = 0;
+  S.books = S.books.filter(d => {
+    if (d.asin && cd.has(d.asin.toUpperCase())) return true;
+    const k = keep.get(key(d)); if (!k || k === d) return true;
+    for (const f of Object.keys(d)) if (f !== 'id' && f !== 'asin' && (k[f] == null || k[f] === '' || (Array.isArray(k[f]) && !k[f].length))) k[f] = d[f];
+    for (const f of Object.keys(d)) if (/Src$/.test(f) && d[f] === 'manual' && k[f] !== 'manual') { const base = f.slice(0, -3); k[f] = 'manual'; if (base in d) k[base] = d[base]; }
+    for (const f of ['dateManual', 'sourceManual']) if (d[f] && !k[f]) { k[f] = true; k[f === 'dateManual' ? 'date' : 'source'] = d[f === 'dateManual' ? 'date' : 'source']; }
+    if (d.priceSrc !== 'order' && hasPaid(d) && !(k.priceSrc === 'order')) k.price = d.price;
+    if ((d.progress || 0) > (k.progress || 0) || (d.lock && !k.lock)) { k.progress = d.progress; k.status = d.status; }
+    if (d.lock) k.lock = true;
+    n++; return false;
+  });
+  return n;
+}
 function applyPhoneSync(data) {
   const items = data.owned?.items || [];
   if (!items.length) return 0;
   leaveDemo(true);
-  merge(fromKindle(items), false, 'kindle');
+  merge(fromKindle(items).map(x => ({...x, asinWins: true})), false, 'kindle');
+  foldDuplicates(items);
   const dated = applyOwnership(items);
   let priced = 0;
   for (const b of S.books) {
@@ -137,13 +161,19 @@ async function runSync(force) {
     const paid = S.books.filter(b => b.asin && hasPaid(b)).map(b => b.asin); // already priced: the script never looks these up again
     const data = hasCore ? await KLC_CORE.sync(force, msg => syncProgress(msg), paid) : await bridgeSync(force, paid);
     const gr = normGoodreads(data.goodreads);
-    let kItems = data.kindle?.items || [];
+    // Like the phone bookmark: Content & Devices is the main list, because prices paid and purchase dates are filed under its
+    // Amazon IDs. The Kindle reader's list then adds reading progress, and any book bought since Content & Devices was last read.
+    const owned = data.owned?.items || [], kList = data.kindle?.items || [];
+    let kItems = owned.length ? owned : kList;
     // The Kindle reader (read.amazon.com) has its own sign-in. If it said no but Content & Devices answered, build the library from that list.
-    const fromOwned = !kItems.length && !!data.owned?.items?.length;
-    if (fromOwned) kItems = data.owned.items;
+    const fromOwned = owned.length > 0, noProgress = fromOwned && !kList.length;
     if (!gr.length && !kItems.length) { setSync([data.grErr, data.kErr].filter(Boolean).join(' · ') || 'Nothing to sync yet.', 'local'); cardResult(data, 0, 0, 0, 0); return; }
     leaveDemo(true);
-    if (kItems.length) merge(fromKindle(kItems), false, 'kindle');
+    if (kItems.length) merge(fromKindle(kItems).map(x => fromOwned ? {...x, asinWins: true} : x), false, 'kindle');
+    if (fromOwned) foldDuplicates(owned);
+    // Reading progress, plus any book Content & Devices hasn't listed yet (it's re-read once a day). A book already here under
+    // its Content & Devices ID is matched by title, so it isn't added twice.
+    if (fromOwned && kList.length) merge(fromKindle(kList), false, 'kindle');
     const res = merge(gr, false, 'goodreads', !kItems.length || S.settings.grAll);
     const dated = applyOwnership(data.owned?.items);
     let priced = 0;
@@ -158,7 +188,7 @@ async function runSync(force) {
     const kTxt = data.kErr && !kItems.length ? `Kindle failed: ${data.kErr}` : kItems.length ? `Kindle ${kItems.length} books` + (data.kErr ? ' (older copy: ' + data.kErr + ')' : '') : 'Kindle not synced';
     lastSyncMsg = `Synced ${when} · ${grTxt} · ${kTxt}${oTxt}`;
     setSync(lastSyncMsg, data.grErr || data.kErr || data.oErr ? 'local' : 'db');
-    cardResult(data, gr.length, kItems.length, dated, priced, fromOwned);
+    cardResult(data, gr.length, kItems.length, dated, priced, noProgress);
     setTimeout(lookupBookInfo, 500);
   } catch (e) {
     setSync(e.message || String(e), 'local'); cardError('sync', e.message || String(e));
@@ -269,6 +299,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.12', ['On a computer, your library now comes from Amazon\'s Content & Devices list, like on a phone, so prices paid land on the right books. The Kindle reader still adds reading progress and brand-new books', 'A book that was in your library twice (once from the computer, once from the phone) becomes one again, keeping your edits']],
   ['2.0.0.0.11', ['iPads get the phone setup (the sync bookmark, Google Drive or a file) instead of being told to use a computer']],
   ['2.0.0.0.10', ['Until you pick a theme, the page starts in Fruit on iPhone, iPad and Mac, and in Default everywhere else. A theme you pick always sticks']],
   ['2.0.0.0.9', ['New theme in Settings: Fruit. Frosted glass panels over a soft, colorful background, rounded pill buttons and bright colors. It follows your device\'s light or dark setting']],

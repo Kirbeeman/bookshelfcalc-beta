@@ -6,16 +6,19 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 11 (latest)
+## 2.0 beta 12 (latest)
 
-**iPads get the phone setup**
+**Computers build the library like phones do**
 
-- iPads ask websites for the computer version and say they're a Mac, so setup told iPad users to switch to Chrome on a computer. iPads are now recognized and get the same start as a phone: sync from Amazon with the bookmark, load from Google Drive, or import a file.
+- On a computer, your library now comes from Amazon's **Content & Devices** list, the same list the phone bookmark uses. Prices paid and purchase dates are filed under that list's book IDs, so they now land on the right books instead of missing the ones whose ID differs in the Kindle reader.
+- The Kindle reader's list still adds **reading progress**, and any book bought since Content & Devices was last read (it's re-read once a day). A book already in your library is matched by its title, so it isn't added twice. If Content & Devices can't be read (for example, Amazon wants you to sign in again), the Kindle reader's list is used as before.
+- A book that ended up in your library **twice** (once from a computer sync, once from the phone through Google Drive) becomes one again. Anything only one copy had is kept, your own edits win, and the further reading progress wins.
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 11** iPads get the phone setup
 - **2.0 beta 10** The starting theme follows your device
 - **2.0 beta 9** New theme: Fruit
 - **2.0 beta 8** Behind-the-scenes cleanup

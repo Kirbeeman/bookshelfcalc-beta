@@ -1618,6 +1618,8 @@ function merge(incoming, replace, kind) {
     if (!m && (!inc.author || true)) { const t = byTitle.get(normTitle(inc.title)); if (t && t !== 'dup' && (!inc.author || !t.author || surname(t.author) === surname(inc.author))) m = t; }
     if (m) {
       for (const f of ['asin','author','pages','date']) if ((m[f] == null || m[f] === '') && inc[f]) m[f] = inc[f];
+      // Content & Devices files prices and purchase dates under its own Amazon ID, so that ID wins over another edition's
+      if (inc.asinWins && inc.asin && m.asin && m.asin.toUpperCase() !== inc.asin.toUpperCase() && !byAsin.has(inc.asin.toUpperCase())) { m.asin = inc.asin; byAsin.set(inc.asin.toUpperCase(), m); }
       if ((m.price == null || m.price === '') && inc.price != null) m.price = inc.price;
       if (inc.source && (m.source == null || kind === 'kindle')) m.source = inc.source;
       if (inc.rating) m.rating = inc.rating;
