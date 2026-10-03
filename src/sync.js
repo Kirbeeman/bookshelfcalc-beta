@@ -268,6 +268,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.3', ['The calculator is now called Shelf of Shame everywhere, including the sync script and your Google Drive file']],
   ['2.0.0.0.2', ['Set up the bookmark: one tap copies the sync code and opens a page that walks you through saving it, already named Shelf sync', 'The sync script also works in Userscripts, the free script app for iPhone and iPad']],
   ['2.0.0.0.1', ['The bottom of Settings shows which version of the app and of the sync script you have', 'Tapping outside Settings closes it']],
   ['1.55', ['Faster on phones with big libraries: the library table loads 40 books at a time, scrolling no longer redraws the page, and search waits for a pause in typing']],
@@ -513,7 +514,7 @@ function wizGo(step) {
     trouble: `<h2>The script isn't answering yet</h2>
       <p>Almost always one of these:</p>
       <ul class="wlist">${EXT_PAGE ? `<li><b>Allow User Scripts is off.</b> <span class="kbd">${EXT_PAGE}</span> → Tampermonkey → Details → turn it on.</li>` : ''}
-      <li><b>The script is switched off.</b> Click the Tampermonkey icon in the toolbar and make sure <b>Kindle Library Calculator</b> is on.</li>
+      <li><b>The script is switched off.</b> Click the Tampermonkey icon in the toolbar and make sure <b>Shelf of Shame</b> is on.</li>
       <li><b>The install didn't finish.</b> Go back a step and press Install again.</li></ul>
       <div class="row wnav"><button type="button" class="btn" data-go="script">Back</button><button type="button" class="btn primary" id="wizCheck">Try again</button></div>`,
     done: `<h2>You're connected ✓</h2>

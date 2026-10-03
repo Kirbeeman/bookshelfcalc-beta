@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Kindle Library Calculator
+// @name         Shelf of Shame
 // @namespace    kindle-library-calculator
-// @version      2.0.0.0.2
+// @version      2.0.0.0.3
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -336,7 +336,7 @@ if (!onCalc) {
 }
 
 // ---------- 4. goodreads.com/kindle-calculator: the calculator drawn inside Goodreads (kept for older links) ----------
-document.title = 'Kindle Library Calculator';
+document.title = 'Shelf of Shame';
 document.querySelectorAll('link[rel="stylesheet"], style').forEach(n => n.remove());
 const font = document.createElement('link'); font.rel = 'stylesheet';
 font.href = 'https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,800&family=JetBrains+Mono:wght@400;600&display=swap';

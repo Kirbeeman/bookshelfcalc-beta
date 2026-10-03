@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Kindle Library Calculator (beta)
+// @name         Shelf of Shame (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      2.0.0.0.2
+// @version      2.0.0.0.3
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -330,7 +330,7 @@ if (!onCalc) {
 }
 
 // ---------- 4. goodreads.com/kindle-calculator: the calculator drawn inside Goodreads (kept for older links) ----------
-document.title = 'Kindle Library Calculator';
+document.title = 'Shelf of Shame';
 document.querySelectorAll('link[rel="stylesheet"], style').forEach(n => n.remove());
 const font = document.createElement('link'); font.rel = 'stylesheet';
 font.href = 'https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,800&family=JetBrains+Mono:wght@400;600&display=swap';
@@ -340,7 +340,7 @@ document.body.removeAttribute('style');
 document.body.innerHTML = `<div class="wrap">
   <header class="top">
     <div class="brand">
-      <h1>Kindle Library Calculator</h1>
+      <h1>Shelf of Shame</h1>
       <div class="store demo" id="store"><i></i><span>Example library</span></div>
       <div class="store" id="sync" hidden><span>Not synced yet</span></div>
     </div>
@@ -2241,7 +2241,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.0.0.0.2';
+const LATEST_SCRIPT = '2.0.0.0.3';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2287,6 +2287,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.3', ['The calculator is now called Shelf of Shame everywhere, including the sync script and your Google Drive file']],
   ['2.0.0.0.2', ['Set up the bookmark: one tap copies the sync code and opens a page that walks you through saving it, already named Shelf sync', 'The sync script also works in Userscripts, the free script app for iPhone and iPad']],
   ['2.0.0.0.1', ['The bottom of Settings shows which version of the app and of the sync script you have', 'Tapping outside Settings closes it']],
   ['1.55', ['Faster on phones with big libraries: the library table loads 40 books at a time, scrolling no longer redraws the page, and search waits for a pause in typing']],
@@ -2532,7 +2533,7 @@ function wizGo(step) {
     trouble: `<h2>The script isn't answering yet</h2>
       <p>Almost always one of these:</p>
       <ul class="wlist">${EXT_PAGE ? `<li><b>Allow User Scripts is off.</b> <span class="kbd">${EXT_PAGE}</span> → Tampermonkey → Details → turn it on.</li>` : ''}
-      <li><b>The script is switched off.</b> Click the Tampermonkey icon in the toolbar and make sure <b>Kindle Library Calculator</b> is on.</li>
+      <li><b>The script is switched off.</b> Click the Tampermonkey icon in the toolbar and make sure <b>Shelf of Shame</b> is on.</li>
       <li><b>The install didn't finish.</b> Go back a step and press Install again.</li></ul>
       <div class="row wnav"><button type="button" class="btn" data-go="script">Back</button><button type="button" class="btn primary" id="wizCheck">Try again</button></div>`,
     done: `<h2>You're connected ✓</h2>
@@ -2607,7 +2608,9 @@ function wizGo(step) {
 // and the sign-in token lives in this tab's memory. Nothing goes through any server of ours.
 const GD_CLIENT = '415875336210-7sqa3p2evj9on6be8vu7pal417g39hme.apps.googleusercontent.com';
 const GD_SCOPE = 'https://www.googleapis.com/auth/drive.file';
-const GD_NAME = 'Kindle Library Calculator.json';
+const GD_NAME = 'Shelf of Shame.json';
+const GD_OLD = 'Kindle Library Calculator.json'; // the file's name before the rename; found and renamed on the next sync
+const GD_DESC = 'Your Shelf of Shame library (bookshelf.kirbee213.tv). Delete it any time.';
 const gdGet = k => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
 const gdSet = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} };
 const gd = {token: '', exp: 0, client: null, busy: false, timer: 0, lastHash: '', state: '', when: 0, err: ''};
@@ -2670,14 +2673,21 @@ async function gapi(method, url, body, type) {
   if (!r.ok) throw new Error(`Google Drive answered ${r.status}`);
   return r;
 }
+// A library file saved before the rename keeps its contents and just gets the new name. If renaming fails, the old name still works.
+// The modified time read before the rename is kept, so a change saved from another device still counts as new.
+async function gdRename(f) {
+  if (f.name !== GD_OLD) return f;
+  try { const r = await gapi('PATCH', `https://www.googleapis.com/drive/v3/files/${f.id}?fields=id`, JSON.stringify({name: GD_NAME, description: GD_DESC}), 'application/json'); if (r) return {...f, name: GD_NAME}; } catch {}
+  return f;
+}
 async function gdFind() {
-  const id = gdGet('klc-gd-file'), F = 'id,modifiedTime,trashed';
-  if (id) { const r = await gapi('GET', `https://www.googleapis.com/drive/v3/files/${id}?fields=${F}`); if (r) { const f = await r.json(); if (!f.trashed) return f; } }
-  const q = encodeURIComponent(`name = '${GD_NAME}' and trashed = false`);
+  const id = gdGet('klc-gd-file'), F = 'id,name,modifiedTime,trashed';
+  if (id) { const r = await gapi('GET', `https://www.googleapis.com/drive/v3/files/${id}?fields=${F}`); if (r) { const f = await r.json(); if (!f.trashed) return gdRename(f); } }
+  const q = encodeURIComponent(`(name = '${GD_NAME}' or name = '${GD_OLD}') and trashed = false`);
   const r = await gapi('GET', `https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&orderBy=modifiedTime desc&fields=files(${F})`);
   const f = r && (await r.json()).files?.[0];
   if (f) gdSet('klc-gd-file', f.id);
-  return f || null;
+  return f ? gdRename(f) : null;
 }
 async function gdWrite(id, obj) {
   const data = JSON.stringify(obj);
@@ -2685,7 +2695,7 @@ async function gdWrite(id, obj) {
   if (id) r = await gapi('PATCH', `https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=media&fields=id,modifiedTime`, data, 'application/json');
   if (!r) {
     const b = 'klc' + Date.now();
-    const body = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name: GD_NAME, mimeType: 'application/json', description: 'Your Kindle Library Calculator library (bookshelf.kirbee213.tv). Delete it any time.'})}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${data}\r\n--${b}--`;
+    const body = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name: GD_NAME, mimeType: 'application/json', description: GD_DESC})}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${data}\r\n--${b}--`;
     r = await gapi('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime', body, 'multipart/related; boundary=' + b);
   }
   const f = await r.json(); gdSet('klc-gd-file', f.id); gdSet('klc-gd-mtime', f.modifiedTime); return f;

@@ -1,6 +1,6 @@
-# Kindle Library Calculator: beta
+# Shelf of Shame: beta
 
-Test copy of the [Kindle Library Calculator](https://github.com/Kirbeeman/bookshelfcalc), served at **https://betabookshelf.kirbee213.tv**.
+Test copy of the [Shelf of Shame](https://github.com/Kirbeeman/bookshelfcalc), served at **https://betabookshelf.kirbee213.tv**.
 
 New features are tried out here before they go to the real site. Things may break.
 
