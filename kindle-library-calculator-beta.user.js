@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Shelf of Shame (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      2.0.0.0.15
+// @version      2.0.0.0.16
 // @updateURL    https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @downloadURL  https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
@@ -1455,7 +1455,7 @@ function renderStats() {
     // Age of the oldest unread book: how long it has sat since you bought it (reading pace doesn't change this)
     const mo = Math.round(y * 12);
     $('#fOldest').textContent = y >= 1 ? `${y.toFixed(1)} years` : `${mo} month${mo === 1 ? '' : 's'}`;
-    $('#fOldestL').innerHTML = `your oldest unread book has been waiting that long, since ${esc(new Date(o.date).toLocaleDateString([], {month: 'long', year: 'numeric'}))}: <i>${esc(o.title)}</i>`;
+    $('#fOldestL').innerHTML = `<i>${esc(o.title)}</i> has been waiting this long for you to read it (since ${esc(new Date(o.date).toLocaleDateString([], {month: 'long', year: 'numeric'}))})`;
   } else { $('#fOldest').textContent = '—'; $('#fOldestL').textContent = 'oldest unread book'; }
   $('#fReading').textContent = fmtInt(by.reading.length);
   const stalled = by.reading.filter(isStalled).length;
@@ -1768,7 +1768,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.0.0.0.15`], ['touchicon', `icon-${ico}-180.png?v=2.0.0.0.15`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.0.0.0.16`], ['touchicon', `icon-${ico}-180.png?v=2.0.0.0.16`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2332,7 +2332,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.0.0.0.15';
+const LATEST_SCRIPT = '2.0.0.0.16';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2379,6 +2379,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.0.0.0.16', ['Your oldest unread book is named first, as in "Moby-Dick has been waiting this long for you to read it"']],
   ['2.0.0.0.15', ['Fixed: the phone sync bookmark stopped with "Can\'t find variable: unHtml"']],
   ['2.0.0.0.14', ['The sync script cleans up titles and authors as it reads them from Amazon (no more &amp;). This one needs a script update']],
   ['2.0.0.0.13', ['Dictionaries and user guides that came with your Kindle are no longer counted as unread books worth $7.99 each (Settings can count them again)', 'A book Amazon lists as bought but with no order behind it counts as free instead of a guessed price', 'Titles show & instead of &amp;', 'Fruit theme: pop-ups like How this adds up are no longer hidden under the next panel']],

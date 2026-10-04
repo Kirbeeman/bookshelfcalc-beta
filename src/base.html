@@ -1125,7 +1125,7 @@ function renderStats() {
     // Age of the oldest unread book: how long it has sat since you bought it (reading pace doesn't change this)
     const mo = Math.round(y * 12);
     $('#fOldest').textContent = y >= 1 ? `${y.toFixed(1)} years` : `${mo} month${mo === 1 ? '' : 's'}`;
-    $('#fOldestL').innerHTML = `your oldest unread book has been waiting that long, since ${esc(new Date(o.date).toLocaleDateString([], {month: 'long', year: 'numeric'}))}: <i>${esc(o.title)}</i>`;
+    $('#fOldestL').innerHTML = `<i>${esc(o.title)}</i> has been waiting this long for you to read it (since ${esc(new Date(o.date).toLocaleDateString([], {month: 'long', year: 'numeric'}))})`;
   } else { $('#fOldest').textContent = '—'; $('#fOldestL').textContent = 'oldest unread book'; }
   $('#fReading').textContent = fmtInt(by.reading.length);
   const stalled = by.reading.filter(isStalled).length;

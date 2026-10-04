@@ -6,16 +6,17 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.0 beta 15 (latest)
+## 2.0 beta 16 (latest)
 
-**Phone sync bookmark fixed**
+**Your oldest unread book, named first**
 
-- The phone sync bookmark stopped straight away with "Can't find variable: unHtml" after beta 14. The title clean-up that beta 14 added to the sync script never made it into the bookmark. It's in now. No script update is needed.
+- The oldest-unread figure now reads like "*Moby-Dick* has been waiting this long for you to read it (since November 2016)".
 
 ---
 
 ## Earlier betas
 
+- **2.0 beta 15** Phone sync bookmark fixed
 - **2.0 beta 14** Cleaner titles from the sync script (script update required)
 - **2.0 beta 13** Truer library value
 - **2.0 beta 12** Computers build the library like phones do
