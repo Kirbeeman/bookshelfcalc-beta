@@ -345,6 +345,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.4', ['The full bookcase keeps room at the end of its last shelf for the bookend, plants and other decorations']],
   ['2.1.0.0.3', ['On a computer the bookcase is 3 shelves tall at most and holds up to 100 unread books, with thinner spines when it needs them; the rest are counted below it']],
   ['2.1.0.0.2', ['Signed code: the phone bookmark and the sync script now only run code signed with the Shelf of Shame key, so nobody else can change what runs in your Amazon account. Set up the bookmark once more, and update the sync script once']],
   ['2.1.0.0.1', ['Security: every page now tells your browser to run only the Shelf of Shame\'s own code and Google\'s sign-in, and to talk only to this site, Google Fonts and Google Drive', 'A getting-started guide for every device at /help']],

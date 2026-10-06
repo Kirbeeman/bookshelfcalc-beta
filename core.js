@@ -1246,6 +1246,7 @@ function comicSvg(gs) {
 const DECOR_SETS = {halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
 const ORNAMENTS = {halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
 let shelfMemo = {};
+const DECOR_ROOM = 340; // px kept free at the end of a computer's full bookcase for the bookend and decorations
 function decorShelf() {
   const bc = document.querySelector('#stack .bookcase'); if (!bc) return;
   bc.querySelectorAll('.decor:not(.orn)').forEach(n => n.remove());
@@ -1406,7 +1407,10 @@ function renderStats() {
       const bc = stack.querySelector('.bookcase'); if (PHONE || !bc) return 0;
       const cs = getComputedStyle(bc), row = parseFloat(cs.lineHeight) || 176, top = bc.getBoundingClientRect().top + parseFloat(cs.borderTopWidth);
       const rowOf = el => Math.floor((el.getBoundingClientRect().bottom - top - 1) / row);
-      if (![...bc.children].some(el => rowOf(el) > 2)) return 0;
+      // the end of the last shelf keeps room for the bookend and its plants, vases and the like (decorShelf puts them there)
+      const kids = [...bc.children], last = kids[kids.length - 1];
+      const full = rowOf(last) === 2 && bc.getBoundingClientRect().right - 20 - last.getBoundingClientRect().right < DECOR_ROOM;
+      if (!full && !kids.some(el => rowOf(el) > 2)) return 0;
       return Math.max(1, [...bc.querySelectorAll('.spine')].filter(el => rowOf(el) <= 2).length - 1);
     };
     let cap = PHONE ? 15 : 100, maxPiles = 99, scale = 1;
@@ -1416,12 +1420,12 @@ function renderStats() {
     for (let tries = memo ? 1 : 0; tries < 20; tries++) {
       drawShelf(cap, maxPiles, scale); const fit = shelfFit(); if (!fit) break;
       if (tries === 0) { // first guess straight from the widths: how much thinner the spines must be for 3 shelves
-        const bc = stack.querySelector('.bookcase'), room = 3 * (bc.clientWidth - 20) * .94;
+        const bc = stack.querySelector('.bookcase'), room = 3 * (bc.clientWidth - 20) * .94 - DECOR_ROOM;
         let sw = 0, other = 0;
         for (const el of bc.children) { const cs = getComputedStyle(el), w = el.offsetWidth + parseFloat(cs.marginLeft) + parseFloat(cs.marginRight); if (el.classList.contains('spine')) sw += w; else other += w; }
-        maxPiles = 3; scale = Math.max(.45, Math.min(.98, (room - Math.min(other, 3 * 130)) / (sw || 1))); continue;
+        maxPiles = 3; scale = Math.max(.38, Math.min(.98, (room - Math.min(other, 3 * 130)) / (sw || 1))); continue;
       }
-      if (scale > .45) scale = Math.max(.45, scale - .03); else cap = Math.min(cap - 1, fit);
+      if (scale > .38) scale = Math.max(.38, scale - .03); else cap = Math.min(cap - 1, fit);
     }
     shelfMemo = {key: fitKey, cap, maxPiles, scale};
     requestAnimationFrame(decorShelf);
@@ -1753,7 +1757,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.1.0.0.3`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.3`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.1.0.0.4`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.4`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2321,7 +2325,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.1.0.0.3';
+const LATEST_SCRIPT = '2.1.0.0.4';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2407,6 +2411,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.4', ['The full bookcase keeps room at the end of its last shelf for the bookend, plants and other decorations']],
   ['2.1.0.0.3', ['On a computer the bookcase is 3 shelves tall at most and holds up to 100 unread books, with thinner spines when it needs them; the rest are counted below it']],
   ['2.1.0.0.2', ['Signed code: the phone bookmark and the sync script now only run code signed with the Shelf of Shame key, so nobody else can change what runs in your Amazon account. Set up the bookmark once more, and update the sync script once']],
   ['2.1.0.0.1', ['Security: every page now tells your browser to run only the Shelf of Shame\'s own code and Google\'s sign-in, and to talk only to this site, Google Fonts and Google Drive', 'A getting-started guide for every device at /help']],

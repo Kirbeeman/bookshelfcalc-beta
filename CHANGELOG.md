@@ -6,19 +6,18 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.1 beta 3 (latest)
+## 2.1 beta 4 (latest)
 
-**100 books on three shelves**
+**Decorations back on the full bookcase**
 
-- On a computer, a full bookcase holds **100 unread books on at most 3 shelves**. The spines get thinner to fit, and the rest are counted below it. With fewer than 100 unread, they all fit within 3 shelves.
-- When the bookcase is full, at most 3 little piles of books lie flat, so more books fit.
-- Windows too narrow for 100 readable spines show fewer books, still on 3 shelves. Phones keep the 15-book shelf.
+- With 100 books on three shelves there was no room left for the bookend, plants and other decorations at the end of the last shelf, so they disappeared. The full bookcase now keeps room for them, with slightly thinner spines to make up for it.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.1 beta 3** 100 books on three shelves
 - **2.1 beta 2** Signed code: the sync only runs code Daniel signed (set up the bookmark again; script update required)
 - **2.1 beta 1** Security policy and a guide for every device (folded into beta 2)
 - **2.0 beta 16** Your oldest unread book, named first (went live as 2.0)
