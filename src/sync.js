@@ -345,6 +345,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.7', ['Books added per year: the small arrows on cut-off bars are gone (they looked like 1s); the break mark still shows a bar is cut off', 'The reading-status rings and table show 99.5% instead of rounding to 100%']],
   ['2.1.0.0.6', ['The status dots under the title use the same colors in every theme: green when saved or synced, yellow while waiting or syncing, red when something went wrong']],
   ['2.1.0.0.5', ['Unread shares near 0% or 100% show a decimal (99.5%) instead of rounding to 100% when you have read a few books', 'New wording when you have barely started your library, or not started it at all']],
   ['2.1.0.0.4', ['The full bookcase keeps room at the end of its last shelf for the bookend, plants and other decorations']],

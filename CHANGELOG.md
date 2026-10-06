@@ -6,20 +6,19 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.1 beta 6 (latest)
+## 2.1 beta 7 (latest)
 
-**Status dots in traffic-light colors**
+**Cleaner year chart and exact rings**
 
-- The status dots under the title use the same colors in every theme: **green** when saved or synced, **yellow** while waiting or syncing, **red** when something went wrong, and gray for the example library.
-- The sync script / bookmark line gets a dot too.
-- "Amazon paused lookups" is now yellow instead of red, since the rest continue next visit.
-- The Google Drive problem line now reads "There is a problem with the sync. Tap to retry."
+- Books added per year: the small arrows on cut-off bars looked like 1s ("129↑"). They're gone. The break mark still shows a bar is cut off, and the note under the chart says so.
+- The reading-status rings and table rounded 99.5% to 100% and 0.5% to "<1%". They now show one decimal near 0% and 100%, like the summary.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.1 beta 6** Status dots in traffic-light colors
 - **2.1 beta 5** Truer unread share
 - **2.1 beta 4** Decorations back on the full bookcase
 - **2.1 beta 3** 100 books on three shelves

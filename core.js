@@ -1475,7 +1475,7 @@ function renderStats() {
   // status list
   // By status (#6): a small table so books and pages each have a labeled column, with each status's share of the books
   const allBk = order.reduce((a, k) => a + by[k].length, 0), stPages = k => by[k].reduce((a, b) => a + pagesOf(b), 0);
-  const stRows = order.map(k => `<tr><td><i style="background:${STATUS_COLOR[k]}"></i>${STATUS[k]}</td><td>${fmtInt(by[k].length)}<span class="pc">${allBk ? Math.round(by[k].length / allBk * 100) : 0}%</span></td><td>${fmtInt(stPages(k))}</td></tr>`).join('');
+  const stRows = order.map(k => `<tr><td><i style="background:${STATUS_COLOR[k]}"></i>${STATUS[k]}</td><td>${fmtInt(by[k].length)}<span class="pc">${pctText(allBk ? by[k].length / allBk * 100 : 0)}</span></td><td>${fmtInt(stPages(k))}</td></tr>`).join('');
   // The unread pile at a glance (#11): its shortest and longest books, the average length, and how many are quick reads
   const known = pile.filter(b => b.pages > 0).sort((a, b) => a.pages - b.pages);
   const shortB = known[0], longB = known[known.length - 1];
@@ -1523,7 +1523,7 @@ function renderStats() {
   let capped = false;
   if (!keys.length) box.innerHTML = '<p class="muted" style="align-self:center">No purchase dates yet.</p>';
   else {
-    // Stacked bars on a true scale, except unusually tall years: those are cut off (with a break mark and "↑")
+    // Stacked bars on a true scale, except unusually tall years: those are cut off (with a break mark)
     // so one big buying year doesn't flatten the rest. Numbers above bars are always exact.
     const W = Math.max(260, box.clientWidth || 320), H = 170, padL = 2, padR = 2, padT = 22, padB = 22;
     const tot = y => order.reduce((a, k) => a + yrs[y][k], 0);
@@ -1549,7 +1549,7 @@ function renderStats() {
         prevCut = cut;
         if (cut) bars += `<path d="M${x - 2},${base - h + 14} l${bw + 4},-6 M${x - 2},${base - h + 21} l${bw + 4},-6" stroke="var(--paper)" stroke-width="3"/>`;
         lift = cut && prevCut ? (lift ? 0 : 11) : 0; // neighbouring cut-off bars: stagger their labels so they don't collide
-        labels += `<text x="${cx}" y="${base - h - 6 - lift}" text-anchor="middle" class="yn">${t}${cut ? '↑' : ''}</text>`;
+        labels += `<text x="${cx}" y="${base - h - 6 - lift}" text-anchor="middle" class="yn">${t}</text>`;
       }
       if (i % every === 0 || i === keys.length - 1) labels += `<text x="${cx}" y="${H - 6}" text-anchor="middle" class="yy">'${y.slice(2)}</text>`;
       hits += `<rect class="yhit" data-y="${y}" data-i="${i}" x="${padL + slot * i}" y="0" width="${slot}" height="${H}" fill="transparent"/>`;
@@ -1561,7 +1561,7 @@ function renderStats() {
   }
   const undated = bs.filter(b => !b.date).length;
   const baseInfo = yearText('all');
-  const undatedTxt = (undated ? ` <span class="muted">(${fmtInt(undated)} books have no purchase date)</span>` : '') + (capped ? ' <span class="muted">Years marked ↑ are cut off so the others stay readable; the numbers are exact.</span>' : '');
+  const undatedTxt = (undated ? ` <span class="muted">(${fmtInt(undated)} books have no purchase date)</span>` : '') + (capped ? ' <span class="muted">Bars with a break mark are cut off so the others stay readable; the numbers are exact.</span>' : '');
   const cursor = () => box.querySelector('.ycursor');
   // Reading status rings: every year until you point at one, then just that year
   const RC = 2 * Math.PI * 26;
@@ -1574,10 +1574,10 @@ function renderStats() {
     $('#ringsTitle').textContent = y === 'all' ? 'Reading status · all years' : `Reading status · ${y}`;
     $('#ringsTotal').textContent = `${fmtInt(t)} book${t === 1 ? '' : 's'}`;
     rk.forEach(k => {
-      const p = t ? v[k] / t : 0, pct = Math.round(p * 100);
+      const p = t ? v[k] / t : 0;
       $('#rv-' + k).setAttribute('stroke-dasharray', `${v[k] && p * RC < 0.5 ? 0.5 : p * RC} ${RC}`);
       $('#rv-' + k).style.opacity = v[k] ? 1 : 0;
-      $('#rp-' + k).textContent = (v[k] && !pct ? '<1' : pct) + '%';
+      const rp = $('#rp-' + k); rp.textContent = pctText(p * 100); rp.style.fontSize = rp.textContent.length > 4 ? '80%' : ''; // 99.5% needs a little less room
       $('#rn-' + k).textContent = `${fmtInt(v[k])} book${v[k] === 1 ? '' : 's'}`;
     });
   };
@@ -1762,7 +1762,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.1.0.0.6`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.6`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.1.0.0.7`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.7`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2330,7 +2330,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.1.0.0.6';
+const LATEST_SCRIPT = '2.1.0.0.7';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2416,6 +2416,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.7', ['Books added per year: the small arrows on cut-off bars are gone (they looked like 1s); the break mark still shows a bar is cut off', 'The reading-status rings and table show 99.5% instead of rounding to 100%']],
   ['2.1.0.0.6', ['The status dots under the title use the same colors in every theme: green when saved or synced, yellow while waiting or syncing, red when something went wrong']],
   ['2.1.0.0.5', ['Unread shares near 0% or 100% show a decimal (99.5%) instead of rounding to 100% when you have read a few books', 'New wording when you have barely started your library, or not started it at all']],
   ['2.1.0.0.4', ['The full bookcase keeps room at the end of its last shelf for the bookend, plants and other decorations']],
