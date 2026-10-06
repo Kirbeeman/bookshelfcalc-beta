@@ -6,21 +6,20 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.1 beta 2 (latest)
+## 2.1 beta 3 (latest)
 
-**Signed code: the sync only runs code Daniel signed** (set up the bookmark again; script update required)
+**100 books on three shelves**
 
-- The **phone sync bookmark** now checks that the code it loads was signed with Daniel's signing key, and that the file matches exactly, before running anything. If either check fails it stops and says so. Set up the bookmark again once (Settings › Set up the bookmark); the old bookmark still works for now, but shows a note asking you to.
-- The **sync script** is now a small loader that never changes. Each time it runs it checks the signed release and the script's code the same way, so updates arrive without reinstalling, but only signed ones. It keeps the last checked copy so it works offline, and never steps back to an older release. Your installed script switches to the loader with its usual update; after that, the loader itself never needs updating.
-- Someone who got into the website or the GitHub repo still couldn't make either one run their own code.
-- The sync script runs in its own space, so the site's security policy can't stop it from starting (fixes Tampermonkey in Opera GX). If your script stopped answering after updating, install it again once from Settings.
-- A **one-time notice** the first time you open this version: a thank-you, and a page on what's been done to keep your data safe. It follows your theme.
-- Also in this beta (from 2.1 beta 1, not released on its own): every page carries a **Content Security Policy** (also live as 2.0.1), and there's a **getting-started guide for every device** at betabookshelf.kirbee213.tv/help.
+- On a computer, a full bookcase holds **100 unread books on at most 3 shelves**. The spines get thinner to fit, and the rest are counted below it. With fewer than 100 unread, they all fit within 3 shelves.
+- When the bookcase is full, at most 3 little piles of books lie flat, so more books fit.
+- Windows too narrow for 100 readable spines show fewer books, still on 3 shelves. Phones keep the 15-book shelf.
+- The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.1 beta 2** Signed code: the sync only runs code Daniel signed (set up the bookmark again; script update required)
 - **2.1 beta 1** Security policy and a guide for every device (folded into beta 2)
 - **2.0 beta 16** Your oldest unread book, named first (went live as 2.0)
 - **2.0 beta 15** Phone sync bookmark fixed

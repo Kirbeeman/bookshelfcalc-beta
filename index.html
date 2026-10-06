@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-A0IWuuDCZoTLo7RHm6rI/ow18pwWNGUfvOeu+uelTQM=' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-nI9r+fIZLRN3AAssFBpvfqnzyfmJcSjFhK3aM1TocY8=' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BETA · Shelf of Shame</title>
-<link rel="icon" type="image/png" href="icon-tag.png?v=2.1.0.0.2" id="favicon">
-<link rel="apple-touch-icon" href="icon-tag-180.png?v=2.1.0.0.2" id="touchicon">
+<link rel="icon" type="image/png" href="icon-tag.png?v=2.1.0.0.3" id="favicon">
+<link rel="apple-touch-icon" href="icon-tag-180.png?v=2.1.0.0.3" id="touchicon">
 <meta name="description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
 <meta property="og:title" content="Shelf of Shame">
 <meta property="og:description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
-<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v=2.1.0.0.2">
+<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v=2.1.0.0.3">
 <meta property="og:url" content="https://betabookshelf.kirbee213.tv/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -964,6 +964,7 @@ function comicSvg(gs) {
 // The last shelf's leftover space gets a bookend and these, in order; ORNAMENTS are the small things set between books now and then (Default spine colors only)
 const DECOR_SETS = {halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
 const ORNAMENTS = {halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
+let shelfMemo = {};
 function decorShelf() {
   const bc = document.querySelector('#stack .bookcase'); if (!bc) return;
   bc.querySelectorAll('.decor:not(.orn)').forEach(n => n.remove());
@@ -1044,78 +1045,104 @@ function renderStats() {
   if (!pile.length) {
     stack.innerHTML = n ? '<div class="pile-empty">The shelf is empty. Every book has been opened.</div>' : '<div class="pile-empty muted">Import your library to fill the shelf.</div>';
   } else {
-    const SHELF = window.matchMedia('(max-width: 640px)').matches ? 15 : 100; // a phone gets a short shelf; the rest is counted below it
-    // Within any group: just-bought books first (newest first), then the longest-waiting
-    const pickOrder = list => [...list.filter(isNew).sort((a,b) => b.date.localeCompare(a.date)), ...list.filter(b => !isNew(b)).sort((a,b) => (a.date || '9').localeCompare(b.date || '9'))];
-    let shown, globeG = [], comicG = [], globeSmallest = false;
-    if (S.settings.spineMode === 'genre') {
-      // The shelf doubles as a chart: each genre gets spines in proportion to its share of the unread pile, grouped together, biggest first
-      const groups = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; (groups[g] ||= []).push(b); });
-      let slots = Math.min(SHELF, pile.length);
-      let keys = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
-      // A phone's 10 spines are 10% each, too coarse for small genres: under 5% they're the lands on a spinning globe, under 3% a comic lying on the shelf
-      if (SHELF <= 15 && pile.length > SHELF) {
-        const share = g => groups[g].length / pile.length;
-        // Unknown isn't a genre, so it never becomes globe land or comic panels (it stays in the key below)
-        // One spine is 1/15 of the pile: under that a genre is globe land, under half that it's on the comic
-        const spine = 1 / SHELF;
-        comicG = keys.filter(g => g !== 'unknown' && share(g) < spine / 2); globeG = keys.filter(g => g !== 'unknown' && share(g) >= spine / 2 && share(g) < spine);
-        // The globe is always there: if no genre falls in its range, it takes the smallest genre that would have had spines
-        if (!globeG.length) { const rest = keys.filter(g => g !== 'unknown' && !comicG.includes(g)); if (rest.length > 1) { globeG = [rest[rest.length - 1]]; globeSmallest = true; } }
-        keys = keys.filter(g => !globeG.includes(g) && !comicG.includes(g) && !(g === 'unknown' && share(g) < spine));
-        if (globeG.length) slots--;
+    const PHONE = window.matchMedia('(max-width: 640px)').matches; // a phone gets a short shelf; the rest is counted below it
+    const drawShelf = (SHELF, maxPiles, scale) => {
+      // Within any group: just-bought books first (newest first), then the longest-waiting
+      const pickOrder = list => [...list.filter(isNew).sort((a,b) => b.date.localeCompare(a.date)), ...list.filter(b => !isNew(b)).sort((a,b) => (a.date || '9').localeCompare(b.date || '9'))];
+      let shown, globeG = [], comicG = [], globeSmallest = false;
+      if (S.settings.spineMode === 'genre') {
+        // The shelf doubles as a chart: each genre gets spines in proportion to its share of the unread pile, grouped together, biggest first
+        const groups = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; (groups[g] ||= []).push(b); });
+        let slots = Math.min(SHELF, pile.length);
+        let keys = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
+        // A phone's 10 spines are 10% each, too coarse for small genres: under 5% they're the lands on a spinning globe, under 3% a comic lying on the shelf
+        if (PHONE && pile.length > SHELF) {
+          const share = g => groups[g].length / pile.length;
+          // Unknown isn't a genre, so it never becomes globe land or comic panels (it stays in the key below)
+          // One spine is 1/15 of the pile: under that a genre is globe land, under half that it's on the comic
+          const spine = 1 / SHELF;
+          comicG = keys.filter(g => g !== 'unknown' && share(g) < spine / 2); globeG = keys.filter(g => g !== 'unknown' && share(g) >= spine / 2 && share(g) < spine);
+          // The globe is always there: if no genre falls in its range, it takes the smallest genre that would have had spines
+          if (!globeG.length) { const rest = keys.filter(g => g !== 'unknown' && !comicG.includes(g)); if (rest.length > 1) { globeG = [rest[rest.length - 1]]; globeSmallest = true; } }
+          keys = keys.filter(g => !globeG.includes(g) && !comicG.includes(g) && !(g === 'unknown' && share(g) < spine));
+          if (globeG.length) slots--;
+        }
+        const big = keys.reduce((a, g) => a + groups[g].length, 0) || 1;
+        const exact = keys.map(g => groups[g].length / big * slots);
+        const seats = exact.map(Math.floor);
+        let left = slots - seats.reduce((a, b) => a + b, 0);
+        exact.map((x, i) => [x - seats[i], i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (left > 0) { seats[i]++; left--; } }); // largest remainders get the leftover seats
+        shown = keys.flatMap((g, i) => pickOrder(groups[g]).slice(0, seats[i]));
+        // Just-bought books lead the whole shelf whatever their genre; the genre groups follow
+        shown = [...shown.filter(isNew).sort((a, b) => b.date.localeCompare(a.date)), ...shown.filter(b => !isNew(b))];
+      } else shown = pickOrder(pile).slice(0, SHELF);
+      const cloth = n => `var(--cloth-${n % 6 + 1})`;
+      const gmode = S.settings.spineMode === 'genre';
+      const tipOf = (b, p, nw) => `${esc(b.title)} — ${esc(b.author)} · ${p} pages${genreLabel(b) ? ' · ' + esc(genreLine(b)) + (tagsShown(b).length ? '\n' + esc(tagsShown(b).slice(0, 4).join(', ')) : b.genreSub && b.genreSub !== genreLabel(b) ? ' › ' + esc(b.genreSub) : '') : ''}${nw ? ' · bought ' + b.date : ''}`;
+      // One book's spine. In By genre mode a second genre shows as two bands in its color; otherwise the bands are decoration.
+      const spineOf = (b, i, flat) => {
+        const h = hash(b.id + b.title), p = pagesOf(b), nw = isNew(b);
+        const w = Math.round(Math.max(18, Math.min(46, 12 + p / 22)) * scale); // thinner spines when a full bookcase has to hold 100
+        const ht = 112 + (h % 46);
+        const r = (!flat && h % 23 === 0 && i > 0) ? -4 : 0, lean = !nw && r !== 0;
+        const c = gmode ? `var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})` : cloth(h);
+        const two = gmode && b.genre2 && GENRES[b.genre2] && b.genre2 !== b.genre;
+        const cls = `spine ${two ? 'g2' : gmode ? 'plain' : 's' + (h >> 3) % 5}${nw ? ' new' : ''}${lean ? ' lean' : ''}`;
+        const size = flat ? `--len:${Math.round(ht * .78)}px;--th:${Math.max(15, Math.round(w * .72))}px;--dx:${(h >> 5) % 9}px` : `--h:${ht}px;--w:${w}px;--r:${lean ? r : 0}deg`;
+        return `<span class="${cls}" style="${size};--c:${c}${two ? `;--c2:var(--g-${b.genre2})` : ''}" title="${tipOf(b, p, nw)}"><b>${esc(b.title)}</b></span>`;
+      };
+      // Now and then two or three books lie flat in a little pile, like a real shelf (never the just-bought ones)
+      let html = '<div class="bookcase">', piles = 0;
+      for (let i = 0; i < shown.length; i++) {
+        const b = shown[i], h = hash(b.id + b.title);
+        if (!PHONE && piles < maxPiles && i > 2 && h % 11 === 0 && !isNew(b)) { // no piles on a phone's short shelf
+          const n = 2 + (h >> 4) % 2, seg = shown.slice(i, i + n), cut = seg.findIndex(isNew), pile2 = cut < 0 ? seg : seg.slice(0, cut);
+          if (pile2.length >= 2) { piles++; html += `<span class="lay">${pile2.map(x => spineOf(x, i, true)).join('')}</span>`; i += pile2.length - 1; continue; }
+        }
+        html += spineOf(b, i, false);
+        if (!gmode && i % 23 === 11 && i < shown.length - 3) { const set = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default, k = set[(i / 23 | 0) % set.length]; html += `<span class="decor orn" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px">${DECOR[k][2]}</span>`; }
       }
-      const big = keys.reduce((a, g) => a + groups[g].length, 0) || 1;
-      const exact = keys.map(g => groups[g].length / big * slots);
-      const seats = exact.map(Math.floor);
-      let left = slots - seats.reduce((a, b) => a + b, 0);
-      exact.map((x, i) => [x - seats[i], i]).sort((a, b) => b[0] - a[0]).forEach(([, i]) => { if (left > 0) { seats[i]++; left--; } }); // largest remainders get the leftover seats
-      shown = keys.flatMap((g, i) => pickOrder(groups[g]).slice(0, seats[i]));
-      // Just-bought books lead the whole shelf whatever their genre; the genre groups follow
-      shown = [...shown.filter(isNew).sort((a, b) => b.date.localeCompare(a.date)), ...shown.filter(b => !isNew(b))];
-    } else shown = pickOrder(pile).slice(0, SHELF);
-    const cloth = n => `var(--cloth-${n % 6 + 1})`;
-    const gmode = S.settings.spineMode === 'genre';
-    const tipOf = (b, p, nw) => `${esc(b.title)} — ${esc(b.author)} · ${p} pages${genreLabel(b) ? ' · ' + esc(genreLine(b)) + (tagsShown(b).length ? '\n' + esc(tagsShown(b).slice(0, 4).join(', ')) : b.genreSub && b.genreSub !== genreLabel(b) ? ' › ' + esc(b.genreSub) : '') : ''}${nw ? ' · bought ' + b.date : ''}`;
-    // One book's spine. In By genre mode a second genre shows as two bands in its color; otherwise the bands are decoration.
-    const spineOf = (b, i, flat) => {
-      const h = hash(b.id + b.title), p = pagesOf(b), nw = isNew(b);
-      const w = Math.round(Math.max(18, Math.min(46, 12 + p / 22)));
-      const ht = 112 + (h % 46);
-      const r = (!flat && h % 23 === 0 && i > 0) ? -4 : 0, lean = !nw && r !== 0;
-      const c = gmode ? `var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})` : cloth(h);
-      const two = gmode && b.genre2 && GENRES[b.genre2] && b.genre2 !== b.genre;
-      const cls = `spine ${two ? 'g2' : gmode ? 'plain' : 's' + (h >> 3) % 5}${nw ? ' new' : ''}${lean ? ' lean' : ''}`;
-      const size = flat ? `--len:${Math.round(ht * .78)}px;--th:${Math.max(15, Math.round(w * .72))}px;--dx:${(h >> 5) % 9}px` : `--h:${ht}px;--w:${w}px;--r:${lean ? r : 0}deg`;
-      return `<span class="${cls}" style="${size};--c:${c}${two ? `;--c2:var(--g-${b.genre2})` : ''}" title="${tipOf(b, p, nw)}"><b>${esc(b.title)}</b></span>`;
+      if (globeG.length || comicG.length) {
+        const pct = g => `${GENRES[g]} ${Math.round(pile.filter(b => (GENRES[b.genre] ? b.genre : 'unknown') === g).length / pile.length * 100)}%`;
+        if (globeG.length) html += `<span class="gx gx-globe" data-g="${globeG.join(' ')}" title="${globeSmallest ? 'Your smallest genre' : `Genres under ${Math.round(100 / SHELF)}% of your unread books`}: ${esc(globeG.map(pct).join(', '))}">${smallGenreSvg(globeG)}</span>`;
+        if (comicG.length) html += `<span class="gx" title="Genres under ${Math.round(50 / SHELF)}% of your unread books: ${esc(comicG.map(pct).join(', '))}">${comicSvg(comicG)}</span>`;
+      }
+      html += '</div>';
+      const gl = $('#genreLegend');
+      if (S.settings.spineMode === 'genre') {
+        const cnt = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; cnt[g] = (cnt[g] || 0) + 1; });
+        gl.innerHTML = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).map(g => `<span${g === 'nonfiction' ? ` title="${esc([...new Set(pile.filter(b => b.genre === 'nonfiction').map(b => b.genreName).filter(Boolean))].join(', '))}"` : ''}><i style="background:var(--g-${g})"></i>${GENRES[g]} <span class="num muted">${cnt[g]} · ${Math.round(cnt[g] / pile.length * 100)}%</span></span>`).join('')
+          + (pile.some(b => b.genreSrc === 'guess') ? `<span class="muted">${fmtInt(pile.filter(b => b.genreSrc === 'guess').length)} genres are guessed from the book's title, because Amazon has no store page for them.</span>` : '')
+          + (globeG.length || comicG.length ? `<span class="muted">${globeG.length ? (globeSmallest ? `The globe holds your smallest genre, ${esc(GENRES[globeG[0]])}.` : `The globe holds the genres under ${Math.round(100 / SHELF)}%.`) : ''}${globeG.length && comicG.length ? ' ' : ''}${comicG.length ? `The comic holds the ones under ${Math.round(50 / SHELF)}%.` : ''}</span>` : '');
+        gl.hidden = false;
+      } else gl.hidden = true;
+      if (pile.length > shown.length) html += `<div class="more">+ ${fmtInt(pile.length - shown.length)} more that didn't fit on the shelf${S.settings.spineMode === 'genre' ? ', in the same proportions' : ''}</div>`;
+      stack.innerHTML = html;
     };
-    // Now and then two or three books lie flat in a little pile, like a real shelf (never the just-bought ones)
-    let html = '<div class="bookcase">';
-    for (let i = 0; i < shown.length; i++) {
-      const b = shown[i], h = hash(b.id + b.title);
-      if (SHELF > 15 && i > 2 && h % 11 === 0 && !isNew(b)) { // no piles on a phone's short shelf
-        const n = 2 + (h >> 4) % 2, seg = shown.slice(i, i + n), cut = seg.findIndex(isNew), pile2 = cut < 0 ? seg : seg.slice(0, cut);
-        if (pile2.length >= 2) { html += `<span class="lay">${pile2.map(x => spineOf(x, i, true)).join('')}</span>`; i += pile2.length - 1; continue; }
+    // A computer's bookcase has at most 3 shelves and holds up to 100 books. If they don't fit, the spines get thinner
+    // (and fewer books lie flat); only on a window too narrow for that do fewer books go on the shelves
+    const shelfFit = () => {
+      const bc = stack.querySelector('.bookcase'); if (PHONE || !bc) return 0;
+      const cs = getComputedStyle(bc), row = parseFloat(cs.lineHeight) || 176, top = bc.getBoundingClientRect().top + parseFloat(cs.borderTopWidth);
+      const rowOf = el => Math.floor((el.getBoundingClientRect().bottom - top - 1) / row);
+      if (![...bc.children].some(el => rowOf(el) > 2)) return 0;
+      return Math.max(1, [...bc.querySelectorAll('.spine')].filter(el => rowOf(el) <= 2).length - 1);
+    };
+    let cap = PHONE ? 15 : 100, maxPiles = 99, scale = 1;
+    // the same window width and pile as last time: start from the fit found then (a redraw happens on every edit)
+    const fitKey = [stack.clientWidth, pile.length, S.settings.spineMode, document.documentElement.dataset.theme].join('|'), memo = shelfMemo.key === fitKey;
+    if (memo) ({cap, maxPiles, scale} = shelfMemo);
+    for (let tries = memo ? 1 : 0; tries < 20; tries++) {
+      drawShelf(cap, maxPiles, scale); const fit = shelfFit(); if (!fit) break;
+      if (tries === 0) { // first guess straight from the widths: how much thinner the spines must be for 3 shelves
+        const bc = stack.querySelector('.bookcase'), room = 3 * (bc.clientWidth - 20) * .94;
+        let sw = 0, other = 0;
+        for (const el of bc.children) { const cs = getComputedStyle(el), w = el.offsetWidth + parseFloat(cs.marginLeft) + parseFloat(cs.marginRight); if (el.classList.contains('spine')) sw += w; else other += w; }
+        maxPiles = 3; scale = Math.max(.45, Math.min(.98, (room - Math.min(other, 3 * 130)) / (sw || 1))); continue;
       }
-      html += spineOf(b, i, false);
-      if (!gmode && i % 23 === 11 && i < shown.length - 3) { const set = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default, k = set[(i / 23 | 0) % set.length]; html += `<span class="decor orn" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px">${DECOR[k][2]}</span>`; }
+      if (scale > .45) scale = Math.max(.45, scale - .03); else cap = Math.min(cap - 1, fit);
     }
-    if (globeG.length || comicG.length) {
-      const pct = g => `${GENRES[g]} ${Math.round(pile.filter(b => (GENRES[b.genre] ? b.genre : 'unknown') === g).length / pile.length * 100)}%`;
-      if (globeG.length) html += `<span class="gx gx-globe" data-g="${globeG.join(' ')}" title="${globeSmallest ? 'Your smallest genre' : `Genres under ${Math.round(100 / SHELF)}% of your unread books`}: ${esc(globeG.map(pct).join(', '))}">${smallGenreSvg(globeG)}</span>`;
-      if (comicG.length) html += `<span class="gx" title="Genres under ${Math.round(50 / SHELF)}% of your unread books: ${esc(comicG.map(pct).join(', '))}">${comicSvg(comicG)}</span>`;
-    }
-    html += '</div>';
-    const gl = $('#genreLegend');
-    if (S.settings.spineMode === 'genre') {
-      const cnt = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; cnt[g] = (cnt[g] || 0) + 1; });
-      gl.innerHTML = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).map(g => `<span${g === 'nonfiction' ? ` title="${esc([...new Set(pile.filter(b => b.genre === 'nonfiction').map(b => b.genreName).filter(Boolean))].join(', '))}"` : ''}><i style="background:var(--g-${g})"></i>${GENRES[g]} <span class="num muted">${cnt[g]} · ${Math.round(cnt[g] / pile.length * 100)}%</span></span>`).join('')
-        + (pile.some(b => b.genreSrc === 'guess') ? `<span class="muted">${fmtInt(pile.filter(b => b.genreSrc === 'guess').length)} genres are guessed from the book's title, because Amazon has no store page for them.</span>` : '')
-        + (globeG.length || comicG.length ? `<span class="muted">${globeG.length ? (globeSmallest ? `The globe holds your smallest genre, ${esc(GENRES[globeG[0]])}.` : `The globe holds the genres under ${Math.round(100 / SHELF)}%.`) : ''}${globeG.length && comicG.length ? ' ' : ''}${comicG.length ? `The comic holds the ones under ${Math.round(50 / SHELF)}%.` : ''}</span>` : '');
-      gl.hidden = false;
-    } else gl.hidden = true;
-    if (pile.length > shown.length) html += `<div class="more">+ ${fmtInt(pile.length - shown.length)} more that didn't fit on the shelf${S.settings.spineMode === 'genre' ? ', in the same proportions' : ''}</div>`;
-    stack.innerHTML = html;
+    shelfMemo = {key: fitKey, cap, maxPiles, scale};
     requestAnimationFrame(decorShelf);
   }
   $('#fValue').textContent = mask(pileValue); $('#fValue').classList.toggle('masked', !S.showMoney);
@@ -1445,7 +1472,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.1.0.0.2`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.2`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.1.0.0.3`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.3`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2013,7 +2040,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.1.0.0.2';
+const LATEST_SCRIPT = '2.1.0.0.3';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2099,6 +2126,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.3', ['On a computer the bookcase is 3 shelves tall at most and holds up to 100 unread books, with thinner spines when it needs them; the rest are counted below it']],
   ['2.1.0.0.2', ['Signed code: the phone bookmark and the sync script now only run code signed with the Shelf of Shame key, so nobody else can change what runs in your Amazon account. Set up the bookmark once more, and update the sync script once']],
   ['2.1.0.0.1', ['Security: every page now tells your browser to run only the Shelf of Shame\'s own code and Google\'s sign-in, and to talk only to this site, Google Fonts and Google Drive', 'A getting-started guide for every device at /help']],
   ['2.0.0.0.16', ['Your oldest unread book is named first, as in "Moby-Dick has been waiting this long for you to read it"']],
