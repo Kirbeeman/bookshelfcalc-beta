@@ -71,5 +71,6 @@ let code = saved && saved.hash === want ? saved.code : null;
 if (!code) { try { code = await get(SITE + 'core.js?v=' + encodeURIComponent(m.version)); } catch (e) { return stop('could not download core.js (' + e.message + ')'); } }
 if (await fingerprint(code) !== want) return stop('core.js does not match the signed release');
 if (!saved || saved.hash !== want || saved.rel.text !== rel.text) api[1]('klc-signed', JSON.stringify({rel, hash: want, code}));
-new Function('return ' + code)()(api[0], api[1], api[2], api[3], {script: {name: 'Shelf of Shame', version: m.version}}, SITE);
+let run; try { run = new Function('return ' + code)(); } catch (e) { return stop('this page does not allow it (' + e.message.slice(0, 80) + ')'); }
+run(api[0], api[1], api[2], api[3], {script: {name: 'Shelf of Shame', version: m.version}}, SITE);
 })();
