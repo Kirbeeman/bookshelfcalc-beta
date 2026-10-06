@@ -2,20 +2,26 @@
 
 Newest first. The latest beta is described in full; earlier ones are listed by title.
 
-Beta versions are named for the live version they're heading toward, plus a beta count: "2.0 beta 1" is the first beta of what goes live as 2.0. (The script's internal version for that is 2.0.0.0.1.) Before this numbering, the beta used 1.51 to 1.55, which overlapped with live versions.
+Beta versions are named for the live version they're heading toward, plus a beta count: "2.1 beta 1" is the first beta of what goes live as 2.1. (The script's internal version for that is 2.1.0.0.1.) 2.0 went live on October 6, 2026. Before this numbering, the beta used 1.51 to 1.55, which overlapped with live versions.
 
 ---
 
-## 2.0 beta 16 (latest)
+## 2.1 beta 2 (latest)
 
-**Your oldest unread book, named first**
+**Signed code: the sync only runs code Daniel signed** (set up the bookmark again; script update required)
 
-- The oldest-unread figure now reads like "*Moby-Dick* has been waiting this long for you to read it (since November 2016)".
+- The **phone sync bookmark** now checks that the code it loads was signed with Daniel's signing key, and that the file matches exactly, before running anything. If either check fails it stops and says so. Set up the bookmark again once (Settings › Set up the bookmark); the old bookmark still works for now, but shows a note asking you to.
+- The **sync script** is now a small loader that never changes. Each time it runs it checks the signed release and the script's code the same way, so updates arrive without reinstalling, but only signed ones. It keeps the last checked copy so it works offline, and never steps back to an older release. Your installed script switches to the loader with its usual update; after that, the loader itself never needs updating.
+- Someone who got into the website or the GitHub repo still couldn't make either one run their own code.
+- A **one-time notice** the first time you open this version: a thank-you, and a page on what's been done to keep your data safe. It follows your theme.
+- Also in this beta (from 2.1 beta 1, not released on its own): every page carries a **Content Security Policy** (also live as 2.0.1), and there's a **getting-started guide for every device** at betabookshelf.kirbee213.tv/help.
 
 ---
 
 ## Earlier betas
 
+- **2.1 beta 1** Security policy and a guide for every device (folded into beta 2)
+- **2.0 beta 16** Your oldest unread book, named first (went live as 2.0)
 - **2.0 beta 15** Phone sync bookmark fixed
 - **2.0 beta 14** Cleaner titles from the sync script (script update required)
 - **2.0 beta 13** Truer library value

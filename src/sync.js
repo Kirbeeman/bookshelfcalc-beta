@@ -28,7 +28,10 @@ window.addEventListener('message', e => {
 });
 // ---------- phone sync bookmark: amazon.com opens this page with #bm and hands over what it read there ----------
 // The bookmark is tiny (phone browsers cut off long bookmarks): it loads bm.js from this site, which does the work on amazon.com
-const bookmarkletCode = () => `javascript:(()=>{const s=document.createElement('script');s.src='${location.origin}/bm.js?'+Date.now();document.body.appendChild(s)})()`;
+// The bookmark checks the signed release before running anything: it fetches release.json, checks its signature with the
+// public key below, then loads bm.js with the signed fingerprint so the browser refuses any other file.
+const SIGN_KEY = '__SIGN_KEY__';
+const bookmarkletCode = () => `javascript:(async()=>{const S='${location.origin}/',K='${SIGN_KEY}',a=u=>Uint8Array.from(atob(u),c=>c.charCodeAt(0)),E=()=>alert('Shelf sync stopped: its code could not be checked as genuine, so nothing was run.');try{const r=await(await fetch(S+'release.json?'+Date.now())).json(),c=crypto.subtle,k=await c.importKey('spki',a(K),{name:'ECDSA',namedCurve:'P-256'},0,['verify']);if(!await c.verify({name:'ECDSA',hash:'SHA-256'},k,a(r.sig),new TextEncoder().encode(r.text)))throw 0;const m=JSON.parse(r.text),s=document.createElement('script');s.src=S+'bm.js?v='+m.version;s.integrity=m.files['bm.js'];s.crossOrigin='anonymous';s.onerror=E;document.body.appendChild(s)}catch(e){E()}})()`;
 function initPhoneSync() {
   if (location.hash !== '#bm' || !window.opener) return;
   const AMZ = /^https:\/\/www\.amazon\.(com|co\.uk|ca|com\.au)$/;
@@ -91,6 +94,7 @@ function startSync() {
   if (MOBILE && S.demo) { const p = $('#demoBanner p'); if (p) p.innerHTML = '<strong>This is an example library</strong> of public-domain classics so you can see how it works. Tap <b>Get started</b> to bring in your own books from Amazon, Google Drive or a file.'; const bi = $('#bannerImport'); if (bi) bi.textContent = 'Get started'; }
   initPhoneSync();
   initDrive();
+  storeReady.then(() => setTimeout(showNotice, 1800));
   if (hasCore) { enableSync(); return; }
   postBridge({type: 'hello'});
   if (location.protocol === 'file:') return;
@@ -294,6 +298,45 @@ function forceUpdate(v) {
   if (!d.open) d.showModal();
 }
 
+// ---------- a one-time notice for a new version (looks like the update dialog and follows the theme) ----------
+const NOTICE = 'signed-2.1';
+const NOTICE_ICONS = {
+  thanks: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+  safe: '<svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>'
+};
+function showNotice() {
+  let seen = ''; try { seen = localStorage.getItem('klc-notice') || ''; } catch { return; }
+  if (seen === NOTICE) return;
+  // new people (still on the example) have nothing to be thanked for yet; they just don't see it
+  if (S.demo) { lsSet1('klc-notice', NOTICE); return; }
+  // never on top of the update dialog or the setup walk-through: wait until they're closed
+  if (document.querySelector('dialog[open]')) { setTimeout(showNotice, 3000); return; }
+  const d = document.createElement('dialog'); d.id = 'dlgNotice'; d.className = 'wizdlg forcedlg';
+  const done = () => { lsSet1('klc-notice', NOTICE); d.close(); d.remove(); };
+  d.addEventListener('cancel', e => { e.preventDefault(); done(); });
+  document.body.append(d);
+  const page = n => {
+    const dots = `<div class="pp">${[1, 2].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</div><div class="count">PAGE ${n} OF 2</div>`;
+    d.innerHTML = `<div class="dlg wiz">` + (n === 1 ? `${dots}
+      <div class="forceicon" aria-hidden="true">${NOTICE_ICONS.thanks}</div>
+      <h2>Thank you</h2>
+      <p>Thanks for using the Shelf of Shame, and for sticking with it through every update. Your ideas, bug reports and patience are what keep it getting better, and I'm grateful for every one of you.</p>
+      <div class="row wnav"><span></span><button type="button" class="btn primary" id="noticeNext">Next</button></div>`
+      : `${dots}
+      <div class="forceicon" aria-hidden="true">${NOTICE_ICONS.safe}</div>
+      <h2>Keeping your data safe</h2>
+      <p>I'm committed to keeping the Shelf of Shame safe and secure. The sync reads your books, prices and order dates from Amazon and Goodreads, and that should only ever end up with you.</p>
+      <p>So this version adds a new layer of protection: the sync bookmark and the sync script now check that their code is genuine, signed by me, before they run. Even if someone broke into the website or its code, they couldn't use it to get at your data.</p>
+      <div class="wwarn">There may be a few hiccups while this settles in. If something looks off, reload the page or sync again. ${MOBILE ? 'Sync from your phone? Set up the bookmark once more: <b>Settings › Set up the bookmark</b>.' : ''}</div>
+      <p>The added layer of security is worth it. Thanks for bearing with me.<br><b>Daniel</b></p>
+      <div class="row wnav"><button type="button" class="btn" id="noticeBack">Back</button><button type="button" class="btn primary" id="noticeDone">Got it</button></div>`) + `</div>`;
+    const go = $('#noticeNext'), bk = $('#noticeBack'), ok = $('#noticeDone');
+    if (go) go.onclick = () => page(2); if (bk) bk.onclick = () => page(1); if (ok) ok.onclick = done;
+    (go || ok).focus();
+  };
+  page(1); d.showModal(); $('#noticeNext').focus();
+}
+
 // ---------- small storage helpers (storage can be blocked; nothing here may throw) ----------
 const ssGet = k => { try { return sessionStorage.getItem(k) || ''; } catch { return ''; } };
 const ssSet = (k, v) => { try { v ? sessionStorage.setItem(k, v) : sessionStorage.removeItem(k); } catch {} };
@@ -302,6 +345,8 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.2', ['Signed code: the phone bookmark and the sync script now only run code signed with the Shelf of Shame key, so nobody else can change what runs in your Amazon account. Set up the bookmark once more, and update the sync script once']],
+  ['2.1.0.0.1', ['Security: every page now tells your browser to run only the Shelf of Shame\'s own code and Google\'s sign-in, and to talk only to this site, Google Fonts and Google Drive', 'A getting-started guide for every device at /help']],
   ['2.0.0.0.16', ['Your oldest unread book is named first, as in "Moby-Dick has been waiting this long for you to read it"']],
   ['2.0.0.0.15', ['Fixed: the phone sync bookmark stopped with "Can\'t find variable: unHtml"']],
   ['2.0.0.0.14', ['The sync script cleans up titles and authors as it reads them from Amazon (no more &amp;). This one needs a script update']],

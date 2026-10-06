@@ -5,6 +5,8 @@
 (async () => {
   // Loaded by the short bookmark as <site>/bm.js, so the site's address comes from where this file was loaded
   const SITE = new URL('./', (document.currentScript && document.currentScript.src) || '__SITE__').href;
+  // The signed bookmark loads this file with its signed fingerprint (integrity). The older bookmark doesn't check anything.
+  const checked = !!(document.currentScript && document.currentScript.integrity);
   const host = location.hostname;
   if (!/^www\.amazon\.(com|co\.uk|ca|com\.au)$/.test(host)) {
     const to = /^(?:[a-z.]+\.)?amazon\.(com|co\.uk|ca|com\.au)$/.test(host) ? 'https://www.' + host.replace(/^.*?amazon\./, 'amazon.') + '/' : 'https://www.amazon.com/';
@@ -34,9 +36,11 @@
 #klcbm a{color:#9fb0ff}#klcbm [hidden]{display:none!important}</style>
 <div class="t"><b>Shelf of Shame sync</b><button class="x" aria-label="Close">×</button></div>
 <div class="m" id="klcbm-m">Starting…</div><div class="bar"><i id="klcbm-bar"></i></div>
-<div class="row"><button class="b" id="klcbm-stop" hidden>Send what I have</button><button class="b p" id="klcbm-send" hidden>Send to Shelf of Shame</button></div>`;
+<div class="row"><button class="b" id="klcbm-stop" hidden>Send what I have</button><button class="b p" id="klcbm-send" hidden>Send to Shelf of Shame</button></div>
+<div class="m" id="klcbm-old" hidden style="margin-top:10px;font-size:13px">This is the older Shelf sync bookmark, which doesn't check that its code is genuine. Please set it up again once: on the Shelf of Shame, open <b>Settings</b> and tap <b>Set up the bookmark</b>.</div>`;
   document.body.appendChild(box);
   const $ = id => document.getElementById(id);
+  if (!checked) $('klcbm-old').hidden = false;
   const msg = (h, frac) => { $('klcbm-m').innerHTML = h; if (frac != null) $('klcbm-bar').style.width = Math.round(Math.min(1, frac) * 100) + '%'; };
   window.__klcbm = {show: () => { box.hidden = false; }};
   box.querySelector('.x').onclick = () => { stop = true; box.remove(); delete window.__klcbm; };

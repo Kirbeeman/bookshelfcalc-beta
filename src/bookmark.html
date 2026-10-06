@@ -63,7 +63,8 @@ code{font-size:.9em}
   // The calculator copies the code before sending people here; #c says it did
   if (location.hash !== '#c') document.getElementById('copied').hidden = true;
   history.replaceState(null, '', location.pathname); // so the saved bookmark is the plain page, not #c
-  const code = `javascript:(()=>{const s=document.createElement('script');s.src='${location.origin}/bm.js?'+Date.now();document.body.appendChild(s)})()`;
+  const SIGN_KEY = '__SIGN_KEY__';
+  const code = `javascript:(async()=>{const S='${location.origin}/',K='${SIGN_KEY}',a=u=>Uint8Array.from(atob(u),c=>c.charCodeAt(0)),E=()=>alert('Shelf sync stopped: its code could not be checked as genuine, so nothing was run.');try{const r=await(await fetch(S+'release.json?'+Date.now())).json(),c=crypto.subtle,k=await c.importKey('spki',a(K),{name:'ECDSA',namedCurve:'P-256'},0,['verify']);if(!await c.verify({name:'ECDSA',hash:'SHA-256'},k,a(r.sig),new TextEncoder().encode(r.text)))throw 0;const m=JSON.parse(r.text),s=document.createElement('script');s.src=S+'bm.js?v='+m.version;s.integrity=m.files['bm.js'];s.crossOrigin='anonymous';s.onerror=E;document.body.appendChild(s)}catch(e){E()}})()`;
   const btn = document.getElementById('again');
   btn.onclick = async () => {
     try { await navigator.clipboard.writeText(code); }

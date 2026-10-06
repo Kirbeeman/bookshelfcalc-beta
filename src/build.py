@@ -43,13 +43,16 @@ _bm=open('bookmarklet.src.js').read().replace('/*CORE*/', _core)
 open('/tmp/klc-bm.js','w').write(_bm)
 _min=subprocess.run(['terser','/tmp/klc-bm.js','--compress','--mangle','--ecma','2020'],capture_output=True,text=True,check=True).stdout.strip()
 open('../bm.js','w').write(_min + '\n')
-import shutil; shutil.copy('privacy.html', '../privacy.html'); shutil.copy('bookmark.html', '../bookmark.html'); shutil.copy('iphone.html', '../iphone.html')
+import shutil; shutil.copy('privacy.html', '../privacy.html'); open('../bookmark.html','w').write(open('bookmark.html').read().replace('__SIGN_KEY__', open('signing-key.pub').read().strip())); shutil.copy('iphone.html', '../iphone.html'); os.makedirs('../ioshelp', exist_ok=True); shutil.copy('iphone.html', '../ioshelp/index.html'); shutil.copy('help.html', '../help.html'); os.makedirs('../help', exist_ok=True); shutil.copy('help.html', '../help/index.html')
 for _f in ['icon-tag.png', 'icon-tag-180.png', 'icon-web.png', 'icon-web-180.png', 'og.png']: shutil.copy(_f, '../' + _f)  # drawn by icons/make_icons.js  # served next to the page; the bookmark itself just loads this file
-_sync=(open('sync.js').read() + '\n' + open('drive.js').read()).replace('__SCRIPT_VERSION__', VER).replace('__REQUIRED_SCRIPT__', REQ)
+_sync=(open('sync.js').read() + '\n' + open('drive.js').read()).replace('__SCRIPT_VERSION__', VER).replace('__REQUIRED_SCRIPT__', REQ).replace('__SIGN_KEY__', open('signing-key.pub').read().strip())
 src=R(src,"// ---------- export ----------", _sync+"\n// ---------- export ----------")
 standalone=src.replace('<label class="check full" data-us>','<label class="check full" data-us hidden>')
 for out_path in ('../index.html', '../BookshelfCalc/index.html'):
     open(out_path,'w').write(standalone)
+# every page gets its Content Security Policy (csp.py), after all pages are written
+import sys as _sys; _sys.dont_write_bytecode = True  # no __pycache__ folder in the repo
+import csp as _csp; _csp.apply_all('..')
 
 css=re.search(r'<style>(.*?)</style>',src,re.S).group(1)
 body=src[src.index('<div class="wrap">'):src.index('<script>')]
@@ -65,5 +68,13 @@ js=R(js,"const lsSet = v => { try { localStorage.setItem(LS, JSON.stringify(v));
  "const lsSet = v => { try { GM_setValue(LS, JSON.stringify(v)); return true; } catch { return false; } };")
 tpl=open('template.user.js').read()
 out=tpl.replace('/*CSS*/',css.replace('\\','\\\\').replace('`','\\`').replace('${','\\${')).replace('/*BODY*/',body.replace('\\','\\\\').replace('`','\\`').replace('${','\\${')).replace('/*CALC*/',js)
-open('../kindle-library-calculator.user.js','w').write(out)
+# core.js: the sync script's code on its own, starting at "(function", for the signed loader to check and run
+open('../core.js','w').write(out[out.index('(function (GM_getValue'):])
+# the loader people install: never updates itself, only runs core.js from a signed release
+_key=open('signing-key.pub').read().strip()
+_ld=open('loader.user.js').read().replace('__VERSION__', VER).replace('__SIGN_KEY__', _key)
+open('../kindle-library-calculator.user.js','w').write(_ld)
+# signed release: stops the build if bm.js or core.js changed and the new release text isn't signed yet
+import signing as _signing
+print('signed release', _signing.release('..', VER))
 print('built', len(out))

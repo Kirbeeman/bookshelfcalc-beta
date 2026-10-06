@@ -1,22 +1,487 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-A0IWuuDCZoTLo7RHm6rI/ow18pwWNGUfvOeu+uelTQM=' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>BETA · Shelf of Shame</title>
-<link rel="icon" type="image/png" href="icon-tag.png?v=2.1.0.0.2" id="favicon">
-<link rel="apple-touch-icon" href="icon-tag-180.png?v=2.1.0.0.2" id="touchicon">
-<meta name="description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
-<meta property="og:title" content="Shelf of Shame">
-<meta property="og:description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
-<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v=2.1.0.0.2">
-<meta property="og:url" content="https://betabookshelf.kirbee213.tv/">
-<meta name="twitter:card" content="summary_large_image">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,800&family=JetBrains+Mono:wght@400;600&family=Cormorant+Garamond:wght@600;700&family=Creepster&display=swap">
-<style>
+(function (GM_getValue, GM_setValue, GM_addStyle, GM_xmlhttpRequest, GM_info, SITE_URL) {
+'use strict';
+const host = location.hostname;
+const onKindle = /^read\.amazon\./.test(host);
+const onGoodreads = host === 'www.goodreads.com';
+const onCalc = onGoodreads && location.pathname.replace(/\/$/, '') === '/kindle-calculator';
+const onSite = location.origin + '/' === SITE_URL || (host === 'kirbeeman.github.io' && location.pathname.startsWith('/bookshelfcalc'));
+
+// ---------- core: fetch Goodreads shelves and the Kindle library from any page ----------
+function gmGet(url) {
+  return new Promise((resolve, reject) => GM_xmlhttpRequest({
+    method: 'GET', url, timeout: 30000,
+    onload: r => resolve({status: r.status, text: r.responseText, finalUrl: r.finalUrl || url}),
+    onerror: () => reject(new Error('network error')),
+    ontimeout: () => reject(new Error('timed out')),
+  }));
+}
+const tag = (el, name) => (el.getElementsByTagName(name)[0]?.textContent || '').trim();
+
+async function goodreadsUserId() {
+  const saved = GM_getValue('grUser', '');
+  if (saved) return saved;
+  const r = await gmGet('https://www.goodreads.com/review/list');
+  const m = r.finalUrl.match(/\/review\/list\/(\d+)/) || r.text.match(/\/review\/list\/(\d+)/);
+  if (!m) throw new Error('sign in at goodreads.com first');
+  GM_setValue('grUser', m[1]);
+  return m[1];
+}
+async function shelfRss(id, shelf) {
+  const out = [], seen = new Set();
+  for (let page = 1; page <= 80; page++) {
+    const r = await gmGet(`https://www.goodreads.com/review/list_rss/${id}?shelf=${encodeURIComponent(shelf)}&page=${page}`);
+    if (r.status !== 200) throw new Error('rss ' + r.status);
+    const x = new DOMParser().parseFromString(r.text, 'text/xml');
+    if (x.querySelector('parsererror') || !x.querySelector('channel')) throw new Error('rss unavailable');
+    let fresh = 0;
+    for (const it of x.getElementsByTagName('item')) {
+      const bid = tag(it, 'book_id') || tag(it, 'guid');
+      if (seen.has(bid)) continue; seen.add(bid); fresh++;
+      out.push({title: tag(it, 'title'), author: tag(it, 'author_name'), isbn: tag(it, 'isbn'), pages: tag(it, 'num_pages'),
+        rating: tag(it, 'user_rating'), dateAdded: tag(it, 'user_date_added'), readAt: tag(it, 'user_read_at')});
+    }
+    if (!fresh) break;
+  }
+  return out;
+}
+async function shelfHtml(id, shelf) {
+  const out = [], seen = new Set();
+  for (let page = 1; page <= 80; page++) {
+    const r = await gmGet(`https://www.goodreads.com/review/list/${id}?shelf=${encodeURIComponent(shelf)}&per_page=100&page=${page}&view=table`);
+    if (r.status !== 200) throw new Error(`Goodreads returned ${r.status} for your ${shelf} shelf`);
+    const doc = new DOMParser().parseFromString(r.text, 'text/html');
+    let fresh = 0;
+    for (const row of doc.querySelectorAll('tr.review, tr.bookalike')) {
+      const a = row.querySelector('td.field.title a'); if (!a) continue;
+      const key = a.getAttribute('href'); if (seen.has(key)) continue; seen.add(key); fresh++;
+      const val = c => (row.querySelector(`td.field.${c} .value`)?.textContent || '').replace(/\s+/g, ' ').trim();
+      out.push({title: (a.getAttribute('title') || a.textContent).trim(), author: row.querySelector('td.field.author a')?.textContent || '',
+        isbn: val('isbn'), pages: val('num_pages'), rating: String(row.querySelectorAll('td.field.rating .staticStar.p10').length),
+        dateAdded: val('date_added'), readAt: val('date_read')});
+    }
+    if (!fresh) break;
+  }
+  return out;
+}
+async function fetchGoodreads(progress) {
+  const id = await goodreadsUserId();
+  const shelves = {'to-read': 'unread', 'currently-reading': 'reading', 'read': 'finished'};
+  const all = []; let html = false;
+  for (const [shelf, status] of Object.entries(shelves)) {
+    progress(`Reading your Goodreads "${shelf}" shelf…`);
+    let books;
+    if (!html) { try { books = await shelfRss(id, shelf); } catch { html = true; } }
+    if (html) books = await shelfHtml(id, shelf);
+    books.forEach(b => all.push({...b, status}));
+  }
+  return all;
+}
+async function fetchKindle(progress) {
+  const kHost = GM_getValue('kindleHost', 'read.amazon.com');
+  const items = []; let token = '';
+  for (let page = 0; page < 400; page++) {
+    const r = await gmGet(`https://${kHost}/kindle-library/search?query=&libraryType=BOOKS&sortType=recency&querySize=50` + (token ? '&paginationToken=' + encodeURIComponent(token) : ''));
+    let j; try { j = JSON.parse(r.text); } catch { throw new Error(`sign in at ${kHost} first`); }
+    if (r.status !== 200 || !j.itemsList) throw new Error(`sign in at ${kHost} first`);
+    for (const b of j.itemsList) items.push({asin: b.asin, title: unHtml(b.title), authors: unHtml(b.authors), percentageRead: b.percentageRead, originType: b.originType, resourceType: b.resourceType});
+    progress(`Reading your Kindle library… ${items.length} books`);
+    if (!j.paginationToken) break;
+    token = j.paginationToken;
+  }
+  return items;
+}
+function gmPost(url, body) {
+  return new Promise((resolve, reject) => GM_xmlhttpRequest({
+    method: 'POST', url, data: body, timeout: 30000,
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    onload: r => resolve({status: r.status, text: r.responseText}),
+    onerror: () => reject(new Error('network error')),
+    ontimeout: () => reject(new Error('timed out')),
+  }));
+}
+// Amazon sends some titles and authors with HTML codes left in ("Quick &amp; Easy"); turn them back into characters
+function unHtml(s) {
+  if (s == null) return s;
+  if (Array.isArray(s)) return s.map(unHtml);
+  return String(s).replace(/&(?:(amp)|(lt)|(gt)|(quot)|(#39|apos)|#(\d+)|#x([0-9a-f]+));/gi, (m, a, l, g, q, ap, d, x) => a ? '&' : l ? '<' : g ? '>' : q ? '"' : ap ? "'" : String.fromCodePoint(d ? +d : parseInt(x, 16)));
+}
+// Purchase dates (and Kindle's own "Mark as read" flag) from Amazon's Content & Devices page
+async function fetchOwnership(progress) {
+  const shop = GM_getValue('kindleHost', 'read.amazon.com').replace(/^read\./, 'www.');
+  const page = await gmGet(`https://${shop}/hz/mycd/digital-console/contentlist/booksAll/dateDsc/`);
+  const token = (page.text.match(/csrfToken\s*[=:]\s*["']([^"']+)/) || [])[1];
+  if (!token) throw new Error(`sign in at ${shop} first`);
+  const items = []; const BATCH = 100;
+  for (let start = 0; start < 5000; start += BATCH) {
+    const input = {contentType: 'Ebook', contentCategoryReference: 'booksAll', itemStatusList: ['Active'], showSharedContent: true,
+      fetchCriteria: {sortOrder: 'DESCENDING', sortIndex: 'DATE', startIndex: start, batchSize: BATCH, totalContentCount: -1}, surfaceType: 'LargeDesktop'};
+    const r = await gmPost(`https://${shop}/hz/mycd/digital-console/ajax`,
+      'activity=GetContentOwnershipData&activityInput=' + encodeURIComponent(JSON.stringify(input)) + '&csrfToken=' + encodeURIComponent(token));
+    let j; try { j = JSON.parse(r.text).GetContentOwnershipData; } catch { throw new Error('Amazon sent an unexpected reply'); }
+    const batch = (j && j.items) || [];
+    for (const b of batch) items.push({asin: b.asin, title: unHtml(b.title), authors: unHtml(b.authors), acquiredTime: b.acquiredTime, acquiredDate: b.acquiredDate, readStatus: b.readStatus, originType: b.originType, orderId: b.orderId, orderDetailURL: b.orderDetailURL});
+    progress(`Reading purchase dates… ${items.length}${j && j.numberOfItems ? ' of ' + j.numberOfItems : ''}`);
+    if (batch.length < BATCH || (j.numberOfItems && items.length >= j.numberOfItems)) break;
+  }
+  if (!items.length) throw new Error('no books found on Content & Devices');
+  return items;
+}
+// Prices paid, read from each order's summary page (only the item price is kept; nothing else from the page is stored)
+let pricesPaused = false;
+async function fetchPrices(owned, progress, paid = []) {
+  const prices = JSON.parse(GM_getValue('prices', '{}') || '{}');
+  // Skip books whose price paid is already known (found earlier, or entered/imported on the page): each order is read at most once
+  const known = new Set(paid.map(a => String(a).toUpperCase()));
+  const todo = owned.filter(i => i.originType === 'Purchase' && i.orderDetailURL && !(i.asin in prices) && !known.has(String(i.asin).toUpperCase()));
+  const byOrder = new Map();
+  todo.forEach(i => { const k = i.orderId || i.orderDetailURL; if (!byOrder.has(k)) byOrder.set(k, []); byOrder.get(k).push(i); });
+  // Up to 150 orders per sync, one at a time with a pause between, so it looks like someone paging through their orders.
+  // If Amazon pushes back (robot check, 503 or 429) it stops at once; the rest are read next sync.
+  const batch = [...byOrder].slice(0, 150), total = batch.reduce((a, [, b]) => a + b.length, 0);
+  let done = 0, n = 0;
+  pricesPaused = false;
+  for (const [, books] of batch) {
+    progress(`Reading prices paid… ${done} of ${total}`);
+    try {
+      const r = await gmGet(books[0].orderDetailURL);
+      if (r.status === 503 || r.status === 429 || /validateCaptcha|Enter the characters you see/i.test(r.text)) { pricesPaused = true; break; }
+      const doc = new DOMParser().parseFromString(r.text, 'text/html');
+      doc.querySelectorAll('script, style, noscript, header, #navbar, #navFooter').forEach(n => n.remove());
+      const text = (doc.body ? doc.body.textContent : '').replace(/\s+/g, ' ');
+      const money = s => +s.replace(/[^\d.]/g, '');
+      for (const b of books) {
+        let price = null;
+        const key = String(b.title || '').slice(0, 30);
+        const at = key ? text.indexOf(key) : -1;
+        if (at >= 0) { const m = text.slice(at).match(/Sold by:[^$]{0,200}?\$\s?(\d[\d,]*\.\d\d)/); if (m) price = money(m[1]); }
+        if (price == null && books.length === 1) { const m = text.match(/Item\(s\) Subtotal:\s*\$\s?(\d[\d,]*\.\d\d)/); if (m) price = money(m[1]); }
+        prices[b.asin] = price; // null = looked, nothing found; not retried
+        done++;
+      }
+    } catch { /* network hiccup: try this order again next sync */ }
+    if (++n % 10 === 0) GM_setValue('prices', JSON.stringify(prices)); // keep what's found if the tab is closed mid-way
+    await new Promise(res => setTimeout(res, 450 + Math.random() * 300));
+  }
+  GM_setValue('prices', JSON.stringify(prices));
+  return prices;
+}
+// Facts from a book's Amazon page: today's Kindle price (for Kindle Unlimited books, the "to buy" price),
+// print length in pages, and Amazon's categories for the book (used to pick a genre).
+function parseBookInfo(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script,style,noscript').forEach(n => n.remove());
+  const text = (doc.body ? doc.body.textContent : '').replace(/\s+/g, ' ');
+  const num = s => { const m = String(s || '').match(/\$\s?(\d[\d,]*\.\d\d)/); return m ? +m[1].replace(/,/g, '') : null; };
+  const price = (() => {
+    const sw = doc.querySelector('#tmm-grid-swatch-KINDLE, #tmmSwatches .swatchElement.selected, #formats');
+    const swText = sw ? sw.textContent.replace(/\s+/g, ' ') : '';
+    let m = swText.match(/\$\s?[\d,]*\.\d\d\s*or\s*\$\s?(\d[\d,]*\.\d\d)\s*to buy/i) || text.match(/Kindle\s*\$\s?[\d,]*\.\d\d\s*or\s*\$\s?(\d[\d,]*\.\d\d)\s*to buy/i);
+    if (m) return +m[1].replace(/,/g, '');
+    for (const sel of ['#kindleALCAccordion_desktop_price_content', '#priceBlock-outsideOfForm_feature_div', '#kindle-price', '#corePriceDisplay_desktop_feature_div .a-offscreen', '#corePrice_feature_div .a-offscreen']) {
+      const e = doc.querySelector(sel); const v = e && num(e.textContent); if (v != null) return v;
+    }
+    const v = num(swText); if (v != null && v > 0) return v;
+    m = text.match(/Kindle Price:?\s*\$\s?(\d[\d,]*\.\d\d)/i); // phone layout of the book page
+    if (m) return +m[1].replace(/,/g, '');
+    m = text.match(/(?:^|\s)Kindle\s*\$\s?(\d[\d,]*\.\d\d)(?!\s*or)/);
+    return m ? +m[1].replace(/,/g, '') : null;
+  })();
+  const pagesEl = doc.querySelector('#rpi-attribute-book_details-ebook_pages .rpi-attribute-value');
+  const pm = (pagesEl ? pagesEl.textContent : '').match(/([\d,]+)\s*pages/i) || text.match(/Print length\s*:?[^\d]{0,6}([\d,]+)\s*pages/i);
+  const pages = pm ? +pm[1].replace(/,/g, '') : null;
+  const crumbs = doc.querySelector('#wayfinding-breadcrumbs_feature_div');
+  const cats = [];
+  if (crumbs) cats.push(crumbs.textContent.replace(/\s+/g, ' ').trim());
+  for (const m of text.matchAll(/#[\d,]+ in ([^#(]{3,80}?)(?= \(| #|$)/g)) if (!/^Kindle Store$/i.test(m[1].trim())) cats.push(m[1].trim());
+  // The trail as separate steps, and the best-seller lists, so the page can use Amazon's genre names as they are
+  const trail = crumbs ? [...crumbs.querySelectorAll('li a')].map(a => a.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean) : [];
+  const best = cats.slice(crumbs ? 1 : 0).map(c => c.replace(/\s*Customer Reviews.*$/i, '').trim());
+  return {price, pages, cats: cats.slice(0, 6), trail, best: best.slice(0, 5)};
+}
+const KLC_CORE = {
+  // Look up a few books' Amazon pages. blocked = Amazon asked for a CAPTCHA, so stop for now.
+  async bookInfo(asins) {
+    const shop = GM_getValue('kindleHost', 'read.amazon.com').replace(/^read\./, 'www.');
+    const info = {};
+    for (const a of asins) {
+      try {
+        const r = await gmGet(`https://${shop}/dp/${encodeURIComponent(a)}`);
+        if (/validateCaptcha|Enter the characters you see/i.test(r.text)) return {info, blocked: true};
+        info[a] = r.status === 200 ? parseBookInfo(r.text) : {price: null, pages: null, cats: []};
+      } catch { /* try again next time */ }
+      await new Promise(res => setTimeout(res, 700));
+    }
+    return {info, blocked: false};
+  },
+  // force = the Sync now button: always refresh the Kindle list. Otherwise reuse it for 6 hours.
+  async sync(force, progress = () => {}, paid = []) {
+    const out = {goodreads: [], grErr: '', kindle: null, kErr: ''};
+    try { out.goodreads = await fetchGoodreads(progress); } catch (e) { out.grErr = e.message || String(e); }
+    let k = null; try { k = JSON.parse(GM_getValue('kindle', 'null')); } catch {}
+    if (force || !k || Date.now() - k.time > 6 * 3600e3) {
+      try { progress('Reading your Kindle library…'); k = {time: Date.now(), items: await fetchKindle(progress)}; GM_setValue('kindle', JSON.stringify(k)); }
+      catch (e) { out.kErr = e.message || String(e); }
+    }
+    out.kindle = k;
+    let o = null; try { o = JSON.parse(GM_getValue('owned', 'null')); } catch {}
+    if (force || !o || o.v !== 3 || Date.now() - o.time > 24 * 3600e3) {  // v3 = includes order links (prices) and authors (library fallback)
+      try { progress('Reading purchase dates…'); o = {v: 3, time: Date.now(), items: await fetchOwnership(progress)}; GM_setValue('owned', JSON.stringify(o)); }
+      catch (e) { out.oErr = e.message || String(e); }
+    }
+    out.owned = o;
+    if (o && o.items) {
+      try { out.prices = await fetchPrices(o.items, progress, paid); out.pPaused = pricesPaused; } catch (e) { out.pErr = e.message || String(e); }
+    }
+    return out;
+  },
+};
+
+// ---------- 1. On the website: answer the page's sync requests ----------
+if (onSite) {
+  const post = m => window.postMessage(Object.assign({klc: 1}, m), location.origin);
+  window.addEventListener('message', async e => {
+    const d = e.data;
+    if (!d || d.klc !== 1 || (e.origin && e.origin !== location.origin)) return;
+    if (d.type === 'hello') post({type: 'ready', version: GM_info.script.version});
+    else if (d.type === 'binfo') {
+      const data = await KLC_CORE.bookInfo((d.asins || []).slice(0, 20));
+      post({type: 'binfoResult', id: d.id, data: JSON.stringify(data)});
+    }
+    else if (d.type === 'sync') {
+      const data = await KLC_CORE.sync(!!d.force, msg => post({type: 'progress', msg}), d.paid || []);
+      post({type: 'result', data: JSON.stringify(data)});
+    }
+  });
+  post({type: 'ready', version: GM_info.script.version});
+  return;
+}
+
+function badge(html) {
+  GM_addStyle(`#klc-badge{position:fixed;right:16px;bottom:16px;z-index:2147483647;background:#1b1e20;color:#f2f2ee;font:600 13px/1.4 system-ui,sans-serif;padding:10px 14px;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.25);max-width:320px}#klc-badge a{color:#9fb0ff;text-decoration:underline}#klc-badge button{all:unset;cursor:pointer;margin-left:10px;opacity:.6}`);
+  let el = document.getElementById('klc-badge');
+  if (!el) { el = document.createElement('div'); el.id = 'klc-badge'; document.body.appendChild(el); }
+  el.innerHTML = html + '<button aria-label="Close">×</button>';
+  el.querySelector('button').onclick = () => el.remove();
+}
+
+// ---------- 2. On the Kindle library page: refresh the cached Kindle list (optional; the website fetches it too) ----------
+if (onKindle) {
+  GM_setValue('kindleHost', host);
+  (async () => {
+    badge('Syncing your Kindle library…');
+    try {
+      const items = await fetchKindle(msg => badge(msg));
+      GM_setValue('kindle', JSON.stringify({time: Date.now(), items}));
+      badge(`Kindle library synced: ${items.length} books. <a href="${SITE_URL}">Open calculator</a>`);
+    } catch (e) {
+      badge(`Couldn't read your Kindle library (${e.message}). Reload the page to try again.`);
+    }
+  })();
+  return;
+}
+
+// Remember the signed-in Goodreads user id (read from the site header)
+const me = document.querySelector('header a[href*="/user/show/"], nav a[href*="/user/show/"], a[href*="/user/show/"]');
+const meId = me && (me.getAttribute('href').match(/\/user\/show\/(\d+)/) || [])[1];
+if (meId) GM_setValue('grUser', meId);
+
+// ---------- 3. Anywhere else on Goodreads: a small link to the calculator ----------
+if (!onCalc) {
+  GM_addStyle(`#klc-open{position:fixed;right:16px;bottom:16px;z-index:2147483647;background:#1b1e20;color:#f2f2ee!important;font:600 13px/1 system-ui,sans-serif;padding:10px 14px;border-radius:8px;text-decoration:none!important;box-shadow:0 4px 18px rgba(0,0,0,.25)}#klc-open:hover{background:#27408b}`);
+  const a = document.createElement('a'); a.id = 'klc-open'; a.href = SITE_URL; a.textContent = 'Shelf of Shame';
+  document.body.appendChild(a);
+  return;
+}
+
+// ---------- 4. goodreads.com/kindle-calculator: the calculator drawn inside Goodreads (kept for older links) ----------
+document.title = 'Shelf of Shame';
+document.querySelectorAll('link[rel="stylesheet"], style').forEach(n => n.remove());
+const font = document.createElement('link'); font.rel = 'stylesheet';
+font.href = 'https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600;7..72,800&family=JetBrains+Mono:wght@400;600&display=swap';
+document.head.appendChild(font);
+document.body.removeAttribute('class');
+document.body.removeAttribute('style');
+document.body.innerHTML = `<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Shelf of Shame</h1>
+      <div class="store demo" id="store"><i></i><span>Example library</span></div>
+      <div class="store" id="sync" hidden><span>Not synced yet</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="btnSync" hidden>Sync now</button>
+      <button class="btn" id="btnAdd">Add book</button>
+      <button class="btn" id="btnSettings">Settings</button>
+    </div>
+  </header>
+
+  <div class="banner" id="demoBanner">
+    <p><strong>This is an example library</strong> of public-domain classics so you can see how it works. Your first sync replaces it with your Kindle library and Goodreads shelves.</p>
+    <div class="row"><button class="btn primary" id="bannerImport">Set up sync</button><button class="btn" id="bannerEmpty">Start empty</button></div>
+  </div>
+
+  <div class="notice" id="notice" role="note">
+    <p><strong>Heads up: this calculator is good, not perfect.</strong> It works with whatever Amazon and Goodreads are willing to share, so a few titles won't match up, and some genres, page counts and prices are best guesses. Click any book's title to fix it. Your edits always win and are never overwritten by a sync.</p>
+    <button type="button" class="x" id="noticeClose" aria-label="Dismiss this note">×</button>
+  </div>
+
+  <section class="yearstrip" aria-label="This year so far">
+    <h3 id="yrH">This year</h3>
+    <div class="ys"><span class="v" id="yrBooks">0</span><span class="l" id="yrBooksL">books added</span></div>
+    <div class="ys"><button type="button" class="reveal" data-reveal><span class="v" id="yrSpent">$0</span></button><span class="l" id="yrSpentL">spent this year</span></div>
+    <div class="ys"><button type="button" class="reveal" data-reveal><span class="v" id="yrMonth">$0</span></button><span class="l">a month, on average</span></div>
+    <div class="ys"><button type="button" class="reveal" data-reveal><span class="v" id="yrAll">$0</span></button><span class="l" id="yrAllL">spent in all</span></div>
+  </section>
+  <section class="tiles" aria-label="Library summary">
+    <div class="tile"><h3>Books</h3><div class="big" id="tBooks">0</div><div class="sub" id="tBooksSub"></div></div>
+    <div class="tile"><h3>Library value</h3><button type="button" class="reveal" id="revealValue" aria-pressed="false"><span class="big" id="tValue">$0</span><span class="sub" id="tValueSub"></span><span class="hint" id="revealHint">Click to reveal</span></button></div>
+    <div class="tile time"><h3>Time to read it all</h3><div class="big" id="tHours">0 h</div><div class="sub" id="tHoursSub"></div></div>
+    <div class="tile shame"><h3>Unread</h3><div class="big" id="tUnread">0%</div><div class="sub" id="tUnreadSub"></div></div>
+  </section>
+
+  <section class="pile" aria-labelledby="pileH">
+    <div>
+      <div class="pile-head"><h3>Shelf of Shame</h3><h2 class="pile-title" id="pileH">0 unread books</h2><div class="shelfbar"><div class="newnote" id="pileNew" hidden></div><span class="seglabel">Spine color <span class="seg" role="group" aria-label="Spine color"><button type="button" id="spDefault" aria-pressed="true">Default</button><button type="button" id="spGenre" aria-pressed="false">By genre</button></span></span></div><span class="genrestatus" id="genreStatus" hidden></span></div>
+      <div id="stack"></div>
+      <div class="genrelegend" id="genreLegend" hidden></div>
+    </div>
+    <div class="pile-facts">
+      <p class="verdict" id="verdict"></p>
+      <div>
+        <div class="meter" id="meter" aria-hidden="true"></div>
+        <div class="legend" id="meterLegend" style="margin-top:8px"></div>
+      </div>
+      <div class="shelfbar" style="justify-content:flex-start"><span class="seglabel">Reading pace <span class="seg" role="group" aria-label="Reading pace"><button type="button" data-pace="slow" aria-pressed="false">Slow</button><button type="button" data-pace="average" aria-pressed="true">Average</button><button type="button" data-pace="fast" aria-pressed="false">Fast</button></span></span><span class="seglabel" id="paceNote"></span></div>
+      <div class="facts">
+        <div class="fact"><button type="button" class="reveal" data-reveal><span class="v" id="fValue">$0</span></button><span class="l">spent on books you haven't opened</span></div>
+        <div class="fact"><span class="v" id="fHours">0 h</span><span class="l">of reading sitting on the shelf</span></div>
+        <div class="fact"><span class="v" id="fClear">—</span><span class="l" id="fClearL">shelf cleared at your pace</span></div>
+        <div class="fact"><span class="v" id="fOldest">—</span><span class="l" id="fOldestL">oldest unread book</span></div>
+        <div class="fact"><span class="v" id="fReading">0</span><span class="l" id="fReadingL">started but not finished</span></div>
+        <div class="fact"><span class="v" id="fRate">—</span><span class="l">bought vs finished, last 12 months</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid3">
+    <div class="card"><h3>By status</h3><div class="statlist" id="statusList"></div></div>
+    <div class="card"><h3>Books added per year</h3><div class="bars" id="years"></div><div class="rings" id="yearRings" aria-live="polite"></div><div class="yearinfo" id="yearInfo"></div><div class="legend" id="yearLegend"></div></div>
+    <div class="card"><h3>Most-owned authors</h3><div class="authors" id="authors"></div></div>
+  </section>
+
+  <section class="shelf" aria-labelledby="shelfH">
+    <div class="toolbar">
+      <h2 id="shelfH">Your library</h2>
+      <div class="row"><input type="search" id="q" placeholder="Search title or author" aria-label="Search"><select id="tagSel" aria-label="Filter by tag" hidden></select><button class="btn" id="btnXlsx" type="button">Export spreadsheet</button></div>
+    </div>
+    <div class="seg libtabs" id="libTabs" role="tablist" hidden></div>
+    <div class="chips" id="chips"></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th><button data-k="title">Title</button></th>
+          <th><button data-k="status">Status</button></th>
+          <th><button data-k="progress">Progress</button></th>
+          <th class="r"><button data-k="pages">Pages</button></th>
+          <th class="r"><button data-k="price">Price</button></th>
+          <th><button data-k="date">Added</button></th>
+          <th><button data-k="rating">Rating</button></th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <button class="btn showmore" id="showMore" hidden>Show more</button>
+  </section>
+</div>
+
+<!-- Import -->
+<dialog id="dlgImport">
+  <form class="dlg" method="dialog" id="importForm">
+    <div class="dlg-head"><h2>Import your books</h2><button class="x" value="cancel" aria-label="Close">×</button></div>
+    <div class="tabs" role="tablist" id="impTabs">
+      <button type="button" class="tab" role="tab" data-t="goodreads" aria-selected="true">Goodreads</button>
+      <button type="button" class="tab" role="tab" data-t="amazon" aria-selected="false">Amazon orders</button>
+      <button type="button" class="tab" role="tab" data-t="csv" aria-selected="false">Any CSV / backup</button>
+    </div>
+    <div data-p="goodreads">
+      <ol class="steps">
+        <li>On goodreads.com go to <strong>My Books → Import and export → Export library</strong>.</li>
+        <li>Download the CSV and drop it here. Shelves map to status: to-read is unread, currently-reading is reading, read is finished.</li>
+      </ol>
+      <label class="check" style="margin-top:10px"><input type="checkbox" id="grKindleOnly"> Only import Kindle editions</label>
+    </div>
+    <div data-p="amazon" hidden>
+      <ol class="steps">
+        <li>Request your data at <strong>amazon.com/hz/privacy-central/data-requests</strong> (choose Kindle / Digital orders).</li>
+        <li>When the email arrives, unzip it and find the digital orders CSV (for example <span class="num">Digital Items.csv</span>).</li>
+        <li>Drop it here. Prices and purchase dates get matched onto books you already imported by ASIN or title.</li>
+      </ol>
+    </div>
+    <div data-p="csv" hidden>
+      <p class="note" style="font-size:.88rem">Any CSV with a header row works. Recognised columns: <span class="num">title, author, asin, pages, price, date, status, progress, rating, source</span>. Status can be unread, reading, finished or abandoned. A backup file from this page also goes here.</p>
+    </div>
+    <div class="drop" id="drop">Drop the file here, or <label style="color:var(--accent);cursor:pointer;text-decoration:underline">choose a file<input type="file" id="file" accept=".json,.csv,.txt,.xml,text/csv,application/json,text/xml" hidden></label></div>
+    <textarea id="paste" hidden></textarea>
+    <label class="check"><input type="checkbox" id="replace"> Replace my current library instead of merging</label>
+    <div class="dlg-foot"><span class="result" id="impResult"></span><button type="button" class="btn primary" id="doImport">Import</button></div>
+  </form>
+</dialog>
+
+<!-- Edit -->
+<dialog id="dlgEdit">
+  <form class="dlg" id="editForm">
+    <div class="dlg-head"><h2 id="editH">Edit book</h2><button type="button" class="x" id="editClose" aria-label="Close">×</button></div>
+    <div class="form">
+      <label class="full">Title<input type="text" id="eTitle" required></label>
+      <label>Author<input type="text" id="eAuthor"></label>
+      <label>ASIN<input type="text" id="eAsin"></label>
+      <label>Status<select id="eStatus"><option value="unread">Unread</option><option value="reading">Reading</option><option value="finished">Finished</option><option value="abandoned">DNF (Did Not Finish)</option></select></label>
+      <label>Progress %<input type="number" id="eProgress" min="0" max="100" step="1"></label>
+      <label>Pages<input type="number" id="ePages" min="0" step="1" placeholder="unknown"></label>
+      <label>Price paid<input type="number" id="ePrice" min="0" step="0.01" placeholder="unknown"></label>
+      <label>Added on<input type="date" id="eDate"></label>
+      <label>How you got it<select id="eSource"><option value="purchase">Bought</option><option value="free">Free</option><option value="ku">Kindle Unlimited</option><option value="prime">Prime Reading</option><option value="sample">Sample</option><option value="device">Came with my Kindle (dictionary or guide)</option><option value="shared">Shared with me (Family Library)</option><option value="other">Borrowed / other</option></select></label>
+      <label>Genre<select id="eGenre"></select></label>
+      <label>Second genre<select id="eGenre2"></select></label>
+      <p class="etags" id="eTags" hidden></p>
+      <label>Rating<select id="eRating"><option value="0">No rating</option><option value="1">★</option><option value="2">★★</option><option value="3">★★★</option><option value="4">★★★★</option><option value="5">★★★★★</option></select></label>
+    </div>
+    <div class="dlg-foot">
+      <div class="row"><button type="button" class="btn danger" id="eDelete">Delete</button><span class="result err" id="eConfirm"></span></div>
+      <button type="submit" class="btn primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Settings -->
+<dialog id="dlgSettings">
+  <form class="dlg" id="setForm">
+    <div class="dlg-head"><h2>Settings</h2><button type="button" class="x" id="setClose" aria-label="Close">×</button></div>
+    <div class="themesect"><h4>Theme</h4><div class="themepick" role="radiogroup" aria-label="Theme" id="themePick"></div></div>
+    <div class="form">
+      <label>Pages to assume when unknown<input type="number" id="sPages" min="1"></label>
+      <label>Price to assume when unknown<input type="number" id="sPrice" min="0" step="0.01"></label>
+      <label>Minutes per page<input type="number" id="sMin" min="0.2" step="0.1"></label>
+      <label>Pages you read per day<input type="number" id="sDay" min="1"></label>
+      <label>Currency<select id="sCur"><option>USD</option><option>GBP</option><option>EUR</option><option>CAD</option><option>AUD</option><option>JPY</option><option>INR</option><option>BRL</option><option>MXN</option></select></label>
+      <label>Finished when progress reaches %<input type="number" id="sDone" min="50" max="100"></label>
+      <label class="check full"><input type="checkbox" id="sBorrowed"> Count Kindle Unlimited, Prime, borrowed and family-shared books</label>
+      <label class="check full"><input type="checkbox" id="sSharedTab"> Show shared and borrowed books on their own tab under Your library</label>
+      <label class="check full"><input type="checkbox" id="sSamples"> Count samples</label>
+      <label class="check full"><input type="checkbox" id="sGrAll"> Include Goodreads books that aren't in my Kindle library</label>
+      <label class="check full"><input type="checkbox" id="sExtras"> Count the dictionaries and user guides that came with your Kindle</label>
+    </div>
+    <p class="note">Kindle doesn't report page counts or prices, so unknown values use the numbers above. Values you enter per book always win. About one minute per page is typical for adult fiction.</p>
+    <div class="files"><h4>Files and backups</h4><p class="note">Only needed if you don't use the sync script, or to move your library to another browser.</p><div class="row"><button type="button" class="btn" id="btnImport">Import a file</button><button type="button" class="btn" id="btnExport">Back up library</button></div></div>
+    <div class="dlg-foot"><div class="row"><button type="button" class="btn danger" id="wipe">Delete all books</button><span class="result err" id="wipeConfirm"></span></div><button type="submit" class="btn primary">Save</button></div>
+    <p class="verline" id="verLine"></p>
+  </form>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+`;
+GM_addStyle(`
 /* Layout: e-paper ledger — summary strip, the pile itself as the centerpiece, breakdowns, then the full shelf table. */
 :root{
   --bg:#eceeea; --paper:#f7f8f5; --ink:#1b1e20; --muted:#5d6560; --rule:#cfd4ce;
@@ -450,193 +915,9 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
 @media (max-width:900px){.grid3{grid-template-columns:1fr}.pile{grid-template-columns:1fr}}
 @media (max-width:640px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tile.shame{grid-column:1/-1;order:3;border-radius:0!important}.tile.time{grid-column:1/-1;order:4;border-radius:0 0 9px 9px!important}.tile:first-child{border-radius:9px 0 0 0}.tile:nth-child(2){border-radius:0 9px 0 0}.tile:nth-child(3){border-radius:0 0 0 9px}.tile:last-child{border-radius:0 0 9px 0}.tile .big{font-size:1.35rem}h1{font-size:1.35rem}.form{grid-template-columns:1fr}.facts{grid-template-columns:1fr 1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-.betabar{background:repeating-linear-gradient(45deg,#f2c14e 0 14px,#e8b23a 14px 28px);color:#1b1206;font:600 .82rem/1.4 system-ui,sans-serif;text-align:center;padding:6px 12px;position:relative;z-index:50}.betabar a{color:inherit}
-</style>
+`);
 
-</head>
-<body>
-<div class="betabar" role="note"><b>BETA</b> · test copy. Things may break here. Your real library is at <a href="https://bookshelf.kirbee213.tv/">bookshelf.kirbee213.tv</a> and is not affected.</div>
-<div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <h1>Shelf of Shame</h1>
-      <div class="store demo" id="store"><i></i><span>Example library</span></div>
-      <div class="store" id="sync" hidden><span>Not synced yet</span></div>
-    </div>
-    <div class="actions">
-      <button class="btn primary" id="btnSync" hidden>Sync now</button>
-      <button class="btn" id="btnAdd">Add book</button>
-      <button class="btn" id="btnSettings">Settings</button>
-    </div>
-  </header>
 
-  <div class="banner" id="demoBanner">
-    <p><strong>This is an example library</strong> of public-domain classics so you can see how it works. Install the free sync script and your own Kindle library replaces it automatically. Your books are saved in this browser only.</p>
-    <div class="row"><button class="btn primary" id="bannerImport">Set up sync</button><button class="btn" id="bannerEmpty">Start empty</button></div>
-  </div>
-
-  <div class="notice" id="notice" role="note">
-    <p><strong>Heads up: this calculator is good, not perfect.</strong> It works with whatever Amazon and Goodreads are willing to share, so a few titles won't match up, and some genres, page counts and prices are best guesses. Click any book's title to fix it. Your edits always win and are never overwritten by a sync.</p>
-    <button type="button" class="x" id="noticeClose" aria-label="Dismiss this note">×</button>
-  </div>
-
-  <section class="yearstrip" aria-label="This year so far">
-    <h3 id="yrH">This year</h3>
-    <div class="ys"><span class="v" id="yrBooks">0</span><span class="l" id="yrBooksL">books added</span></div>
-    <div class="ys"><button type="button" class="reveal" data-reveal><span class="v" id="yrSpent">$0</span></button><span class="l" id="yrSpentL">spent this year</span></div>
-    <div class="ys"><button type="button" class="reveal" data-reveal><span class="v" id="yrMonth">$0</span></button><span class="l">a month, on average</span></div>
-    <div class="ys"><button type="button" class="reveal" data-reveal><span class="v" id="yrAll">$0</span></button><span class="l" id="yrAllL">spent in all</span></div>
-  </section>
-  <section class="tiles" aria-label="Library summary">
-    <div class="tile"><h3>Books</h3><div class="big" id="tBooks">0</div><div class="sub" id="tBooksSub"></div></div>
-    <div class="tile"><h3>Library value</h3><button type="button" class="reveal" id="revealValue" aria-pressed="false"><span class="big" id="tValue">$0</span><span class="sub" id="tValueSub"></span><span class="hint" id="revealHint">Click to reveal</span></button></div>
-    <div class="tile time"><h3>Time to read it all</h3><div class="big" id="tHours">0 h</div><div class="sub" id="tHoursSub"></div></div>
-    <div class="tile shame"><h3>Unread</h3><div class="big" id="tUnread">0%</div><div class="sub" id="tUnreadSub"></div></div>
-  </section>
-
-  <section class="pile" aria-labelledby="pileH">
-    <div>
-      <div class="pile-head"><h3>Shelf of Shame</h3><h2 class="pile-title" id="pileH">0 unread books</h2><div class="shelfbar"><div class="newnote" id="pileNew" hidden></div><span class="seglabel">Spine color <span class="seg" role="group" aria-label="Spine color"><button type="button" id="spDefault" aria-pressed="true">Default</button><button type="button" id="spGenre" aria-pressed="false">By genre</button></span></span></div><span class="genrestatus" id="genreStatus" hidden></span></div>
-      <div id="stack"></div>
-      <div class="genrelegend" id="genreLegend" hidden></div>
-    </div>
-    <div class="pile-facts">
-      <p class="verdict" id="verdict"></p>
-      <div>
-        <div class="meter" id="meter" aria-hidden="true"></div>
-        <div class="legend" id="meterLegend" style="margin-top:8px"></div>
-      </div>
-      <div class="shelfbar" style="justify-content:flex-start"><span class="seglabel">Reading pace <span class="seg" role="group" aria-label="Reading pace"><button type="button" data-pace="slow" aria-pressed="false">Slow</button><button type="button" data-pace="average" aria-pressed="true">Average</button><button type="button" data-pace="fast" aria-pressed="false">Fast</button></span></span><span class="seglabel" id="paceNote"></span></div>
-      <div class="facts">
-        <div class="fact"><button type="button" class="reveal" data-reveal><span class="v" id="fValue">$0</span></button><span class="l">spent on books you haven't opened</span></div>
-        <div class="fact"><span class="v" id="fHours">0 h</span><span class="l">of reading sitting on the shelf</span></div>
-        <div class="fact"><span class="v" id="fClear">—</span><span class="l" id="fClearL">shelf cleared at your pace</span></div>
-        <div class="fact"><span class="v" id="fOldest">—</span><span class="l" id="fOldestL">oldest unread book</span></div>
-        <div class="fact"><span class="v" id="fReading">0</span><span class="l" id="fReadingL">started but not finished</span></div>
-        <div class="fact"><span class="v" id="fRate">—</span><span class="l">bought vs finished, last 12 months</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="grid3">
-    <div class="card"><h3>By status</h3><div class="statlist" id="statusList"></div></div>
-    <div class="card"><h3>Books added per year</h3><div class="bars" id="years"></div><div class="rings" id="yearRings" aria-live="polite"></div><div class="yearinfo" id="yearInfo"></div><div class="legend" id="yearLegend"></div></div>
-    <div class="card"><h3>Most-owned authors</h3><div class="authors" id="authors"></div></div>
-  </section>
-
-  <section class="shelf" aria-labelledby="shelfH">
-    <div class="toolbar">
-      <h2 id="shelfH">Your library</h2>
-      <div class="row"><input type="search" id="q" placeholder="Search title or author" aria-label="Search"><select id="tagSel" aria-label="Filter by tag" hidden></select><button class="btn" id="btnXlsx" type="button">Export spreadsheet</button></div>
-    </div>
-    <div class="seg libtabs" id="libTabs" role="tablist" hidden></div>
-    <div class="chips" id="chips"></div>
-    <div class="tablewrap">
-      <table>
-        <thead><tr>
-          <th><button data-k="title">Title</button></th>
-          <th><button data-k="status">Status</button></th>
-          <th><button data-k="progress">Progress</button></th>
-          <th class="r"><button data-k="pages">Pages</button></th>
-          <th class="r"><button data-k="price">Price</button></th>
-          <th><button data-k="date">Added</button></th>
-          <th><button data-k="rating">Rating</button></th>
-        </tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
-    </div>
-    <button class="btn showmore" id="showMore" hidden>Show more</button>
-  </section>
-</div>
-
-<!-- Import -->
-<dialog id="dlgImport">
-  <form class="dlg" method="dialog" id="importForm">
-    <div class="dlg-head"><h2>Import your books</h2><button class="x" value="cancel" aria-label="Close">×</button></div>
-    <div class="tabs" role="tablist" id="impTabs">
-      <button type="button" class="tab" role="tab" data-t="goodreads" aria-selected="true">Goodreads</button>
-      <button type="button" class="tab" role="tab" data-t="amazon" aria-selected="false">Amazon orders</button>
-      <button type="button" class="tab" role="tab" data-t="csv" aria-selected="false">Any CSV / backup</button>
-    </div>
-    <div data-p="goodreads">
-      <ol class="steps">
-        <li>On goodreads.com go to <strong>My Books → Import and export → Export library</strong>.</li>
-        <li>Download the CSV and drop it here. Shelves map to status: to-read is unread, currently-reading is reading, read is finished.</li>
-      </ol>
-      <label class="check" style="margin-top:10px"><input type="checkbox" id="grKindleOnly"> Only import Kindle editions</label>
-    </div>
-    <div data-p="amazon" hidden>
-      <ol class="steps">
-        <li>Request your data at <strong>amazon.com/hz/privacy-central/data-requests</strong> (choose Kindle / Digital orders).</li>
-        <li>When the email arrives, unzip it and find the digital orders CSV (for example <span class="num">Digital Items.csv</span>).</li>
-        <li>Drop it here. Prices and purchase dates get matched onto books you already imported by ASIN or title.</li>
-      </ol>
-    </div>
-    <div data-p="csv" hidden>
-      <p class="note" style="font-size:.88rem">Any CSV with a header row works. Recognised columns: <span class="num">title, author, asin, pages, price, date, status, progress, rating, source</span>. Status can be unread, reading, finished or abandoned. A backup file from this page also goes here.</p>
-    </div>
-    <div class="drop" id="drop">Drop the file here, or <label style="color:var(--accent);cursor:pointer;text-decoration:underline">choose a file<input type="file" id="file" accept=".json,.csv,.txt,.xml,text/csv,application/json,text/xml" hidden></label></div>
-    <textarea id="paste" hidden></textarea>
-    <label class="check"><input type="checkbox" id="replace"> Replace my current library instead of merging</label>
-    <div class="dlg-foot"><span class="result" id="impResult"></span><button type="button" class="btn primary" id="doImport">Import</button></div>
-  </form>
-</dialog>
-
-<!-- Edit -->
-<dialog id="dlgEdit">
-  <form class="dlg" id="editForm">
-    <div class="dlg-head"><h2 id="editH">Edit book</h2><button type="button" class="x" id="editClose" aria-label="Close">×</button></div>
-    <div class="form">
-      <label class="full">Title<input type="text" id="eTitle" required></label>
-      <label>Author<input type="text" id="eAuthor"></label>
-      <label>ASIN<input type="text" id="eAsin"></label>
-      <label>Status<select id="eStatus"><option value="unread">Unread</option><option value="reading">Reading</option><option value="finished">Finished</option><option value="abandoned">DNF (Did Not Finish)</option></select></label>
-      <label>Progress %<input type="number" id="eProgress" min="0" max="100" step="1"></label>
-      <label>Pages<input type="number" id="ePages" min="0" step="1" placeholder="unknown"></label>
-      <label>Price paid<input type="number" id="ePrice" min="0" step="0.01" placeholder="unknown"></label>
-      <label>Added on<input type="date" id="eDate"></label>
-      <label>How you got it<select id="eSource"><option value="purchase">Bought</option><option value="free">Free</option><option value="ku">Kindle Unlimited</option><option value="prime">Prime Reading</option><option value="sample">Sample</option><option value="device">Came with my Kindle (dictionary or guide)</option><option value="shared">Shared with me (Family Library)</option><option value="other">Borrowed / other</option></select></label>
-      <label>Genre<select id="eGenre"></select></label>
-      <label>Second genre<select id="eGenre2"></select></label>
-      <p class="etags" id="eTags" hidden></p>
-      <label>Rating<select id="eRating"><option value="0">No rating</option><option value="1">★</option><option value="2">★★</option><option value="3">★★★</option><option value="4">★★★★</option><option value="5">★★★★★</option></select></label>
-    </div>
-    <div class="dlg-foot">
-      <div class="row"><button type="button" class="btn danger" id="eDelete">Delete</button><span class="result err" id="eConfirm"></span></div>
-      <button type="submit" class="btn primary">Save</button>
-    </div>
-  </form>
-</dialog>
-
-<!-- Settings -->
-<dialog id="dlgSettings">
-  <form class="dlg" id="setForm">
-    <div class="dlg-head"><h2>Settings</h2><button type="button" class="x" id="setClose" aria-label="Close">×</button></div>
-    <div class="themesect"><h4>Theme</h4><div class="themepick" role="radiogroup" aria-label="Theme" id="themePick"></div></div>
-    <div class="form">
-      <label>Pages to assume when unknown<input type="number" id="sPages" min="1"></label>
-      <label>Price to assume when unknown<input type="number" id="sPrice" min="0" step="0.01"></label>
-      <label>Minutes per page<input type="number" id="sMin" min="0.2" step="0.1"></label>
-      <label>Pages you read per day<input type="number" id="sDay" min="1"></label>
-      <label>Currency<select id="sCur"><option>USD</option><option>GBP</option><option>EUR</option><option>CAD</option><option>AUD</option><option>JPY</option><option>INR</option><option>BRL</option><option>MXN</option></select></label>
-      <label>Finished when progress reaches %<input type="number" id="sDone" min="50" max="100"></label>
-      <label class="check full"><input type="checkbox" id="sBorrowed"> Count Kindle Unlimited, Prime, borrowed and family-shared books</label>
-      <label class="check full"><input type="checkbox" id="sSharedTab"> Show shared and borrowed books on their own tab under Your library</label>
-      <label class="check full"><input type="checkbox" id="sSamples"> Count samples</label>
-      <label class="check full" data-us hidden><input type="checkbox" id="sGrAll"> Include Goodreads books that aren't in my Kindle library</label>
-      <label class="check full"><input type="checkbox" id="sExtras"> Count the dictionaries and user guides that came with your Kindle</label>
-    </div>
-    <p class="note">Kindle doesn't report page counts or prices, so unknown values use the numbers above. Values you enter per book always win. About one minute per page is typical for adult fiction.</p>
-    <div class="files"><h4>Files and backups</h4><p class="note">Only needed if you don't use the sync script, or to move your library to another browser.</p><div class="row"><button type="button" class="btn" id="btnImport">Import a file</button><button type="button" class="btn" id="btnExport">Back up library</button></div></div>
-    <div class="dlg-foot"><div class="row"><button type="button" class="btn danger" id="wipe">Delete all books</button><span class="result err" id="wipeConfirm"></span></div><button type="submit" class="btn primary">Save</button></div>
-    <p class="verline" id="verLine"></p>
-  </form>
-</dialog>
-
-<div id="toast" role="status" aria-live="polite"></div>
-
-<script>
-(() => {
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -692,8 +973,8 @@ const S = {showMoney:false, books: DEMO.map(b => ({...b})), settings:{...DEFAULT
 // ---------- persistence ----------
 let db = null, col = null, saved = {}, saveTimer = null, savedMeta = '';
 const LS = 'kindle-calc-v1';
-const lsGet = () => { try { return JSON.parse(localStorage.getItem(LS) || 'null'); } catch { return null; } };
-const lsSet = v => { try { localStorage.setItem(LS, JSON.stringify(v)); return true; } catch { return false; } };
+const lsGet = () => { try { return JSON.parse(GM_getValue(LS, 'null')); } catch { return null; } };
+const lsSet = v => { try { GM_setValue(LS, JSON.stringify(v)); return true; } catch { return false; } };
 
 async function initStore() {
   const local = lsGet();
@@ -2016,7 +2297,7 @@ async function lookupBookInfo() {
 const LATEST_SCRIPT = '2.1.0.0.2';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
-const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
+const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
 const verLess = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < Math.max(x.length, y.length); i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0); } return false; };
 let scriptVer = '';
 // The oldest sync script this page works with. Raise it only when a release changes the script itself;
@@ -2621,8 +2902,5 @@ function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.ad
 renderAll();
 storeReady = initStore();
 startSync();
-})();
-</script>
 
-</body>
-</html>
+})

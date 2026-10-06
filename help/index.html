@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Getting started with the Shelf of Shame</title>
+<link rel="icon" type="image/png" href="/icon-tag.png">
+<link rel="apple-touch-icon" href="/icon-tag-180.png">
+<meta name="description" content="Set up the Shelf of Shame on a Windows PC, Mac, Android phone, iPhone or iPad in about five minutes.">
+<meta property="og:title" content="Getting started with the Shelf of Shame">
+<meta property="og:description" content="Set up the Shelf of Shame on a Windows PC, Mac, Android phone, iPhone or iPad in about five minutes.">
+<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png">
+<meta property="og:url" content="https://betabookshelf.kirbee213.tv/help">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{--bg:#f7f8f5;--paper:#ffffff;--ink:#1b1e20;--muted:#5d6560;--rule:#cfd4ce;--accent:#27408b;--btn:#1b1e20;--btnink:#f7f8f5}
+@media (prefers-color-scheme:dark){:root{--bg:#121517;--paper:#1a1e21;--ink:#e7e8e3;--muted:#9aa29c;--rule:#2d3336;--accent:#9fb0ff;--btn:#e7e8e3;--btnink:#121517}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.55 Georgia,"Times New Roman",serif;padding:24px 16px 56px}
+main{max-width:600px;margin:0 auto}
+h1{font-size:1.7rem;line-height:1.2;margin:0 0 8px}
+h2{font-size:1.2rem;line-height:1.3;margin:32px 0 10px}
+p{margin:0 0 12px}
+.lead{font-size:1.05rem}
+.muted{color:var(--muted);font-size:.95rem}
+ul{padding-left:22px;margin:0 0 12px}li{margin:0 0 6px}
+ol.steps{list-style:none;counter-reset:s;padding:0;margin:0 0 12px}
+ol.steps>li{counter-increment:s;position:relative;background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:12px 14px 12px 56px;margin:0 0 10px}
+ol.steps>li::before{content:counter(s);position:absolute;left:12px;top:11px;width:30px;height:30px;border-radius:50%;background:var(--btn);color:var(--btnink);font:700 16px/30px system-ui,sans-serif;text-align:center}
+ol.steps>li p{margin:0}ol.steps>li p+p{margin-top:4px;font-size:.92rem;color:var(--muted)}
+.box{background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;margin:0 0 12px}
+.go{display:inline-block;background:var(--btn);color:var(--btnink);font:700 16px/1 system-ui,sans-serif;padding:14px 18px;border-radius:9px;text-decoration:none;margin:4px 0 8px}
+a{color:var(--accent)}
+code{font-size:.9em}
+table{width:100%;border-collapse:collapse;font-size:.95rem;background:var(--paper);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+th,td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--rule)}
+th{font-family:system-ui,sans-serif;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+@media (max-width:480px){table,thead,tbody,tr,th,td{display:block}thead{display:none}tr{border-bottom:1px solid var(--rule);padding:6px 0}tr:last-child{border-bottom:0}td{border:0;padding:4px 12px}td:first-child{font-weight:700}}
+nav.jump{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}nav.jump a{background:var(--paper);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;text-decoration:none;font:600 14px system-ui,sans-serif}
+</style>
+</head>
+<body>
+<main>
+<h1>Getting started with the Shelf of Shame</h1>
+<p class="lead">The Shelf of Shame shows how many of your Kindle books you haven't read yet, what you've spent and how long they'd take to read. It's free, it runs in your web browser at <b>betabookshelf.kirbee213.tv</b>, and setup takes about five minutes on any device.</p>
+<a class="go" href="/">Open the Shelf of Shame</a>
+
+<h2>Which way is yours?</h2>
+<table>
+<thead><tr><th>Device</th><th>Use this browser</th><th>How your books get in</th><th>Install anything?</th></tr></thead>
+<tbody>
+<tr><td>Windows PC or Mac</td><td>Chrome, Edge, Firefox or Opera</td><td>The sync script, inside the free Tampermonkey add-on</td><td>Yes, once</td></tr>
+<tr><td>Android phone or tablet</td><td>Chrome</td><td>The Shelf sync bookmark</td><td>No</td></tr>
+<tr><td>iPhone or iPad</td><td>Safari</td><td>The Shelf sync bookmark</td><td>No</td></tr>
+</tbody>
+</table>
+<nav class="jump"><a href="#computer">Windows or Mac</a><a href="#android">Android</a><a href="#ios">iPhone or iPad</a><a href="#drive">Google Drive</a><a href="#trouble">Trouble?</a></nav>
+<p class="muted">Every device needs your <b>Amazon</b> email and password (the account your Kindle books are on). Goodreads is optional and only used on a computer. Each device keeps its own copy of your library; to have the same library everywhere, connect <a href="#drive">Google Drive</a>.</p>
+
+<h2 id="computer">On a Windows PC or Mac</h2>
+<p>Use <b>Chrome, Edge, Firefox or Opera</b>. The page walks you through each step; here's what it will ask.</p>
+<ol class="steps">
+<li><p>Go to <b>betabookshelf.kirbee213.tv</b> and click <b>Set up sync</b>.</p></li>
+<li><p><b>Add Tampermonkey</b>, a free browser add-on. Click the button the page shows, then <b>Add to</b> your browser.</p></li>
+<li><p><b>Chrome, Edge and Opera only:</b> turn on one switch. Go to <code>chrome://extensions</code> (or <code>edge://extensions</code> or <code>opera://extensions</code>), click <b>Details</b> under Tampermonkey and turn on <b>Allow User Scripts</b>.</p></li>
+<li><p><b>Install the sync script:</b> click the button on the page, then <b>Install</b> in the Tampermonkey tab that opens.</p></li>
+<li><p><b>Sign in</b> in the same browser to <b>amazon.com</b> and <b>read.amazon.com</b> (the Kindle reader has its own sign-in).</p><p>Goodreads is optional: books you marked read there count as read here.</p></li>
+<li><p>Back on the page, click <b>Sync now</b>.</p><p>The first sync takes a few minutes; later ones are quick.</p></li>
+</ol>
+<p>The script updates itself through Tampermonkey. Now and then the page asks you to update it before it syncs: click <b>Update script</b>, press <b>Update</b> in the tab that opens, and come back.</p>
+<p class="muted"><b>Safari on a Mac:</b> the setup doesn't support Safari yet. Use Chrome, Edge or Firefox on the Mac, or use the Shelf sync bookmark instead: in <b>Settings</b>, drag <b>Shelf sync</b> to your bookmarks bar, then click it while you're on amazon.com.</p>
+
+<h2 id="android">On an Android phone or tablet</h2>
+<p>Use <b>Chrome</b>. Nothing to install: a bookmark called <b>Shelf sync</b> reads your books on amazon.com.</p>
+<p><b>Set it up (one time):</b></p>
+<ol class="steps">
+<li><p>Go to <b>betabookshelf.kirbee213.tv</b> and tap <b>Sync from Amazon</b> in the welcome box.</p><p>No welcome box? Tap <b>Settings</b>, then <b>Set up the bookmark</b>.</p></li>
+<li><p>A page called <b>Add the Shelf sync bookmark</b> opens, and the code you need is already copied.</p></li>
+<li><p>Tap <b>⋮</b> (top right), then the <b>☆</b> star.</p><p>The bookmark is saved, already named Shelf sync.</p></li>
+<li><p>Tap <b>⋮ › Bookmarks</b>, tap the <b>⋮</b> next to <b>Shelf sync</b>, then <b>Edit</b>. Clear the URL, paste, and go back to save.</p><p>The URL should now start with <code>javascript:</code></p></li>
+</ol>
+<p><b>Sync (whenever you like):</b></p>
+<ol class="steps">
+<li><p>Go to <b>amazon.com</b> in Chrome and sign in.</p></li>
+<li><p>Tap the address bar, type <b>Shelf sync</b>, and tap the bookmark (with the star) in the list.</p></li>
+<li><p>When the dark box says <b>Ready</b>, tap <b>Send to Shelf of Shame</b>.</p><p>Your library opens in a new tab.</p></li>
+</ol>
+<p class="muted">Each sync also looks up genres and page counts for up to 80 more books, so a big library fills in over a few syncs.</p>
+
+<h2 id="ios">On an iPhone or iPad</h2>
+<p>Use <b>Safari</b> for every step, not Chrome or the Amazon app. Nothing to install: a bookmark called <b>Shelf sync</b> reads your books on amazon.com.</p>
+<p><b>Set it up (one time):</b></p>
+<ol class="steps">
+<li><p>Go to <b>betabookshelf.kirbee213.tv</b> and tap <b>Sync from Amazon</b> in the welcome box.</p><p>No welcome box? Tap <b>Settings</b>, then <b>Set up the bookmark</b>.</p></li>
+<li><p>A page called <b>Add the Shelf sync bookmark</b> opens, and the code you need is already copied.</p></li>
+<li><p>Tap <b>Share</b>, then <b>Add Bookmark</b>, then <b>Save</b>. The name Shelf sync is already filled in.</p><p>On iOS 26, tap <b>•••</b> next to the address bar first to find Share.</p></li>
+<li><p>Open your bookmarks (the <b>open book</b> button, or <b>••• › Bookmarks</b>), <b>press and hold Shelf sync</b> and tap <b>Edit</b>.</p></li>
+<li><p>Tap the address, delete everything in it, tap and hold, choose <b>Paste</b>, then tap <b>Done</b>.</p><p>The address should now start with <code>javascript:</code></p></li>
+</ol>
+<p><b>Sync (whenever you like):</b></p>
+<ol class="steps">
+<li><p>Go to <b>amazon.com</b> in Safari and sign in.</p></li>
+<li><p>Open your bookmarks and tap <b>Shelf sync</b>.</p></li>
+<li><p>When the dark box says <b>Ready</b>, tap <b>Send to Shelf of Shame</b>.</p><p>Your library opens in a new tab.</p></li>
+</ol>
+<p class="muted">Keep using the calculator in Safari rather than as a Home Screen icon: an icon keeps its own separate copy and won't see the books you sync in Safari. There's an iPhone-only version of these steps at <a href="/ioshelp">betabookshelf.kirbee213.tv/ioshelp</a>.</p>
+
+<h2 id="drive">Google Drive (optional, any device)</h2>
+<div class="box">
+<p><b>What it's for:</b> Google Drive is not how your books get from Amazon; the sync script or the bookmark does that. Drive keeps a <b>copy of your library in your own Google Drive</b>, for two reasons:</p>
+<ul>
+<li><b>The same library on every device.</b> Your computer, phone and tablet all show the same books, including page counts or prices you typed in by hand. Changes made on each are merged book by book.</li>
+<li><b>A safety copy.</b> Browsers can clear a website's saved data, for example when you clear your history (Safari on iPhone does it on its own if you don't open the site for about a week). With Drive connected, your library comes back as soon as you reconnect.</li>
+</ul>
+<p style="margin:0">The calculator can only see the one file it creates in your Drive (<i>Shelf of Shame.json</i>), nothing else. Your library goes straight between your device and Google; no one else's server sees it.</p>
+</div>
+<p><b>To connect, on each device:</b></p>
+<ol class="steps">
+<li><p>On the calculator, open <b>Settings</b>.</p></li>
+<li><p>Under <b>Google Drive</b>, tap <b>Connect Google Drive</b>.</p></li>
+<li><p>Sign in to Google with the <b>same Google account on every device</b> and tap <b>Allow</b>.</p></li>
+<li><p>After that it saves by itself while you use the calculator.</p><p>When you come back another day, tap <b>Google Drive: tap to sync</b> near the top to pick up where you left off.</p></li>
+</ol>
+
+<h2 id="trouble">If something goes wrong</h2>
+<table>
+<thead><tr><th>Device</th><th>What happens</th><th>What to do</th></tr></thead>
+<tbody>
+<tr><td>Computer</td><td>The page says the sync script isn't found</td><td>Check <b>Allow User Scripts</b> is on (Chrome, Edge, Opera) and the script is switched on in Tampermonkey, then reload the page.</td></tr>
+<tr><td>Computer</td><td><b>Update needed</b> won't go away</td><td>Press <b>Update</b> in the Tampermonkey tab that opened, then come back. If Tampermonkey shows both "Kindle Library Calculator" and "Shelf of Shame", delete "Kindle Library Calculator".</td></tr>
+<tr><td>Computer</td><td>Amazon wants you to sign in</td><td>Sign in at amazon.com (and read.amazon.com) in the same browser, then <b>Retry</b>.</td></tr>
+<tr><td>Phone or tablet</td><td>Tapping Shelf sync does nothing</td><td>Check the bookmark's address starts with <code>javascript:</code>. Make sure you're on amazon.com in the browser, not the Amazon app.</td></tr>
+<tr><td>Phone or tablet</td><td>Shelf sync brings you back to the setup page</td><td>The paste didn't take. Tap <b>Copy the sync code again</b> and redo the edit step.</td></tr>
+<tr><td>Phone or tablet</td><td>It says Amazon wants you to sign in</td><td>Tap the Content &amp; Devices link it shows, sign in, then tap Shelf sync again.</td></tr>
+<tr><td>iPhone or iPad</td><td>Send to Shelf of Shame does nothing</td><td>Open the <b>Settings</b> app, then <b>Apps › Safari</b>, turn off <b>Block Pop-ups</b>, and tap Send again.</td></tr>
+<tr><td>Any</td><td>Your library is gone</td><td>Sync again. If you connected Google Drive, tap <b>Google Drive: tap to sync</b> instead.</td></tr>
+<tr><td>Any</td><td>Some books show no genre or pages</td><td>Sync again later; each sync fills in more.</td></tr>
+</tbody>
+</table>
+<p style="margin-top:16px">If a step doesn't match what you see, take a screenshot and send it to Daniel.</p>
+<p class="muted"><a href="/privacy.html">Privacy</a></p>
+</main>
+</body>
+</html>

@@ -16,21 +16,29 @@ us=R(us,'// @name         Shelf of Shame\n','// @name         Shelf of Shame (be
 us=R(us,'// @namespace    kindle-library-calculator\n','// @namespace    kindle-library-calculator-beta\n')
 us=us.replace('https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js','https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js')
 us=re.sub(r'// @match        https://(bookshelf\.kirbee213\.tv|kirbeeman\.github\.io/bookshelfcalc|www\.goodreads\.com|read\.amazon\.[a-z.]+/kindle-library)\S*\n','',us)
+us=R(us,'// @connect      bookshelf.kirbee213.tv\n','// @connect      betabookshelf.kirbee213.tv\n')
+us=R(us,"const SITE = 'https://bookshelf.kirbee213.tv/';","const SITE = 'https://betabookshelf.kirbee213.tv/';")
 us=R(us,'// @connect      goodreads.com\n','// @match        https://betabookshelf.kirbee213.tv/*\n// @connect      goodreads.com\n')
-us=R(us,"const SITE_URL = 'https://bookshelf.kirbee213.tv/';","const SITE_URL = 'https://betabookshelf.kirbee213.tv/';")
-us=R(us,"const onSite = host === 'bookshelf.kirbee213.tv' || (host === 'kirbeeman.github.io' && location.pathname.startsWith('/bookshelfcalc'));","const onSite = host === 'betabookshelf.kirbee213.tv';")
 os.makedirs(O,exist_ok=True)
 html=R(html,'<meta property="og:image" content="https://bookshelf.kirbee213.tv/og.png?v='+VER+'">','<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v='+VER+'">')
 html=R(html,'<meta property="og:url" content="https://bookshelf.kirbee213.tv/">','<meta property="og:url" content="https://betabookshelf.kirbee213.tv/">')
 open(O+'/index.html','w').write(html)
 open(O+'/kindle-library-calculator-beta.user.js','w').write(us)
 shutil.copy(G+'/bm.js', O+'/bm.js')
+# the signed code and its signed release are the same files on both sites
+shutil.copy(G+'/core.js', O+'/core.js'); shutil.copy(G+'/release.json', O+'/release.json')
 shutil.copy(G+'/privacy.html', O+'/privacy.html')
 shutil.copy(G+'/bookmark.html', O+'/bookmark.html')
-shutil.copy(G+'/iphone.html', O+'/iphone.html')
-os.makedirs(O+'/ioshelp', exist_ok=True); shutil.copy(G+'/iphone.html', O+'/ioshelp/index.html')  # the same guide at /ioshelp
+# the iPhone guide, pointed at the beta site, at /iphone.html and /ioshelp
+ios=open(G+'/iphone.html').read().replace('bookshelf.kirbee213.tv', 'betabookshelf.kirbee213.tv')
+open(O+'/iphone.html','w').write(ios)
+os.makedirs(O+'/ioshelp', exist_ok=True); open(O+'/ioshelp/index.html','w').write(ios)
+hlp=open(G+'/help.html').read().replace('bookshelf.kirbee213.tv', 'betabookshelf.kirbee213.tv')
+open(O+'/help.html','w').write(hlp); os.makedirs(O+'/help', exist_ok=True); open(O+'/help/index.html','w').write(hlp)
 for f in ['icon-tag.png', 'icon-tag-180.png', 'icon-web.png', 'icon-web-180.png', 'og.png']: shutil.copy(G+'/'+f, O+'/'+f)
 open(O+'/CNAME','w').write('betabookshelf.kirbee213.tv\n')
+# the beta changes the page's script, so its fingerprint in the Content Security Policy is worked out again
+import sys; sys.dont_write_bytecode = True; sys.path.insert(0, G+'/src'); import csp; csp.apply_all(O)
 open(O+'/README.md','w').write("""# Shelf of Shame: beta
 
 Test copy of the [Shelf of Shame](https://github.com/Kirbeeman/bookshelfcalc), served at **https://betabookshelf.kirbee213.tv**.

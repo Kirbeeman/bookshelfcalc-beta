@@ -1,9 +1,16 @@
 // ==UserScript==
-// @name         Shelf of Shame (beta)
-// @namespace    kindle-library-calculator-beta
-// @version      2.1.0.0.2
+// @name         Shelf of Shame
+// @namespace    kindle-library-calculator
+// @version      __VERSION__
 // @downloadURL  none
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
+// @match        https://bookshelf.kirbee213.tv/*
+// @match        https://kirbeeman.github.io/bookshelfcalc/*
+// @match        https://www.goodreads.com/*
+// @match        https://read.amazon.com/kindle-library*
+// @match        https://read.amazon.co.uk/kindle-library*
+// @match        https://read.amazon.ca/kindle-library*
+// @match        https://read.amazon.com.au/kindle-library*
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_addStyle
@@ -14,8 +21,7 @@
 // @grant        GM.listValues
 // @grant        GM.xmlHttpRequest
 // @grant        GM.info
-// @connect      betabookshelf.kirbee213.tv
-// @match        https://betabookshelf.kirbee213.tv/*
+// @connect      bookshelf.kirbee213.tv
 // @connect      goodreads.com
 // @connect      amazon.com
 // @connect      amazon.co.uk
@@ -28,8 +34,8 @@
 // signed with the Shelf of Shame signing key below, checks core.js matches the signed fingerprint, and only then runs it.
 // Someone who took over the website or the GitHub repo still couldn't make it run anything that wasn't signed.
 (async () => {
-const SITE = 'https://betabookshelf.kirbee213.tv/';
-const KEY = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEy1ISS5hsqAzzd9MIDHiLbPEZm3j2D+m31Beqg+ylcGEk6q8Mh6iibJJ5G5dH0GdUVwClChtOexlh5jd7fy9h2g==';
+const SITE = 'https://bookshelf.kirbee213.tv/';
+const KEY = '__SIGN_KEY__';
 const TM = typeof GM_getValue === 'function' && typeof GM_setValue === 'function';
 const cache = {};
 if (!TM && typeof GM !== 'undefined' && GM.getValue) {
