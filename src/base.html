@@ -215,8 +215,9 @@ button{cursor:pointer}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--rule);padding-block:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
 .brand{display:flex;flex-direction:column;gap:2px}
 .store{font-family:var(--mono);font-size:.74rem;color:var(--muted);display:flex;align-items:center;gap:6px}
-.store i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
-.store.db i{background:var(--ok)} .store.local i{background:var(--warn)} .store.demo i{background:var(--accent)}
+/* Status dots use the same colors in every theme: green done, yellow waiting or working, red a problem, gray nothing to report */
+.store i{width:7px;height:7px;border-radius:50%;background:#8a8f8b;display:inline-block;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.28)}
+.store.st-ok i,.gdstore[data-k=ok] i{background:#22a55a} .store.st-wait i,.gdstore[data-k=run] i,.gdstore[data-k=tap] i{background:#f0b429} .store.st-bad i,.gdstore[data-k=err] i{background:#e5484d}
 .actions{display:flex;flex-wrap:wrap;gap:8px}
 
 .notice{border:1px solid var(--rule);border-left:4px solid var(--warn);background:var(--paper);border-radius:8px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between;font-size:.9rem}
@@ -456,7 +457,7 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
   <header class="top">
     <div class="brand">
       <h1>Shelf of Shame</h1>
-      <div class="store demo" id="store"><i></i><span>Example library</span></div>
+      <div class="store st-none" id="store"><i></i><span>Example library</span></div>
     </div>
     <div class="actions">
       <button class="btn" id="btnAdd">Add book</button>
@@ -734,10 +735,10 @@ window.addEventListener('pagehide', flushSave);
 document.addEventListener('visibilitychange', () => { if (document.hidden) flushSave(); });
 function setStore(state, msg) {
   const el = $('#store'), sp = el.querySelector('span');
-  el.className = 'store ' + (S.demo ? 'demo' : S.mode);
+  el.className = 'store ' + (S.demo ? 'st-none' : state === 'saving' ? 'st-wait' : 'st-ok');
   if (S.demo) sp.textContent = 'Example library · not saved';
   else if (state === 'saving') sp.textContent = 'Saving…';
-  else if (state === 'error') { sp.textContent = msg; el.className = 'store local'; }
+  else if (state === 'error') { sp.textContent = msg; el.className = 'store st-bad'; }
   else sp.textContent = 'Saved in this browser only';
   $('#demoBanner').hidden = !S.demo;
 }

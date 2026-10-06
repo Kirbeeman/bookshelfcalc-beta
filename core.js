@@ -305,8 +305,8 @@ document.body.innerHTML = `<div class="wrap">
   <header class="top">
     <div class="brand">
       <h1>Shelf of Shame</h1>
-      <div class="store demo" id="store"><i></i><span>Example library</span></div>
-      <div class="store" id="sync" hidden><span>Not synced yet</span></div>
+      <div class="store st-none" id="store"><i></i><span>Example library</span></div>
+      <div class="store st-wait" id="sync" hidden><i></i><span>Not synced yet</span></div>
     </div>
     <div class="actions">
       <button class="btn primary" id="btnSync" hidden>Sync now</button>
@@ -682,8 +682,9 @@ button{cursor:pointer}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--rule);padding-block:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
 .brand{display:flex;flex-direction:column;gap:2px}
 .store{font-family:var(--mono);font-size:.74rem;color:var(--muted);display:flex;align-items:center;gap:6px}
-.store i{width:7px;height:7px;border-radius:50%;background:var(--muted);display:inline-block}
-.store.db i{background:var(--ok)} .store.local i{background:var(--warn)} .store.demo i{background:var(--accent)}
+/* Status dots use the same colors in every theme: green done, yellow waiting or working, red a problem, gray nothing to report */
+.store i{width:7px;height:7px;border-radius:50%;background:#8a8f8b;display:inline-block;flex:none;box-shadow:0 0 0 1px rgba(0,0,0,.28)}
+.store.st-ok i,.gdstore[data-k=ok] i{background:#22a55a} .store.st-wait i,.gdstore[data-k=run] i,.gdstore[data-k=tap] i{background:#f0b429} .store.st-bad i,.gdstore[data-k=err] i{background:#e5484d}
 .actions{display:flex;flex-wrap:wrap;gap:8px}
 
 .notice{border:1px solid var(--rule);border-left:4px solid var(--warn);background:var(--paper);border-radius:8px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between;font-size:.9rem}
@@ -1022,10 +1023,10 @@ window.addEventListener('pagehide', flushSave);
 document.addEventListener('visibilitychange', () => { if (document.hidden) flushSave(); });
 function setStore(state, msg) {
   const el = $('#store'), sp = el.querySelector('span');
-  el.className = 'store ' + (S.demo ? 'demo' : S.mode);
+  el.className = 'store ' + (S.demo ? 'st-none' : state === 'saving' ? 'st-wait' : 'st-ok');
   if (S.demo) sp.textContent = 'Example library · not saved';
   else if (state === 'saving') sp.textContent = 'Saving…';
-  else if (state === 'error') { sp.textContent = msg; el.className = 'store local'; }
+  else if (state === 'error') { sp.textContent = msg; el.className = 'store st-bad'; }
   else sp.textContent = 'Saved in this browser only';
   $('#demoBanner').hidden = !S.demo;
 }
@@ -1761,7 +1762,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.1.0.0.5`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.5`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.1.0.0.6`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.6`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2075,7 +2076,7 @@ const kpWaiters = {}; let kpSeq = 0, kpRunning = false, lastSyncMsg = '';
 let storeReady = Promise.resolve(), syncing = false, syncOn = false, bridgeWaiters = null;
 const hasCore = typeof KLC_CORE !== 'undefined';
 const postBridge = m => window.postMessage(Object.assign({klc: 1}, m), location.origin === 'null' ? '*' : location.origin);
-function setSync(msg, kind) { const el = $('#sync'); const sc = document.getElementById('syncCard'); el.hidden = !!(sc && !sc.hidden); el.className = 'store ' + (kind || ''); el.querySelector('span').textContent = msg; }
+function setSync(msg, kind) { const el = $('#sync'); const sc = document.getElementById('syncCard'); el.hidden = !!(sc && !sc.hidden); el.className = 'store ' + ({db: 'st-ok', local: 'st-bad'}[kind] || 'st-wait'); /* done, a problem, or still going */ el.querySelector('span').textContent = msg; }
 
 function enableSync() {
   if (syncOn) return;
@@ -2083,7 +2084,7 @@ function enableSync() {
   $('#btnSync').hidden = false;
   $('#bannerImport').textContent = 'Sync now';
   const p = $('#demoBanner p'); if (p) p.innerHTML = '<strong>This is an example library.</strong> Your first sync replaces it with your Kindle library and Goodreads shelves.';
-  setSync('Connected to the sync script');
+  setSync('Connected to the sync script', 'db');
   wizConnected();
   renderScriptSect();
   if (!document.getElementById('dlgWiz')?.open && !document.getElementById('dlgForce')?.open) runSync(false); // no syncing with an out-of-date script // mid-setup, the last setup step starts the sync once they've signed in
@@ -2174,9 +2175,9 @@ function startSync() {
     // First visit (still on the example) or coming back mid-setup: walk them through it
     if (resume || (S.demo && !lsFlag('klc-wiz-skip'))) { openWizard(resume || 'welcome'); return; }
     // Has their own books but no script answered: say so, with a way into setup (unless they sync with the bookmark)
-    const el = $('#sync'); el.hidden = false; el.className = 'store local';
+    const el = $('#sync'); el.hidden = false; el.className = 'store st-bad';
     let bmLast = 0; try { bmLast = +(localStorage.getItem('klc-bm-last') || 0); } catch {}
-    if (bmLast) { el.className = 'store db'; el.querySelector('span').textContent = `Last synced with the sync bookmark ${new Date(bmLast).toLocaleDateString([], {month: 'short', day: 'numeric'})}`; renderScriptSect(); return; }
+    if (bmLast) { el.className = 'store st-ok'; el.querySelector('span').textContent = `Last synced with the sync bookmark ${new Date(bmLast).toLocaleDateString([], {month: 'short', day: 'numeric'})}`; renderScriptSect(); return; }
     el.querySelector('span').innerHTML = 'Sync script not detected, so prices, pages and genres are guesses. <a href="#" id="syncHelp" style="color:inherit">Set up sync</a>';
     $('#syncHelp').onclick = e => { e.preventDefault(); openWizard('welcome'); };
     renderScriptSect();
@@ -2320,7 +2321,7 @@ async function lookupBookInfo() {
         done++;
       }
       renderStats(); renderShelf(); scheduleSave();
-      if (res.blocked) { setSync(`${lastSyncMsg} · Amazon paused lookups after ${done}; the rest continue next visit`, 'local'); stage('details', 'err', `${fmtInt(done)} of ${fmtInt(todo.length)}`, done / todo.length); cardError('details', 'Amazon asked us to slow down. The rest of the book details fill in on your next visit.', true); return; }
+      if (res.blocked) { setSync(`${lastSyncMsg} · Amazon paused lookups after ${done}; the rest continue next visit`, 'wait'); stage('details', 'err', `${fmtInt(done)} of ${fmtInt(todo.length)}`, done / todo.length); cardError('details', 'Amazon asked us to slow down. The rest of the book details fill in on your next visit.', true); return; }
     }
     genreStatus('');
     setSync(`${lastSyncMsg}${done ? ` · details for ${done} books` : ''}`, 'db');
@@ -2329,7 +2330,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.1.0.0.5';
+const LATEST_SCRIPT = '2.1.0.0.6';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2415,6 +2416,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.6', ['The status dots under the title use the same colors in every theme: green when saved or synced, yellow while waiting or syncing, red when something went wrong']],
   ['2.1.0.0.5', ['Unread shares near 0% or 100% show a decimal (99.5%) instead of rounding to 100% when you have read a few books', 'New wording when you have barely started your library, or not started it at all']],
   ['2.1.0.0.4', ['The full bookcase keeps room at the end of its last shelf for the bookend, plants and other decorations']],
   ['2.1.0.0.3', ['On a computer the bookcase is 3 shelves tall at most and holds up to 100 unread books, with thinner spines when it needs them; the rest are counted below it']],
@@ -2710,8 +2712,8 @@ function wizGo(step) {
   const st = document.createElement('style');
   st.textContent = `
 #btnSettings.dot{position:relative}#btnSettings.dot::after{content:"";position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--shame);border:2px solid var(--bg)}
-.gdstore{background:none;border:0;padding:0;cursor:pointer;font:inherit;font-family:var(--mono);font-size:.74rem;color:var(--muted)}.gdstore i{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--warn)}
-.gdstore[data-k=ok] i{background:var(--ok)}.gdstore[data-k=err] i{background:var(--shame)}.gdstore[data-k=run] i{background:var(--accent)}.gdstore[data-k=tap]{text-decoration:underline dotted}
+.gdstore{background:none;border:0;padding:0;cursor:pointer;font:inherit;font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+.gdstore[data-k=tap]{text-decoration:underline dotted}
 .bmsteps{margin:6px 0 0;padding-left:20px;font-size:.84rem;display:flex;flex-direction:column;gap:4px}
 .newtag{display:none;margin-left:8px;vertical-align:2px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;background:var(--shame);border-radius:999px;padding:1px 7px}
 #scriptSect.fresh{outline:2px solid var(--shame);outline-offset:6px;border-radius:4px;transition:outline-color .3s}#scriptSect.fresh .newtag{display:inline-block}
@@ -2893,7 +2895,7 @@ function gdStatus(state) {
   el.hidden = !gdOn() && state !== 'run';
   const t = gd.when ? new Date(gd.when).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'}) : '';
   el.dataset.k = state;
-  el.innerHTML = '<i></i>' + (state === 'run' ? 'Google Drive: syncing…' : state === 'ok' ? `Google Drive: synced ${t}` : state === 'err' ? 'Google Drive: problem, tap to retry' : 'Google Drive: tap to sync');
+  el.innerHTML = '<i></i>' + (state === 'run' ? 'Google Drive: syncing…' : state === 'ok' ? `Google Drive: synced ${t}` : state === 'err' ? 'Google Drive: There is a problem with the sync. Tap to retry.' : 'Google Drive: tap to sync');
   el.title = state === 'err' ? gd.err : state === 'tap' ? 'Google sign-ins last about an hour. Tap to sync your library with your Drive.' : 'Your library is saved in your own Google Drive';
 }
 function renderDriveSect() {

@@ -5,7 +5,7 @@ const kpWaiters = {}; let kpSeq = 0, kpRunning = false, lastSyncMsg = '';
 let storeReady = Promise.resolve(), syncing = false, syncOn = false, bridgeWaiters = null;
 const hasCore = typeof KLC_CORE !== 'undefined';
 const postBridge = m => window.postMessage(Object.assign({klc: 1}, m), location.origin === 'null' ? '*' : location.origin);
-function setSync(msg, kind) { const el = $('#sync'); const sc = document.getElementById('syncCard'); el.hidden = !!(sc && !sc.hidden); el.className = 'store ' + (kind || ''); el.querySelector('span').textContent = msg; }
+function setSync(msg, kind) { const el = $('#sync'); const sc = document.getElementById('syncCard'); el.hidden = !!(sc && !sc.hidden); el.className = 'store ' + ({db: 'st-ok', local: 'st-bad'}[kind] || 'st-wait'); /* done, a problem, or still going */ el.querySelector('span').textContent = msg; }
 
 function enableSync() {
   if (syncOn) return;
@@ -13,7 +13,7 @@ function enableSync() {
   $('#btnSync').hidden = false;
   $('#bannerImport').textContent = 'Sync now';
   const p = $('#demoBanner p'); if (p) p.innerHTML = '<strong>This is an example library.</strong> Your first sync replaces it with your Kindle library and Goodreads shelves.';
-  setSync('Connected to the sync script');
+  setSync('Connected to the sync script', 'db');
   wizConnected();
   renderScriptSect();
   if (!document.getElementById('dlgWiz')?.open && !document.getElementById('dlgForce')?.open) runSync(false); // no syncing with an out-of-date script // mid-setup, the last setup step starts the sync once they've signed in
@@ -104,9 +104,9 @@ function startSync() {
     // First visit (still on the example) or coming back mid-setup: walk them through it
     if (resume || (S.demo && !lsFlag('klc-wiz-skip'))) { openWizard(resume || 'welcome'); return; }
     // Has their own books but no script answered: say so, with a way into setup (unless they sync with the bookmark)
-    const el = $('#sync'); el.hidden = false; el.className = 'store local';
+    const el = $('#sync'); el.hidden = false; el.className = 'store st-bad';
     let bmLast = 0; try { bmLast = +(localStorage.getItem('klc-bm-last') || 0); } catch {}
-    if (bmLast) { el.className = 'store db'; el.querySelector('span').textContent = `Last synced with the sync bookmark ${new Date(bmLast).toLocaleDateString([], {month: 'short', day: 'numeric'})}`; renderScriptSect(); return; }
+    if (bmLast) { el.className = 'store st-ok'; el.querySelector('span').textContent = `Last synced with the sync bookmark ${new Date(bmLast).toLocaleDateString([], {month: 'short', day: 'numeric'})}`; renderScriptSect(); return; }
     el.querySelector('span').innerHTML = 'Sync script not detected, so prices, pages and genres are guesses. <a href="#" id="syncHelp" style="color:inherit">Set up sync</a>';
     $('#syncHelp').onclick = e => { e.preventDefault(); openWizard('welcome'); };
     renderScriptSect();
@@ -250,7 +250,7 @@ async function lookupBookInfo() {
         done++;
       }
       renderStats(); renderShelf(); scheduleSave();
-      if (res.blocked) { setSync(`${lastSyncMsg} · Amazon paused lookups after ${done}; the rest continue next visit`, 'local'); stage('details', 'err', `${fmtInt(done)} of ${fmtInt(todo.length)}`, done / todo.length); cardError('details', 'Amazon asked us to slow down. The rest of the book details fill in on your next visit.', true); return; }
+      if (res.blocked) { setSync(`${lastSyncMsg} · Amazon paused lookups after ${done}; the rest continue next visit`, 'wait'); stage('details', 'err', `${fmtInt(done)} of ${fmtInt(todo.length)}`, done / todo.length); cardError('details', 'Amazon asked us to slow down. The rest of the book details fill in on your next visit.', true); return; }
     }
     genreStatus('');
     setSync(`${lastSyncMsg}${done ? ` · details for ${done} books` : ''}`, 'db');
@@ -345,6 +345,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.6', ['The status dots under the title use the same colors in every theme: green when saved or synced, yellow while waiting or syncing, red when something went wrong']],
   ['2.1.0.0.5', ['Unread shares near 0% or 100% show a decimal (99.5%) instead of rounding to 100% when you have read a few books', 'New wording when you have barely started your library, or not started it at all']],
   ['2.1.0.0.4', ['The full bookcase keeps room at the end of its last shelf for the bookend, plants and other decorations']],
   ['2.1.0.0.3', ['On a computer the bookcase is 3 shelves tall at most and holds up to 100 unread books, with thinner spines when it needs them; the rest are counted below it']],
@@ -640,8 +641,8 @@ function wizGo(step) {
   const st = document.createElement('style');
   st.textContent = `
 #btnSettings.dot{position:relative}#btnSettings.dot::after{content:"";position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:var(--shame);border:2px solid var(--bg)}
-.gdstore{background:none;border:0;padding:0;cursor:pointer;font:inherit;font-family:var(--mono);font-size:.74rem;color:var(--muted)}.gdstore i{width:7px;height:7px;border-radius:50%;display:inline-block;background:var(--warn)}
-.gdstore[data-k=ok] i{background:var(--ok)}.gdstore[data-k=err] i{background:var(--shame)}.gdstore[data-k=run] i{background:var(--accent)}.gdstore[data-k=tap]{text-decoration:underline dotted}
+.gdstore{background:none;border:0;padding:0;cursor:pointer;font:inherit;font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+.gdstore[data-k=tap]{text-decoration:underline dotted}
 .bmsteps{margin:6px 0 0;padding-left:20px;font-size:.84rem;display:flex;flex-direction:column;gap:4px}
 .newtag{display:none;margin-left:8px;vertical-align:2px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#fff;background:var(--shame);border-radius:999px;padding:1px 7px}
 #scriptSect.fresh{outline:2px solid var(--shame);outline-offset:6px;border-radius:4px;transition:outline-color .3s}#scriptSect.fresh .newtag{display:inline-block}

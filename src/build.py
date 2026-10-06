@@ -17,8 +17,8 @@ src=R(src,"samples: $('#sSamples').checked,","samples: $('#sSamples').checked, g
 # shared sync UI (hidden until a sync source is available: Tampermonkey core or the bridge on the website)
 src=R(src,'      <button class="btn" id="btnAdd">Add book</button>',
  '      <button class="btn primary" id="btnSync" hidden>Sync now</button>\n      <button class="btn" id="btnAdd">Add book</button>')
-src=R(src,'<div class="store demo" id="store"><i></i><span>Example library</span></div>',
- '<div class="store demo" id="store"><i></i><span>Example library</span></div>\n      <div class="store" id="sync" hidden><span>Not synced yet</span></div>')
+src=R(src,'<div class="store st-none" id="store"><i></i><span>Example library</span></div>',
+ '<div class="store st-none" id="store"><i></i><span>Example library</span></div>\n      <div class="store st-wait" id="sync" hidden><i></i><span>Not synced yet</span></div>')
 src=R(src,"$('#btnImport').onclick = openImport; $('#bannerImport').onclick = openImport;",
  "$('#btnImport').onclick = openImport; $('#bannerImport').onclick = () => syncOn ? runSync(true) : openWizard('welcome');\n$('#btnSync').onclick = () => runSync(true);")
 src=R(src,"renderAll();\ninitStore();","renderAll();\nstoreReady = initStore();\nstartSync();")

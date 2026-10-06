@@ -6,18 +6,21 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.1 beta 5 (latest)
+## 2.1 beta 6 (latest)
 
-**Truer unread share**
+**Status dots in traffic-light colors**
 
-- The unread share was rounded to the nearest whole number, so 3 books read out of 659 showed as 100% unread. Shares near 0% or 100% now keep one decimal (99.5%), and it only says 100% when no book has been opened.
-- New wording at the top end: "You've barely cracked a spine" from 90% unread, and "Not one book opened yet" when nothing has been opened.
+- The status dots under the title use the same colors in every theme: **green** when saved or synced, **yellow** while waiting or syncing, **red** when something went wrong, and gray for the example library.
+- The sync script / bookmark line gets a dot too.
+- "Amazon paused lookups" is now yellow instead of red, since the rest continue next visit.
+- The Google Drive problem line now reads "There is a problem with the sync. Tap to retry."
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.1 beta 5** Truer unread share
 - **2.1 beta 4** Decorations back on the full bookcase
 - **2.1 beta 3** 100 books on three shelves
 - **2.1 beta 2** Signed code: the sync only runs code Daniel signed (set up the bookmark again; script update required)

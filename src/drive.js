@@ -141,7 +141,7 @@ function gdStatus(state) {
   el.hidden = !gdOn() && state !== 'run';
   const t = gd.when ? new Date(gd.when).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'}) : '';
   el.dataset.k = state;
-  el.innerHTML = '<i></i>' + (state === 'run' ? 'Google Drive: syncing…' : state === 'ok' ? `Google Drive: synced ${t}` : state === 'err' ? 'Google Drive: problem, tap to retry' : 'Google Drive: tap to sync');
+  el.innerHTML = '<i></i>' + (state === 'run' ? 'Google Drive: syncing…' : state === 'ok' ? `Google Drive: synced ${t}` : state === 'err' ? 'Google Drive: There is a problem with the sync. Tap to retry.' : 'Google Drive: tap to sync');
   el.title = state === 'err' ? gd.err : state === 'tap' ? 'Google sign-ins last about an hour. Tap to sync your library with your Drive.' : 'Your library is saved in your own Google Drive';
 }
 function renderDriveSect() {
