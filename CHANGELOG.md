@@ -6,17 +6,19 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.1 beta 4 (latest)
+## 2.1 beta 5 (latest)
 
-**Decorations back on the full bookcase**
+**Truer unread share**
 
-- With 100 books on three shelves there was no room left for the bookend, plants and other decorations at the end of the last shelf, so they disappeared. The full bookcase now keeps room for them, with slightly thinner spines to make up for it.
+- The unread share was rounded to the nearest whole number, so 3 books read out of 659 showed as 100% unread. Shares near 0% or 100% now keep one decimal (99.5%), and it only says 100% when no book has been opened.
+- New wording at the top end: "You've barely cracked a spine" from 90% unread, and "Not one book opened yet" when nothing has been opened.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.1 beta 4** Decorations back on the full bookcase
 - **2.1 beta 3** 100 books on three shelves
 - **2.1 beta 2** Signed code: the sync only runs code Daniel signed (set up the bookmark again; script update required)
 - **2.1 beta 1** Security policy and a guide for every device (folded into beta 2)

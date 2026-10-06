@@ -958,6 +958,8 @@ function comicSvg(gs) {
 const DECOR_SETS = {halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
 const ORNAMENTS = {halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
 let shelfMemo = {};
+// A share as a whole percent, except near the ends: 3 books read out of 659 is 99.5% unread, never a rounded-up 100%
+const pctText = p => (p > 0 && p < 1 ? Math.max(.1, Math.round(p * 10) / 10) : p > 99 && p < 100 ? Math.min(99.9, Math.floor(p * 10) / 10) : Math.round(p)) + '%';
 const DECOR_ROOM = 340; // px kept free at the end of a computer's full bookcase for the bookend and decorations
 function decorShelf() {
   const bc = document.querySelector('#stack .bookcase'); if (!bc) return;
@@ -1027,7 +1029,7 @@ function renderStats() {
   const pk = Object.keys(PACES).find(k => PACES[k] === S.settings.pagesPerDay);
   document.querySelectorAll('[data-pace]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pace === pk));
   $('#paceNote').textContent = `${S.settings.pagesPerDay} pages a day` + (pk ? '' : ' (custom, set in Settings)');
-  $('#tUnread').textContent = Math.round(pct) + '%';
+  $('#tUnread').textContent = pctText(pct);
   $('#tUnreadSub').textContent = `${fmtInt(pile.length)} of ${fmtInt(n)} books never opened`;
 
   // pile
@@ -1169,9 +1171,11 @@ function renderStats() {
   $('#fRate').nextElementSibling.textContent = 'added vs finished of those, last 12 months';
 
   const verdict = !n ? 'Nothing here yet.' :
-    pct >= 60 ? `You've read less than half of what you own. <strong>${Math.round(pct)}%</strong> of your library has never been opened.` :
-    pct >= 35 ? `A well-stocked shelf. <strong>${Math.round(pct)}%</strong> unread, about ${fmtHours(hoursFor(pilePages))} of reading waiting for you.` :
-    pct > 0 ? `Mostly under control. Only <strong>${Math.round(pct)}%</strong> of your library is unread.` :
+    pct >= 100 ? `Not one book opened yet. <strong>All ${fmtInt(n)}</strong> are still waiting for you.` :
+    pct >= 90 ? `You've barely cracked a spine. <strong>${pctText(pct)}</strong> of your library has never been opened.` :
+    pct >= 60 ? `You've read less than half of what you own. <strong>${pctText(pct)}</strong> of your library has never been opened.` :
+    pct >= 35 ? `A well-stocked shelf. <strong>${pctText(pct)}</strong> unread, about ${fmtHours(hoursFor(pilePages))} of reading waiting for you.` :
+    pct > 0 ? `Mostly under control. Only <strong>${pctText(pct)}</strong> of your library is unread.` :
     'A clean conscience. You have read or started everything you own.';
   $('#verdict').innerHTML = verdict + (estPages ? ` <span class="muted" style="font-size:.85rem">(${fmtInt(estPages)} books use the default page count.)</span>` : '');
 

@@ -1246,6 +1246,8 @@ function comicSvg(gs) {
 const DECOR_SETS = {halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
 const ORNAMENTS = {halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
 let shelfMemo = {};
+// A share as a whole percent, except near the ends: 3 books read out of 659 is 99.5% unread, never a rounded-up 100%
+const pctText = p => (p > 0 && p < 1 ? Math.max(.1, Math.round(p * 10) / 10) : p > 99 && p < 100 ? Math.min(99.9, Math.floor(p * 10) / 10) : Math.round(p)) + '%';
 const DECOR_ROOM = 340; // px kept free at the end of a computer's full bookcase for the bookend and decorations
 function decorShelf() {
   const bc = document.querySelector('#stack .bookcase'); if (!bc) return;
@@ -1315,7 +1317,7 @@ function renderStats() {
   const pk = Object.keys(PACES).find(k => PACES[k] === S.settings.pagesPerDay);
   document.querySelectorAll('[data-pace]').forEach(b => b.setAttribute('aria-pressed', b.dataset.pace === pk));
   $('#paceNote').textContent = `${S.settings.pagesPerDay} pages a day` + (pk ? '' : ' (custom, set in Settings)');
-  $('#tUnread').textContent = Math.round(pct) + '%';
+  $('#tUnread').textContent = pctText(pct);
   $('#tUnreadSub').textContent = `${fmtInt(pile.length)} of ${fmtInt(n)} books never opened`;
 
   // pile
@@ -1457,9 +1459,11 @@ function renderStats() {
   $('#fRate').nextElementSibling.textContent = 'added vs finished of those, last 12 months';
 
   const verdict = !n ? 'Nothing here yet.' :
-    pct >= 60 ? `You've read less than half of what you own. <strong>${Math.round(pct)}%</strong> of your library has never been opened.` :
-    pct >= 35 ? `A well-stocked shelf. <strong>${Math.round(pct)}%</strong> unread, about ${fmtHours(hoursFor(pilePages))} of reading waiting for you.` :
-    pct > 0 ? `Mostly under control. Only <strong>${Math.round(pct)}%</strong> of your library is unread.` :
+    pct >= 100 ? `Not one book opened yet. <strong>All ${fmtInt(n)}</strong> are still waiting for you.` :
+    pct >= 90 ? `You've barely cracked a spine. <strong>${pctText(pct)}</strong> of your library has never been opened.` :
+    pct >= 60 ? `You've read less than half of what you own. <strong>${pctText(pct)}</strong> of your library has never been opened.` :
+    pct >= 35 ? `A well-stocked shelf. <strong>${pctText(pct)}</strong> unread, about ${fmtHours(hoursFor(pilePages))} of reading waiting for you.` :
+    pct > 0 ? `Mostly under control. Only <strong>${pctText(pct)}</strong> of your library is unread.` :
     'A clean conscience. You have read or started everything you own.';
   $('#verdict').innerHTML = verdict + (estPages ? ` <span class="muted" style="font-size:.85rem">(${fmtInt(estPages)} books use the default page count.)</span>` : '');
 
@@ -1757,7 +1761,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.1.0.0.4`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.4`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.1.0.0.5`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.5`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2325,7 +2329,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.1.0.0.4';
+const LATEST_SCRIPT = '2.1.0.0.5';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2411,6 +2415,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.5', ['Unread shares near 0% or 100% show a decimal (99.5%) instead of rounding to 100% when you have read a few books', 'New wording when you have barely started your library, or not started it at all']],
   ['2.1.0.0.4', ['The full bookcase keeps room at the end of its last shelf for the bookend, plants and other decorations']],
   ['2.1.0.0.3', ['On a computer the bookcase is 3 shelves tall at most and holds up to 100 unread books, with thinner spines when it needs them; the rest are counted below it']],
   ['2.1.0.0.2', ['Signed code: the phone bookmark and the sync script now only run code signed with the Shelf of Shame key, so nobody else can change what runs in your Amazon account. Set up the bookmark once more, and update the sync script once']],
