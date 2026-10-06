@@ -28,6 +28,8 @@
 // @connect      amazon.ca
 // @connect      amazon.com.au
 // @run-at       document-end
+// @sandbox      DOM
+// @inject-into  content
 // ==/UserScript==
 
 // This loader never updates itself (@downloadURL none). Each time it runs it fetches the latest release, checks it was
