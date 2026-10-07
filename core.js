@@ -1041,6 +1041,7 @@ const fmtMoney = v => { try { return new Intl.NumberFormat(undefined, {style:'cu
 const fmtInt = v => Math.round(v).toLocaleString();
 const fmtHours = h => h < 1 ? Math.round(h * 60) + ' min' : fmtInt(h) + ' h';
 const counted = b => {
+  if (b.returned) return false;
   if (b.source === 'sample' && !S.settings.samples) return false;
   if (b.source === 'device' && !S.settings.extras) return false;
   if ((b.source === 'ku' || b.source === 'prime' || b.source === 'other' || b.source === 'shared') && !S.settings.borrowed) return false;
@@ -1293,8 +1294,8 @@ function renderStats() {
 
   $('#tBooks').textContent = fmtInt(n);
   const hidden = S.books.length - n;
-  const why = {shared:['shared with you (Family Library)'], ku:['Kindle Unlimited'], prime:['Prime Reading'], other:['borrowed or library loan', 'borrowed or library loans'], sample:['sample', 'samples'], device:['dictionary or user guide that came with your Kindle', 'dictionaries and user guides that came with your Kindle']};
-  const nc = {}; S.books.forEach(b => { if (!counted(b)) nc[b.source] = (nc[b.source] || 0) + 1; });
+  const why = {returned:['returned to Amazon (or no longer in your Amazon library)', 'returned to Amazon (or no longer in your Amazon library)'], shared:['shared with you (Family Library)'], ku:['Kindle Unlimited'], prime:['Prime Reading'], other:['borrowed or library loan', 'borrowed or library loans'], sample:['sample', 'samples'], device:['dictionary or user guide that came with your Kindle', 'dictionaries and user guides that came with your Kindle']};
+  const nc = {}; S.books.forEach(b => { if (!counted(b)) { const k = b.returned ? 'returned' : b.source; nc[k] = (nc[k] || 0) + 1; } });
   const tip = `<span class="tipbox" role="tooltip"><strong>Not counted</strong> means books you didn't buy yourself. They stay in your library but are left out of the totals, value, charts and Shelf of Shame:<ul>${Object.keys(why).filter(k => nc[k]).map(k => `<li>${nc[k]} ${why[k][nc[k] === 1 ? 0 : why[k].length - 1]}</li>`).join('')}</ul>See them with the <strong>Not counted</strong> button under Your library. To include them, turn them on in <strong>Settings</strong>, or click a book and change <strong>How you got it</strong>.</span>`;
   $('#tBooksSub').innerHTML = `${fmtInt(by.finished.length)} finished` + (hidden ? ` · <span class="tip" tabindex="0">${hidden} not counted${tip}</span>` : '');
   const mask = v => S.showMoney ? fmtMoney(v) : '••••••';
@@ -1762,7 +1763,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.1.0.0.7`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.7`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.1.0.0.8`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.8`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2056,7 +2057,7 @@ function libraryXlsx() {
   const rows = [...S.books].sort((a, b) => (a.title || '').localeCompare(b.title || '')).map(b => [
     b.title || '', b.author || '', STATUS[b.status] || b.status || '', Math.round(b.progress || 0), b.pages > 0 ? b.pages : null,
     hasPaid(b) ? {money: +b.price} : null, b.kp != null ? {money: b.kp} : null, /^\d{4}-\d{2}-\d{2}$/.test(b.date || '') ? {date: b.date} : null,
-    SOURCE_NAME[b.source] || b.source || '', b.genre && b.genre !== 'unknown' ? genreLabel(b) + (b.genreSub && b.genreSub !== genreLabel(b) ? ' › ' + b.genreSub : '') : '', GENRES[b.genre2] || '', (b.tags || []).join(', '), b.rating || null, counted(b) ? 'Yes' : 'No', b.asin || '',
+    b.returned ? 'Returned' : SOURCE_NAME[b.source] || b.source || '', b.genre && b.genre !== 'unknown' ? genreLabel(b) + (b.genreSub && b.genreSub !== genreLabel(b) ? ' › ' + b.genreSub : '') : '', GENRES[b.genre2] || '', (b.tags || []).join(', '), b.rating || null, counted(b) ? 'Yes' : 'No', b.asin || '',
   ]);
   return buildXlsx(header, rows, [46, 24, 11, 11, 8, 11, 13, 14, 18, 20, 16, 40, 8, 10, 13]);
 }
@@ -2165,7 +2166,7 @@ function startSync() {
   if (MOBILE && S.demo) { const p = $('#demoBanner p'); if (p) p.innerHTML = '<strong>This is an example library</strong> of public-domain classics so you can see how it works. Tap <b>Get started</b> to bring in your own books from Amazon, Google Drive or a file.'; const bi = $('#bannerImport'); if (bi) bi.textContent = 'Get started'; }
   initPhoneSync();
   initDrive();
-  storeReady.then(() => setTimeout(showNotice, 1800));
+  storeReady.then(() => { if (!S.demo && markExtras()) { renderAll(); scheduleSave(); } setTimeout(showNotice, 1800); }); // fix up libraries synced before extras were spotted by title
   if (hasCore) { enableSync(); return; }
   postBridge({type: 'hello'});
   if (location.protocol === 'file:') return;
@@ -2211,13 +2212,22 @@ function normGoodreads(list) {
 const DEVICE_EXTRA = /dictionar|diccionario|dictionnaire|dicion[aá]rio|w[oö]rterbuch|woordenboek|vocabolario|shabd|kosh|lingvo|词典|辞典|辞泉|daijisen|zingarelli|priberam|duden|munjid|user'?s guide|benutzerhandbuch|gu[ií]a del usuario|guide d.utilisation|gebruikershandleiding|guia do usu[aá]rio|guida all.uso|用户指南|yuza gaido/i;
 const ORIGIN = {purchase:'purchase', sharing:'shared', kindleunlimited:'ku', prime:'prime', primereading:'prime', sample:'sample', publiclibrarylending:'other', personallending:'other', rental:'other', koll:'other', freetrial:'free', comicsunlimited:'ku'};
 // Real purchase dates from Amazon replace missing or estimated ones; Kindle's "Mark as read" marks a book finished
+// Dictionaries and user guides come free with a Kindle, even when Amazon's list files them with an order: they're Kindle
+// extras (not counted unless Settings says so), unless a price was really paid for one
+const isExtra = b => !b.sourceManual && DEVICE_EXTRA.test(b.title || '') && !(hasPaid(b) && +b.price > 0);
+function markExtras() { let n = 0; for (const b of S.books) if (b.source === 'purchase' && isExtra(b)) { b.source = 'device'; n++; } return n; }
 function applyOwnership(items) {
   if (!items || !items.length) return 0;
   const byAsin = new Map(items.map(i => [String(i.asin || '').toUpperCase(), i]));
+  // Books Amazon listed before but no longer does were returned (or removed): kept in the list, left out of the totals.
+  // Only from a list that looks complete, so a short answer from Amazon can't mark half the library returned.
+  const seen = S.books.filter(b => b.asin && (b.cdSeen || (b.dateEst === false && !b.dateManual)));
+  const complete = items.length >= seen.length * .8;
   let n = 0;
   for (const b of S.books) {
     const o = b.asin && byAsin.get(b.asin.toUpperCase());
-    if (!o) continue;
+    if (!o) { if (complete && seen.includes(b) && !b.returned) b.returned = true; continue; }
+    b.cdSeen = true; if (b.returned) delete b.returned;
     const d = o.acquiredTime ? new Date(+o.acquiredTime).toISOString().slice(0,10) : toDate(o.acquiredDate);
     if (d && (!b.date || b.dateEst || b.date !== d) && !b.dateManual) { b.date = d; b.dateEst = false; }
     if (d) n++;
@@ -2228,6 +2238,7 @@ function applyOwnership(items) {
     if (src === 'purchase' && !o.orderDetailURL && !o.orderId && !b.sourceManual && !(hasPaid(b) && b.priceSrc !== 'order')) b.source = DEVICE_EXTRA.test(b.title) ? 'device' : 'free';
     if (/^READ$/i.test(o.readStatus || '') && !b.lock && b.status !== 'finished') { b.status = 'finished'; b.progress = 100; }
   }
+  markExtras();
   return n;
 }
 async function runSync(force) {
@@ -2330,7 +2341,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.1.0.0.7';
+const LATEST_SCRIPT = '2.1.0.0.8';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2416,6 +2427,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.8', ['Dictionaries and user guides that came with your Kindle are no longer counted as bought books, even when Amazon files them with an order', 'Books you returned to Amazon are marked Returned and left out of the totals (they come back by themselves if they show up in your Amazon library again)']],
   ['2.1.0.0.7', ['Books added per year: the small arrows on cut-off bars are gone (they looked like 1s); the break mark still shows a bar is cut off', 'The reading-status rings and table show 99.5% instead of rounding to 100%']],
   ['2.1.0.0.6', ['The status dots under the title use the same colors in every theme: green when saved or synced, yellow while waiting or syncing, red when something went wrong']],
   ['2.1.0.0.5', ['Unread shares near 0% or 100% show a decimal (99.5%) instead of rounding to 100% when you have read a few books', 'New wording when you have barely started your library, or not started it at all']],

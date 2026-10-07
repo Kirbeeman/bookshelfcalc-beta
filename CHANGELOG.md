@@ -6,18 +6,19 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.1 beta 7 (latest)
+## 2.1 beta 8 (latest)
 
-**Cleaner year chart and exact rings**
+**Dictionaries and returned books left out of the count**
 
-- Books added per year: the small arrows on cut-off bars looked like 1s ("129↑"). They're gone. The break mark still shows a bar is cut off, and the note under the chart says so.
-- The reading-status rings and table rounded 99.5% to 100% and 0.5% to "<1%". They now show one decimal near 0% and 100%, like the summary.
+- Dictionaries and user guides that came with a Kindle were counted as bought, unread books when Amazon filed them with an order (52 in one tester's library). They're now spotted by title and set aside as Kindle extras, unless a price was really paid. This applies as soon as the page opens.
+- Books returned to Amazon stayed in the totals forever. After a sync, books Amazon no longer lists are marked **Returned** and left out of the totals. They stay in the library list and come back by themselves if Amazon lists them again. A short or incomplete list from Amazon never marks anything returned.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.1 beta 7** Cleaner year chart and exact rings
 - **2.1 beta 6** Status dots in traffic-light colors
 - **2.1 beta 5** Truer unread share
 - **2.1 beta 4** Decorations back on the full bookcase

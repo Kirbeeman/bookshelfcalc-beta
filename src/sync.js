@@ -94,7 +94,7 @@ function startSync() {
   if (MOBILE && S.demo) { const p = $('#demoBanner p'); if (p) p.innerHTML = '<strong>This is an example library</strong> of public-domain classics so you can see how it works. Tap <b>Get started</b> to bring in your own books from Amazon, Google Drive or a file.'; const bi = $('#bannerImport'); if (bi) bi.textContent = 'Get started'; }
   initPhoneSync();
   initDrive();
-  storeReady.then(() => setTimeout(showNotice, 1800));
+  storeReady.then(() => { if (!S.demo && markExtras()) { renderAll(); scheduleSave(); } setTimeout(showNotice, 1800); }); // fix up libraries synced before extras were spotted by title
   if (hasCore) { enableSync(); return; }
   postBridge({type: 'hello'});
   if (location.protocol === 'file:') return;
@@ -140,13 +140,22 @@ function normGoodreads(list) {
 const DEVICE_EXTRA = /dictionar|diccionario|dictionnaire|dicion[aá]rio|w[oö]rterbuch|woordenboek|vocabolario|shabd|kosh|lingvo|词典|辞典|辞泉|daijisen|zingarelli|priberam|duden|munjid|user'?s guide|benutzerhandbuch|gu[ií]a del usuario|guide d.utilisation|gebruikershandleiding|guia do usu[aá]rio|guida all.uso|用户指南|yuza gaido/i;
 const ORIGIN = {purchase:'purchase', sharing:'shared', kindleunlimited:'ku', prime:'prime', primereading:'prime', sample:'sample', publiclibrarylending:'other', personallending:'other', rental:'other', koll:'other', freetrial:'free', comicsunlimited:'ku'};
 // Real purchase dates from Amazon replace missing or estimated ones; Kindle's "Mark as read" marks a book finished
+// Dictionaries and user guides come free with a Kindle, even when Amazon's list files them with an order: they're Kindle
+// extras (not counted unless Settings says so), unless a price was really paid for one
+const isExtra = b => !b.sourceManual && DEVICE_EXTRA.test(b.title || '') && !(hasPaid(b) && +b.price > 0);
+function markExtras() { let n = 0; for (const b of S.books) if (b.source === 'purchase' && isExtra(b)) { b.source = 'device'; n++; } return n; }
 function applyOwnership(items) {
   if (!items || !items.length) return 0;
   const byAsin = new Map(items.map(i => [String(i.asin || '').toUpperCase(), i]));
+  // Books Amazon listed before but no longer does were returned (or removed): kept in the list, left out of the totals.
+  // Only from a list that looks complete, so a short answer from Amazon can't mark half the library returned.
+  const seen = S.books.filter(b => b.asin && (b.cdSeen || (b.dateEst === false && !b.dateManual)));
+  const complete = items.length >= seen.length * .8;
   let n = 0;
   for (const b of S.books) {
     const o = b.asin && byAsin.get(b.asin.toUpperCase());
-    if (!o) continue;
+    if (!o) { if (complete && seen.includes(b) && !b.returned) b.returned = true; continue; }
+    b.cdSeen = true; if (b.returned) delete b.returned;
     const d = o.acquiredTime ? new Date(+o.acquiredTime).toISOString().slice(0,10) : toDate(o.acquiredDate);
     if (d && (!b.date || b.dateEst || b.date !== d) && !b.dateManual) { b.date = d; b.dateEst = false; }
     if (d) n++;
@@ -157,6 +166,7 @@ function applyOwnership(items) {
     if (src === 'purchase' && !o.orderDetailURL && !o.orderId && !b.sourceManual && !(hasPaid(b) && b.priceSrc !== 'order')) b.source = DEVICE_EXTRA.test(b.title) ? 'device' : 'free';
     if (/^READ$/i.test(o.readStatus || '') && !b.lock && b.status !== 'finished') { b.status = 'finished'; b.progress = 100; }
   }
+  markExtras();
   return n;
 }
 async function runSync(force) {
@@ -345,6 +355,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.8', ['Dictionaries and user guides that came with your Kindle are no longer counted as bought books, even when Amazon files them with an order', 'Books you returned to Amazon are marked Returned and left out of the totals (they come back by themselves if they show up in your Amazon library again)']],
   ['2.1.0.0.7', ['Books added per year: the small arrows on cut-off bars are gone (they looked like 1s); the break mark still shows a bar is cut off', 'The reading-status rings and table show 99.5% instead of rounding to 100%']],
   ['2.1.0.0.6', ['The status dots under the title use the same colors in every theme: green when saved or synced, yellow while waiting or syncing, red when something went wrong']],
   ['2.1.0.0.5', ['Unread shares near 0% or 100% show a decimal (99.5%) instead of rounding to 100% when you have read a few books', 'New wording when you have barely started your library, or not started it at all']],
