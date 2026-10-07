@@ -137,7 +137,6 @@ function normGoodreads(list) {
   })).filter(b => b.title);
 }
 
-const DEVICE_EXTRA = /dictionar|diccionario|dictionnaire|dicion[aá]rio|w[oö]rterbuch|woordenboek|vocabolario|shabd|kosh|lingvo|词典|辞典|辞泉|daijisen|zingarelli|priberam|duden|munjid|user'?s guide|benutzerhandbuch|gu[ií]a del usuario|guide d.utilisation|gebruikershandleiding|guia do usu[aá]rio|guida all.uso|用户指南|yuza gaido/i;
 const ORIGIN = {purchase:'purchase', sharing:'shared', kindleunlimited:'ku', prime:'prime', primereading:'prime', sample:'sample', publiclibrarylending:'other', personallending:'other', rental:'other', koll:'other', freetrial:'free', comicsunlimited:'ku'};
 // Real purchase dates from Amazon replace missing or estimated ones; Kindle's "Mark as read" marks a book finished
 // Dictionaries and user guides come free with a Kindle, even when Amazon's list files them with an order: they're Kindle
@@ -355,6 +354,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.9', ['Your oldest unread book is never a dictionary or user guide, even with Kindle extras counted']],
   ['2.1.0.0.8', ['Dictionaries and user guides that came with your Kindle are no longer counted as bought books, even when Amazon files them with an order', 'Books you returned to Amazon are marked Returned and left out of the totals (they come back by themselves if they show up in your Amazon library again)']],
   ['2.1.0.0.7', ['Books added per year: the small arrows on cut-off bars are gone (they looked like 1s); the break mark still shows a bar is cut off', 'The reading-status rings and table show 99.5% instead of rounding to 100%']],
   ['2.1.0.0.6', ['The status dots under the title use the same colors in every theme: green when saved or synced, yellow while waiting or syncing, red when something went wrong']],

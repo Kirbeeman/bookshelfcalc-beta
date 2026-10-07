@@ -752,6 +752,8 @@ function leaveDemo(clear) {
 const fmtMoney = v => { try { return new Intl.NumberFormat(undefined, {style:'currency', currency:S.settings.currency, maximumFractionDigits: v >= 1000 ? 0 : 2}).format(v); } catch { return '$' + v.toFixed(2); } };
 const fmtInt = v => Math.round(v).toLocaleString();
 const fmtHours = h => h < 1 ? Math.round(h * 60) + ' min' : fmtInt(h) + ' h';
+// Dictionaries and user guides that come with a Kindle, known by their titles (Amazon files some of them as purchases)
+const DEVICE_EXTRA = /dictionar|diccionario|dictionnaire|dicion[aá]rio|w[oö]rterbuch|woordenboek|vocabolario|shabd|kosh|lingvo|词典|辞典|辞泉|daijisen|zingarelli|priberam|duden|munjid|user'?s guide|benutzerhandbuch|gu[ií]a del usuario|guide d.utilisation|gebruikershandleiding|guia do usu[aá]rio|guida all.uso|用户指南|yuza gaido/i;
 const counted = b => {
   if (b.returned) return false;
   if (b.source === 'sample' && !S.settings.samples) return false;
@@ -1154,7 +1156,8 @@ function renderStats() {
     $('#fClear').textContent = d.toLocaleDateString(undefined, {month:'short', year:'numeric'});
     $('#fClearL').textContent = `everything read at ${S.settings.pagesPerDay} pages a day (${days > 730 ? (days/365).toFixed(1) + ' years' : fmtInt(days) + ' days'})${QUIP}`;
   } else { $('#fClear').textContent = 'Done'; $('#fClearL').textContent = 'nothing left to read'; }
-  const dated = pile.filter(b => b.date && !b.dateEst).sort((a,b) => a.date.localeCompare(b.date));
+  // never a dictionary or user guide, even with Kindle extras counted: nobody is meant to read those cover to cover
+  const dated = pile.filter(b => b.date && !b.dateEst && b.source !== 'device' && !DEVICE_EXTRA.test(b.title || '')).sort((a,b) => a.date.localeCompare(b.date));
   if (dated.length) {
     const o = dated[0], y = yearsAgo(o.date);
     // Age of the oldest unread book: how long it has sat since you bought it (reading pace doesn't change this)

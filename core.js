@@ -1040,6 +1040,8 @@ function leaveDemo(clear) {
 const fmtMoney = v => { try { return new Intl.NumberFormat(undefined, {style:'currency', currency:S.settings.currency, maximumFractionDigits: v >= 1000 ? 0 : 2}).format(v); } catch { return '$' + v.toFixed(2); } };
 const fmtInt = v => Math.round(v).toLocaleString();
 const fmtHours = h => h < 1 ? Math.round(h * 60) + ' min' : fmtInt(h) + ' h';
+// Dictionaries and user guides that come with a Kindle, known by their titles (Amazon files some of them as purchases)
+const DEVICE_EXTRA = /dictionar|diccionario|dictionnaire|dicion[aá]rio|w[oö]rterbuch|woordenboek|vocabolario|shabd|kosh|lingvo|词典|辞典|辞泉|daijisen|zingarelli|priberam|duden|munjid|user'?s guide|benutzerhandbuch|gu[ií]a del usuario|guide d.utilisation|gebruikershandleiding|guia do usu[aá]rio|guida all.uso|用户指南|yuza gaido/i;
 const counted = b => {
   if (b.returned) return false;
   if (b.source === 'sample' && !S.settings.samples) return false;
@@ -1442,7 +1444,8 @@ function renderStats() {
     $('#fClear').textContent = d.toLocaleDateString(undefined, {month:'short', year:'numeric'});
     $('#fClearL').textContent = `everything read at ${S.settings.pagesPerDay} pages a day (${days > 730 ? (days/365).toFixed(1) + ' years' : fmtInt(days) + ' days'})${QUIP}`;
   } else { $('#fClear').textContent = 'Done'; $('#fClearL').textContent = 'nothing left to read'; }
-  const dated = pile.filter(b => b.date && !b.dateEst).sort((a,b) => a.date.localeCompare(b.date));
+  // never a dictionary or user guide, even with Kindle extras counted: nobody is meant to read those cover to cover
+  const dated = pile.filter(b => b.date && !b.dateEst && b.source !== 'device' && !DEVICE_EXTRA.test(b.title || '')).sort((a,b) => a.date.localeCompare(b.date));
   if (dated.length) {
     const o = dated[0], y = yearsAgo(o.date);
     // Age of the oldest unread book: how long it has sat since you bought it (reading pace doesn't change this)
@@ -1763,7 +1766,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.1.0.0.8`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.8`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.1.0.0.9`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.9`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2209,7 +2212,6 @@ function normGoodreads(list) {
   })).filter(b => b.title);
 }
 
-const DEVICE_EXTRA = /dictionar|diccionario|dictionnaire|dicion[aá]rio|w[oö]rterbuch|woordenboek|vocabolario|shabd|kosh|lingvo|词典|辞典|辞泉|daijisen|zingarelli|priberam|duden|munjid|user'?s guide|benutzerhandbuch|gu[ií]a del usuario|guide d.utilisation|gebruikershandleiding|guia do usu[aá]rio|guida all.uso|用户指南|yuza gaido/i;
 const ORIGIN = {purchase:'purchase', sharing:'shared', kindleunlimited:'ku', prime:'prime', primereading:'prime', sample:'sample', publiclibrarylending:'other', personallending:'other', rental:'other', koll:'other', freetrial:'free', comicsunlimited:'ku'};
 // Real purchase dates from Amazon replace missing or estimated ones; Kindle's "Mark as read" marks a book finished
 // Dictionaries and user guides come free with a Kindle, even when Amazon's list files them with an order: they're Kindle
@@ -2341,7 +2343,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.1.0.0.8';
+const LATEST_SCRIPT = '2.1.0.0.9';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2427,6 +2429,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.1.0.0.9', ['Your oldest unread book is never a dictionary or user guide, even with Kindle extras counted']],
   ['2.1.0.0.8', ['Dictionaries and user guides that came with your Kindle are no longer counted as bought books, even when Amazon files them with an order', 'Books you returned to Amazon are marked Returned and left out of the totals (they come back by themselves if they show up in your Amazon library again)']],
   ['2.1.0.0.7', ['Books added per year: the small arrows on cut-off bars are gone (they looked like 1s); the break mark still shows a bar is cut off', 'The reading-status rings and table show 99.5% instead of rounding to 100%']],
   ['2.1.0.0.6', ['The status dots under the title use the same colors in every theme: green when saved or synced, yellow while waiting or syncing, red when something went wrong']],

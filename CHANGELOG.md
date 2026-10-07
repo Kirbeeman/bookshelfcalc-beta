@@ -6,18 +6,18 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.1 beta 8 (latest)
+## 2.1 beta 9 (latest)
 
-**Dictionaries and returned books left out of the count**
+**No dictionaries as your oldest unread book**
 
-- Dictionaries and user guides that came with a Kindle were counted as bought, unread books when Amazon filed them with an order (52 in one tester's library). They're now spotted by title and set aside as Kindle extras, unless a price was really paid. This applies as soon as the page opens.
-- Books returned to Amazon stayed in the totals forever. After a sync, books Amazon no longer lists are marked **Returned** and left out of the totals. They stay in the library list and come back by themselves if Amazon lists them again. A short or incomplete list from Amazon never marks anything returned.
+- The "oldest unread" card never picks a dictionary or user guide, even with Kindle extras counted in Settings.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.1 beta 8** Dictionaries and returned books left out of the count
 - **2.1 beta 7** Cleaner year chart and exact rings
 - **2.1 beta 6** Status dots in traffic-light colors
 - **2.1 beta 5** Truer unread share
