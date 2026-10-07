@@ -6,17 +6,18 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.1 beta 9 (latest)
+## 2.1 beta 10 (latest)
 
-**No dictionaries as your oldest unread book**
+**Dictionaries stay out, whatever Drive brings back**
 
-- The "oldest unread" card never picks a dictionary or user guide, even with Kindle extras counted in Settings.
+- The live site and the beta share one Google Drive file. A library saved by the live site (2.0) brought dictionaries back as purchases, and the beta only set them aside once, when the page loaded. It now checks on every redraw, including right after a Drive sync, and saves the corrected copy back to Drive.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.1 beta 9** No dictionaries as your oldest unread book
 - **2.1 beta 8** Dictionaries and returned books left out of the count
 - **2.1 beta 7** Cleaner year chart and exact rings
 - **2.1 beta 6** Status dots in traffic-light colors
