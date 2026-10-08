@@ -6,17 +6,21 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 7 (latest)
+## 2.2 beta 8 (latest)
 
-**Find the books with no genre**
+**Genres from Goodreads, dictionaries left out**
 
-- Searching the Genre box for **Unknown** brings up the books that have no genre information yet.
+- A book Amazon no longer sells gets its genre from **Goodreads**, then **Open Library** (exact title and author only); the title is guessed from only when neither knows it. Goodreads is asked slowly, up to 25 books a visit, each book again only after a month.
+- Title guesses read the subtitle, where publishers say what a book is ("A Dark Mafia Romance").
+- Dictionaries and thesauruses in any language are left out automatically, however they arrived and whatever was paid; "count it again" brings one back.
+- The Unknown genre no longer lists dictionaries or the books that came with the Kindle.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 7** Find the books with no genre
 - **2.2 beta 6** Solid Sakura header
 - **2.2 beta 5** Sakura theme
 - **2.2 beta 4** A bookcase that settles like a real one

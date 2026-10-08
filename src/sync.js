@@ -23,7 +23,7 @@ window.addEventListener('message', e => {
   if (!d || d.klc !== 1 || (e.origin && e.origin !== location.origin && location.origin !== 'null')) return;
   if (d.type === 'ready') { checkScriptVersion(d.version); enableSync(); }
   else if (d.type === 'progress') { syncProgress(d.msg); if (bridgeWaiters) bridgeWaiters.poke(); }
-  else if (d.type === 'binfoResult' && kpWaiters[d.id]) { const w = kpWaiters[d.id]; delete kpWaiters[d.id]; try { w(JSON.parse(d.data)); } catch { w(null); } }
+  else if ((d.type === 'binfoResult' || d.type === 'grgenreResult') && kpWaiters[d.id]) { const w = kpWaiters[d.id]; delete kpWaiters[d.id]; try { w(JSON.parse(d.data)); } catch { w(null); } }
   else if (d.type === 'result' && bridgeWaiters) { const w = bridgeWaiters; bridgeWaiters = null; try { w.resolve(JSON.parse(d.data)); } catch (err) { w.reject(err); } }
 });
 // ---------- phone sync bookmark: amazon.com opens this page with #bm and hands over what it read there ----------
@@ -223,9 +223,11 @@ function applyBookInfo(b, inf, now) {
   if (!hasPaid(b) && inf.price != null) { b.kp = inf.price; priced = true; }
   b.kpTime = now;
   if (!(b.pages > 0) && inf.pages) { b.pages = inf.pages; b.pagesSrc = 'amazon'; }
-  if (b.genreSrc !== 'manual') { const g = amazonGenre(inf); if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = 'amazon'; } else if (b.genreSrc === 'amazon') { b.genre = ''; b.genreName = ''; b.genreSub = ''; b.genreSrc = ''; } } // no trail: drop a genre that came from the old best-seller lists
-  b.tagsAmz = amazonTags(inf); b.tags = b.tagsAmz.slice(); // grouped into Parent › Sub-genre on the next redraw
-  if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tagsAmz, b.genre);
+  // a book Amazon no longer sells keeps the genre Goodreads or Open Library gave it
+  const elsewhere = ALT_SRC.has(b.genreSrc) && !(inf.trail || []).length && !(inf.cats || []).length;
+  if (b.genreSrc !== 'manual' && !elsewhere) { const g = amazonGenre(inf); if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = 'amazon'; } else if (b.genreSrc === 'amazon') { b.genre = ''; b.genreName = ''; b.genreSub = ''; b.genreSrc = ''; } } // no trail: drop a genre that came from the old best-seller lists
+  if (!elsewhere) { b.tagsAmz = amazonTags(inf); b.tags = b.tagsAmz.slice(); // grouped into Parent › Sub-genre on the next redraw
+    if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tagsAmz, b.genre); }
   b.genreV = GENRE_V;
   b.infoTime = now;
   return priced;
@@ -261,6 +263,62 @@ async function lookupBookInfo() {
     setSync(`${lastSyncMsg}${done ? ` · details for ${done} books` : ''}`, 'db');
     stage('details', 'ok', nb(done, 'book')); cardMaybeDone();
   } finally { kpRunning = false; tryReload(); }
+  setTimeout(lookupAltGenres, 1500);
+}
+// ---------- genres for books Amazon can't tell us about ----------
+// When a book's Amazon page is gone (taken off sale) or has no category trail, ask Goodreads, then Open Library. Slowly: one book
+// every ten seconds or so, at most 25 per visit, each book asked again only after a month. A title guess is the last resort.
+function grFetch(q) {
+  if (hasCore) return KLC_CORE.grGenres(q);
+  return new Promise(resolve => {
+    const id = ++kpSeq; kpWaiters[id] = resolve;
+    postBridge({type: 'grgenre', id, q});
+    setTimeout(() => { if (kpWaiters[id]) { delete kpWaiters[id]; resolve(null); } }, 60000); // an older script doesn't answer
+  });
+}
+const plainTitle = t => String(t || '').split(/\s*[:(\[]|\s+-\s+/)[0].trim();
+const normT = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+// Open Library: only when the title and the author's surname both match exactly, since its search happily returns another book
+async function olGenres(b) {
+  const title = plainTitle(b.title), sn = normT(surname(b.author));
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 15000);
+  try {
+    const r = await fetch('https://openlibrary.org/search.json?limit=5&fields=title,author_name,subject&title=' + encodeURIComponent(title) + '&author=' + encodeURIComponent(surname(b.author)), {signal: ctl.signal});
+    const docs = (await r.json()).docs || [];
+    const d = docs.find(x => normT(x.title) === normT(title) && (x.author_name || []).some(a => normT(a).split(' ').includes(sn)));
+    return d && (d.subject || []).length ? d.subject : null;
+  } catch { return null; } finally { clearTimeout(t); }
+}
+let altRunning = false;
+async function lookupAltGenres() {
+  if (altRunning || kpRunning || !syncOn || S.demo) return;
+  const MONTH = 30 * 864e5, now = Date.now();
+  const todo = S.books.filter(b => b.asin && b.infoTime && !ALT_SRC.has(b.genreSrc) && b.genreSrc !== 'amazon' && b.genreSrc !== 'manual'
+      && !isExtra(b) && !isDictionary(b) && (!b.altTime || now - b.altTime > MONTH))
+    .sort((a, b) => (counted(a) ? 0 : 1) - (counted(b) ? 0 : 1) || (a.status === 'unread' ? 0 : 1) - (b.status === 'unread' ? 0 : 1)).slice(0, 25);
+  if (!todo.length) return;
+  altRunning = true; let grOk = true, found = 0;
+  try {
+    for (const [i, b] of todo.entries()) {
+      setSync(`${lastSyncMsg} · Looking up genres Amazon doesn't have (Goodreads)… ${i} of ${todo.length}`);
+      let genres = null, src = '';
+      if (grOk) {
+        const r = await grFetch(plainTitle(b.title) + ' ' + String(b.author || '').split(/\s+/).slice(0, 2).join(' '));
+        if (!r || r.paused) grOk = false; // Goodreads asked us to slow down (or the script is older): the rest wait for next visit
+        else if (r.genres && r.genres.length) { genres = r.genres; src = 'goodreads'; }
+      }
+      if (!genres) { const ol = await olGenres(b); if (ol) { genres = ol; src = 'openlibrary'; } }
+      if (!grOk && !genres) break; // don't mark books as tried while Goodreads is turning us away
+      b.altTime = now;
+      const trail = genres && (src === 'goodreads' ? grTrail(genres) : olTrail(genres));
+      if (trail && b.genreSrc !== 'manual') {
+        const inf = {trail}, g = amazonGenre(inf);
+        if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = src; b.tagsAmz = amazonTags(inf); b.tags = b.tagsAmz.slice(); if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tagsAmz, b.genre); found++; }
+      }
+      renderShelf(); scheduleSave();
+      await new Promise(res => setTimeout(res, 6000 + Math.random() * 4000));
+    }
+  } finally { altRunning = false; setSync(`${lastSyncMsg}${found ? ` · ${nb(found, 'genre')} from Goodreads and Open Library` : ''}`, 'db'); renderAll(); scheduleSave(); }
 }
 
 // ---------- tell people when their sync script is behind the site ----------
@@ -350,6 +408,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.8', ['A book Amazon no longer sells gets its genre from Goodreads, then Open Library; the title is only guessed from when neither knows it. Goodreads is asked slowly, a few books each visit', 'Title guesses read the subtitle too, where publishers say what a book is ("A Dark Mafia Romance")', 'Dictionaries and thesauruses in any language are left out automatically, whatever was paid or however they arrived; "count it again" brings one back', 'The Unknown genre no longer lists dictionaries or the books that came with your Kindle']],
   ['2.2.0.0.7', ['Searching the Genre box for Unknown brings up the books that have no genre information yet']],
   ['2.2.0.0.6', ['Sakura: the bar at the top is solid pink, so the page no longer shows through it when you scroll']],
   ['2.2.0.0.5', ['New Sakura theme: cherry-blossom pinks, lavender and mint, round friendly letters, a blossoming branch over the title, petals drifting down behind the page, and a plush bunny and blossom branch on the shelf', 'Halloween is now called Spooky (the same theme, so nothing to pick again)', 'In Spooky, the key under the shelf says cauldron, not globe']],

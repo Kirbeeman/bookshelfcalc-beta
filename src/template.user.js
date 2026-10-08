@@ -1,6 +1,6 @@
 // The sync script's own code. The build turns this into core.js, which the signed loader (loader.user.js) checks against
 // the signed release before running it. SITE_URL comes from the loader, so the same code serves the live site and the beta.
-// @version      2.2.0.0.7
+// @version      2.2.0.0.8
 (function (GM_getValue, GM_setValue, GM_addStyle, GM_xmlhttpRequest, GM_info, SITE_URL) {
 'use strict';
 const host = location.hostname;
@@ -201,7 +201,22 @@ function parseBookInfo(html) {
   const best = cats.slice(crumbs ? 1 : 0).map(c => c.replace(/\s*Customer Reviews.*$/i, '').trim());
   return {price, pages, cats: cats.slice(0, 6), trail, best: best.slice(0, 5)};
 }
+// Goodreads' genres for a book Amazon can't tell us about (taken off sale): search by title and author, read the top result's
+// genre list. Goodreads turns away quick repeat lookups (an empty 202 reply), so the page asks slowly and stops when it does.
+async function grGenres(q) {
+  const s = await gmGet('https://www.goodreads.com/search?q=' + encodeURIComponent(q));
+  if (s.status === 202 || s.status === 429 || s.status === 503 || !s.text) return {paused: true};
+  const id = (s.text.match(/\/book\/show\/(\d+)/) || [])[1];
+  if (!id) return {none: true};
+  await new Promise(res => setTimeout(res, 2500 + Math.random() * 1500));
+  const b = await gmGet('https://www.goodreads.com/book/show/' + id);
+  if (b.status === 202 || b.status === 429 || b.status === 503 || !b.text) return {paused: true};
+  const at = b.text.indexOf('"bookGenres":'), seg = at >= 0 ? b.text.slice(at, at + 4000) : '';
+  const genres = [...seg.matchAll(/"name":"([^"]+)","webUrl":"https:\/\/www\.goodreads\.com\/genres/g)].map(m => unHtml(m[1])).slice(0, 8);
+  return {id, genres};
+}
 const KLC_CORE = {
+  async grGenres(q) { try { return await grGenres(String(q || '').slice(0, 200)); } catch { return {paused: true}; } },
   // Look up a few books' Amazon pages. blocked = Amazon asked for a CAPTCHA, so stop for now.
   async bookInfo(asins) {
     const shop = GM_getValue('kindleHost', 'read.amazon.com').replace(/^read\./, 'www.');
@@ -246,6 +261,10 @@ if (onSite) {
     const d = e.data;
     if (!d || d.klc !== 1 || (e.origin && e.origin !== location.origin)) return;
     if (d.type === 'hello') post({type: 'ready', version: GM_info.script.version});
+    else if (d.type === 'grgenre') {
+      const data = await KLC_CORE.grGenres(d.q);
+      post({type: 'grgenreResult', id: d.id, data: JSON.stringify(data)});
+    }
     else if (d.type === 'binfo') {
       const data = await KLC_CORE.bookInfo((d.asins || []).slice(0, 20));
       post({type: 'binfoResult', id: d.id, data: JSON.stringify(data)});
