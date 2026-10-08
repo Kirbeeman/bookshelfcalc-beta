@@ -17,6 +17,7 @@ Beta versions are named for the live version they're heading toward, plus a beta
 - A shelf that isn't packed full ends with a bookend against the last book, plus an adornment when there's room.
 - By genre: the globe (cauldron in Halloween) and the comic are always on the shelf, on a computer as well as a phone, holding the genres too small for a book of their own.
 - The beta keeps its own Google Drive backup, **Shelf of Shame (beta).json**, apart from the main site's.
+- Halloween: drops of blood swell at the tips of the BETA mark's drips and fall (still for reduced motion).
 - The sync script picks this up by itself: it's a signed release.
 
 ---
