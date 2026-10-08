@@ -6,20 +6,20 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 1 (latest)
+## 2.2 beta 2 (latest)
 
-**Truer genres and a tag search you can combine**
+**Tags grouped by the genre rules**
 
-- Genres and tags come only from each book's own Amazon category trail, never from the Best Sellers Rank lists (a dark romance was showing as "Instructional"). The first step is the main genre and the next two are its sub-genres. Every book gets one more look at its Amazon page.
-- The tag filter is a search box: click it for the whole list (alphabetical) or type to narrow it down. Separate tags or genres with commas to combine them ("fantasy, romance"); "romance" also finds Dark, Fantasy and Paranormal Romance. After the first pick, the list only offers tags those books share.
-- Tags that are the same are combined: the same words in any order, plurals, "&" vs "and", filler like Fiction/Books/Literature, and known synonyms (Romantasy = Romantic Fantasy = Fantasy Romance).
-- Also from live 2.1.1.1: leave a book out by hand.
+- Tags are grouped as **Parent › Sub-genre**, following the agreed genre and tag rules: paranormal subjects roll up to Paranormal (Vampire Romances → Paranormal › Romance); Teen & Young Adult and New Adult & College are parents; describers like Dark, Gothic, Women's, LGBTQ+ and tropes go under their genre (Dark Romance → Romance › Dark); a tag with two genres follows the book's own main genre; Contemporary paired with fantasy is the sub-genre; a subject on its own takes the book's next genre.
+- Amazon's own tags are kept with each book, and the grouping is worked out from them on every redraw. Edit book shows both.
+- Romantasy and Romantic Fantasy count as Fantasy; Folklore joins Fairy Tales; Health joins Fitness & Dieting.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 1** Truer genres and a tag search you can combine
 - **2.1 beta 10** Dictionaries stay out, whatever Drive brings back (went live as 2.1.1.0)
 - **2.1 beta 9** No dictionaries as your oldest unread book
 - **2.1 beta 8** Dictionaries and returned books left out of the count

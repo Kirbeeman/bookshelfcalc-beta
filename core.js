@@ -1060,7 +1060,7 @@ const tagWords = t => (String(t).toLowerCase().replace(/&/g, ' and ').match(/[a-
   .filter(x => !/^(and|the|of|a|fiction|books?|novels?|stories|literature)$/.test(x))
   .map(x => x.length > 4 && x.endsWith('ies') ? x.slice(0, -3) + 'y' : x.length > 3 && x.endsWith('s') && !x.endsWith('ss') ? x.slice(0, -1) : x);
 const TAG_SAME = [
-  ['Romantasy', 'Romantic Fantasy', 'Fantasy Romance'],
+  ['Fantasy', 'Romantasy', 'Romantic Fantasy', 'Fantasy Romance'],
   ['Science Fiction', 'Sci-Fi', 'SciFi'],
   ['Science Fiction Romance', 'Sci-Fi Romance', 'SciFi Romance'],
   ['Romantic Comedy', 'Rom-Com', 'Romcom'],
@@ -1068,19 +1068,79 @@ const TAG_SAME = [
   ['Werewolves & Shifters Romance', 'Werewolf & Shifter Romance', 'Shapeshifter Romance', 'Shifter Romance'],
   ['Teen & Young Adult', 'Young Adult', 'YA'],
   ['GameLit & LitRPG', 'LitRPG', 'GameLit'],
+  ['Disability Fiction', 'Fiction on People with Disabilities'],
+  ['Fitness & Dieting', 'Health'],
+  ['Fairy Tales', 'Fairy Tale Fantasy', 'Fairy Tales & Folklore', 'Folklore'],
 ];
 const tagKey0 = t => tagWords(t).sort().join(' ');
 const TAG_SYN = new Map(TAG_SAME.flatMap(g => g.map(t => [tagKey0(t), tagKey0(g[0])])));
+const TAG_NAME = new Map(TAG_SAME.map(g => [tagKey0(g[0]), g[0]]));
 const tagKey = t => { const k = tagKey0(t); return TAG_SYN.get(k) || k; };
-function mergeTags() {
-  const n = new Map(); for (const b of S.books) for (const t of b.tags || []) n.set(t, (n.get(t) || 0) + 1);
+
+// ---------- genre and tag rules (the project's genre-and-tag-rules page) ----------
+// Each Amazon tag becomes "Parent › Sub-genre" (or just "Parent"). A tag's words are read as units: genres, paranormal
+// subjects, audiences, and describers (everything else: Dark, Gothic, Women's, LGBTQ+, Holiday, Enemies to Lovers…).
+const TAG_WHOLE = new Set(['dark humor']);
+const TAG_UNITS = [ // longest first: [words, kind, name]; kinds g = genre, p = paranormal subject, a = audience
+  ['thriller and suspense', 'g', 'Thriller & Suspense'], ['thrillers and suspense', 'g', 'Thriller & Suspense'], ['action and adventure', 'g', 'Action & Adventure'], ['science fiction', 'g', 'Science Fiction'],
+  ['teen and young adult', 'a', 'Teen & Young Adult'], ['new adult and college', 'a', 'New Adult & College'], ['young adult', 'a', 'Teen & Young Adult'],
+  ['werewolves and shifters', 'p'], ['werewolf and shifter', 'p'], ['witches and wizards', 'p'], ['wizards and witches', 'p'], ['witch and wizard', 'p'], ['demons and devils', 'p'],
+  ['romance', 'g', 'Romance'], ['romances', 'g', 'Romance'], ['romantic', 'g', 'Romance'], ['romantasy', 'g', 'Fantasy'], ['fantasy', 'g', 'Fantasy'],
+  ['horror', 'g', 'Horror'], ['mystery', 'g', 'Mystery'], ['mysteries', 'g', 'Mystery'], ['thriller', 'g', 'Thrillers'], ['thrillers', 'g', 'Thrillers'],
+  ['suspense', 'g', 'Suspense'], ['erotica', 'g', 'Erotica'], ['erotic', 'g', 'Erotica'], ['crime', 'g', 'Crime'], ['contemporary', 'g', 'Contemporary'],
+  ['scifi', 'g', 'Science Fiction'], ['sci-fi', 'g', 'Science Fiction'],
+  ['paranormal', 'p'], ['vampire', 'p'], ['vampires', 'p'], ['psychic', 'p'], ['psychics', 'p'], ['werewolf', 'p'], ['werewolves', 'p'], ['shifter', 'p'], ['shifters', 'p'],
+  ['witch', 'p'], ['witches', 'p'], ['wizard', 'p'], ['wizards', 'p'], ['angel', 'p'], ['angels', 'p'], ['ghost', 'p'], ['ghosts', 'p'], ['demon', 'p'], ['demons', 'p'],
+].map(([w, k, n]) => [w.split(' '), k, n]);
+const MAGICAL = new Set(['Fantasy']);
+const TAG_DESCRIBER = /(fiction|literature)$|^(dark|epic|gothic|urban|cozy|humorous|historical|literary|psychological|political|contemporary|women'?s|lgbtq\+|lesbian|gay|bisexual|black & african american|multicultural & interracial|hispanic american|united states|u\.s\.|siblings|family life|coming of age|epic fantasy 2015 & 2016)$/i;
+const tagUnits = t => {
+  const raw = String(t).replace(/&/g, ' and ').match(/[A-Za-z0-9+'’.-]+/g) || [], low = raw.map(w => w.toLowerCase().replace(/’/g, "'"));
+  const out = []; let d = [];
+  const flush = () => { const w = d.join(' ').replace(/^(and\s*)+|(\s*and)+$/gi, '').replace(/\band\b/g, '&').trim(); if (w) out.push({k: 'd', n: w}); d = []; };
+  for (let i = 0; i < low.length;) {
+    const u = TAG_UNITS.find(([w]) => w.every((x, k) => low[i + k] === x));
+    if (u) { flush(); out.push({k: u[1], n: u[2] || raw.slice(i, i + u[0].length).join(' ').replace(/\band\b/g, '&')}); i += u[0].length; }
+    else { if (!/^(fiction|books?|novels?|literature)$/.test(low[i])) d.push(raw[i]); i++; }
+  }
+  flush();
+  return out;
+};
+// one Amazon tag (already under its usual name) on one book → its grouped name
+function groupTag(t, book, list, idx) {
+  if (TAG_WHOLE.has(t.toLowerCase())) return t;
+  const ps = tagUnits(t), g = ps.filter(x => x.k === 'g'), p = ps.some(x => x.k === 'p'), a = ps.find(x => x.k === 'a'), d = ps.filter(x => x.k === 'd').map(x => x.n);
+  const join = (x, y) => y && y.toLowerCase() !== x.toLowerCase() ? `${x} › ${y}` : x;
+  const nextGenre = () => { for (const u of list.slice(idx + 1)) { const gg = tagUnits(u).find(x => x.k === 'g'); if (gg) return gg.n; } return ''; };
+  if (a) return join(a.n, ps.filter(x => x !== a).map(x => x.n).join(' '));              // 4. audiences are parents
+  if (p) return g.length ? join('Paranormal', g[0].n) : join('Paranormal', ps.filter(x => x.n.toLowerCase() !== 'paranormal').map(x => x.n).join(' ')); // 3. paranormal subjects roll up (Vampires on their own → Paranormal › Vampires)
+  // 8. a subject on its own (Kidnapping, Magic, Mythology) takes the book's next genre as its sub-genre; a describer on its own
+  // (Dark, Epic, Women's Fiction, Literary Fiction: anything named "… Fiction" or "… Literature") stands on its own
+  if (!g.length) return ps.length === 1 && !TAG_DESCRIBER.test(t) ? join(t, nextGenre()) : t;
+  let gs = [...new Map(g.map(x => [x.n, x])).values()];
+  // 7. Contemporary paired with something magical becomes the sub-genre
+  if (gs.length > 1 && gs.some(x => x.n === 'Contemporary') && gs.some(x => MAGICAL.has(x.n))) { d.push('Contemporary'); gs = gs.filter(x => x.n !== 'Contemporary'); }
+  // 6. two genres in one tag: the book's own main genre decides, else the first one named
+  const main = (genreLabel(book) || '').toLowerCase();
+  const parent = gs.length > 1 ? (gs.find(x => main && (main.includes(x.n.toLowerCase()) || x.n.toLowerCase().includes(main))) || gs[0]) : gs[0];
+  return join(parent.n, d.length ? d.join(' ') : (gs.find(x => x !== parent) || {}).n);  // 5. describer + genre goes under the genre
+}
+function groupTags() {
+  // the usual name for each Amazon tag across the library (rule 1), then each book's tags grouped
+  const n = new Map();
+  for (const b of S.books) {
+    if (!b.tagsAmz) { if ((b.tags || []).some(t => t.includes('›'))) continue; b.tagsAmz = (b.tags || []).slice(); }
+    for (const t of b.tagsAmz) n.set(t, (n.get(t) || 0) + 1);
+  }
   const best = new Map();
   for (const [t, c] of n) { const k = tagKey(t); if (!k) continue; const cur = best.get(k); if (!cur || c > n.get(cur) || (c === n.get(cur) && t.length < cur.length)) best.set(k, t); }
+  const name = t => { const k = tagKey(t); return TAG_NAME.get(k) || best.get(k) || t; };
   let changed = 0;
   for (const b of S.books) {
-    if (!b.tags || !b.tags.length) continue;
-    const nt = [...new Set(b.tags.map(t => best.get(tagKey(t)) || t))];
-    if (nt.length !== b.tags.length || nt.some((x, i) => x !== b.tags[i])) { b.tags = nt; changed++; }
+    if (!b.tagsAmz) continue;
+    const list = [...new Set(b.tagsAmz.map(name))];
+    const nt = [...new Set(list.map((t, i) => groupTag(t, b, list, i)))];
+    if (nt.length !== (b.tags || []).length || nt.some((x, i) => x !== b.tags[i])) { b.tags = nt; changed++; }
   }
   return changed;
 }
@@ -1325,7 +1385,7 @@ function decorShelf() {
   bc.insertAdjacentHTML('beforeend', picks.map(k => `<span class="decor" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px;margin-left:${Math.floor(22 + extra)}px">${DECOR[k][2]}</span>`).join(''));
 }
 
-function renderAll() { if (!S.demo && (markExtras() + mergeTags())) scheduleSave(); fixEntities(); if (S.settings.theme && typeof applyTheme === 'function') { applyTheme(S.settings.theme); try { localStorage.setItem('klc-theme-picked', '1'); } catch {} } trackReading(); fillGuesses(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
+function renderAll() { if (!S.demo && (markExtras() + groupTags())) scheduleSave(); fixEntities(); if (S.settings.theme && typeof applyTheme === 'function') { applyTheme(S.settings.theme); try { localStorage.setItem('klc-theme-picked', '1'); } catch {} } trackReading(); fillGuesses(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
 
 function renderStats() {
   const bs = S.books.filter(counted);
@@ -1797,7 +1857,7 @@ function openEdit(id) {
   $('#eGenre').value = b.genreSrc === 'manual' ? b.genre : '';
   $('#eGenre2').innerHTML = '<option value="">Look up automatically</option><option value="none">None</option>' + Object.entries(GENRES).filter(([k]) => k !== 'unknown' && k !== 'nonfiction').map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
   $('#eGenre2').value = b.genre2Src === 'manual' ? (b.genre2 || 'none') : '';
-  $('#eTags').hidden = !(b.tags && b.tags.length); $('#eTags').textContent = b.tags && b.tags.length ? 'Amazon lists it under: ' + b.tags.join(', ') : '';
+  const amz = b.tagsAmz || b.tags || []; $('#eTags').hidden = !amz.length; $('#eTags').textContent = amz.length ? 'Amazon lists it under: ' + amz.join(', ') + ((b.tags || []).length ? '. Grouped as: ' + b.tags.join(', ') : '') : '';
   $('#eDelete').hidden = !editing; delArmed = false; $('#eConfirm').textContent = '';
   $('#dlgEdit').showModal();
 }
@@ -1819,7 +1879,7 @@ $('#editForm').addEventListener('submit', e => {
   };
   // Second genre: picked by hand (or None), or worked out again from Amazon's tags for whatever the main genre is now
   const g2 = $('#eGenre2').value, mainG = data.genre !== undefined ? data.genre : editing && editing.genre;
-  Object.assign(data, g2 ? {genre2: g2 === 'none' ? '' : g2, genre2Src: 'manual'} : {genre2: secondGenre(editing && editing.tags, mainG), genre2Src: ''});
+  Object.assign(data, g2 ? {genre2: g2 === 'none' ? '' : g2, genre2Src: 'manual'} : {genre2: secondGenre(editing && (editing.tagsAmz || editing.tags), mainG), genre2Src: ''});
   if (!data.title) return;
   if (editing) Object.assign(editing, data);
   else { leaveDemo(true); S.books.unshift({id: uid(), ...data}); }
@@ -1857,7 +1917,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.1`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.1`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.2`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.2`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2390,8 +2450,8 @@ function applyBookInfo(b, inf, now) {
   b.kpTime = now;
   if (!(b.pages > 0) && inf.pages) { b.pages = inf.pages; b.pagesSrc = 'amazon'; }
   if (b.genreSrc !== 'manual') { const g = amazonGenre(inf); if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = 'amazon'; } else if (b.genreSrc === 'amazon') { b.genre = ''; b.genreName = ''; b.genreSub = ''; b.genreSrc = ''; } } // no trail: drop a genre that came from the old best-seller lists
-  b.tags = amazonTags(inf);
-  if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tags, b.genre);
+  b.tagsAmz = amazonTags(inf); b.tags = b.tagsAmz.slice(); // grouped into Parent › Sub-genre on the next redraw
+  if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tagsAmz, b.genre);
   b.genreV = GENRE_V;
   b.infoTime = now;
   return priced;
@@ -2430,7 +2490,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.1';
+const LATEST_SCRIPT = '2.2.0.0.2';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2516,6 +2576,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.2', ['Tags are grouped as Parent › Sub-genre by the agreed genre rules: Dark Romance is Romance › Dark, Vampire Romances is Paranormal › Romance, Humorous Fantasy is Fantasy › Humorous, Contemporary Fantasy is Fantasy › Contemporary, and a tag with two genres follows the book\'s own main genre', 'Romantasy and Romantic Fantasy now count as Fantasy; Folklore joins Fairy Tales; Health joins Fitness & Dieting']],
   ['2.2.0.0.1', ['Genres and tags come only from each book\'s own Amazon category, never from the Best Sellers Rank lists (a dark romance was showing as Instructional): the first step is the main genre and the next two are its sub-genres. Every book gets one more look at its Amazon page', 'Tags that are really the same one are combined (Time Travel Romance and Time Travel Romances, GameLit & LitRPG and GameLit & LitRPG Fiction, Thriller & Suspense and Thrillers & Suspense, and the like)', 'The tag filter is searchable: click it for the whole list, or start typing to narrow it down. Separate tags or genres with commas to combine them ("fantasy, romance"); "romance" also finds Dark, Fantasy and Paranormal Romance']],
   ['2.1.1.1', ['Leave a book out by hand: click its title and tick "Leave this book out". It stays in your library (marked "left out") but not in the totals, value, charts or Shelf of Shame']],
   ['2.1.1.0', ['Signed code: the phone bookmark and the sync script only run code signed with the Shelf of Shame key. Set up the bookmark once more, and update the sync script once', 'A Content Security Policy on every page, and a getting-started guide for every device at /help', 'Up to 100 unread books on at most 3 shelves, with the decorations kept', 'Truer numbers: 99.5% instead of a rounded 100%, dictionaries and returned books left out, and no dictionary as your oldest unread book', 'Status dots in the same green, yellow and red in every theme']],

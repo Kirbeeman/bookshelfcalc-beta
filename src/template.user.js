@@ -1,6 +1,6 @@
 // The sync script's own code. The build turns this into core.js, which the signed loader (loader.user.js) checks against
 // the signed release before running it. SITE_URL comes from the loader, so the same code serves the live site and the beta.
-// @version      2.2.0.0.1
+// @version      2.2.0.0.2
 (function (GM_getValue, GM_setValue, GM_addStyle, GM_xmlhttpRequest, GM_info, SITE_URL) {
 'use strict';
 const host = location.hostname;

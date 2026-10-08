@@ -224,8 +224,8 @@ function applyBookInfo(b, inf, now) {
   b.kpTime = now;
   if (!(b.pages > 0) && inf.pages) { b.pages = inf.pages; b.pagesSrc = 'amazon'; }
   if (b.genreSrc !== 'manual') { const g = amazonGenre(inf); if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = 'amazon'; } else if (b.genreSrc === 'amazon') { b.genre = ''; b.genreName = ''; b.genreSub = ''; b.genreSrc = ''; } } // no trail: drop a genre that came from the old best-seller lists
-  b.tags = amazonTags(inf);
-  if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tags, b.genre);
+  b.tagsAmz = amazonTags(inf); b.tags = b.tagsAmz.slice(); // grouped into Parent › Sub-genre on the next redraw
+  if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tagsAmz, b.genre);
   b.genreV = GENRE_V;
   b.infoTime = now;
   return priced;
@@ -350,6 +350,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.2', ['Tags are grouped as Parent › Sub-genre by the agreed genre rules: Dark Romance is Romance › Dark, Vampire Romances is Paranormal › Romance, Humorous Fantasy is Fantasy › Humorous, Contemporary Fantasy is Fantasy › Contemporary, and a tag with two genres follows the book\'s own main genre', 'Romantasy and Romantic Fantasy now count as Fantasy; Folklore joins Fairy Tales; Health joins Fitness & Dieting']],
   ['2.2.0.0.1', ['Genres and tags come only from each book\'s own Amazon category, never from the Best Sellers Rank lists (a dark romance was showing as Instructional): the first step is the main genre and the next two are its sub-genres. Every book gets one more look at its Amazon page', 'Tags that are really the same one are combined (Time Travel Romance and Time Travel Romances, GameLit & LitRPG and GameLit & LitRPG Fiction, Thriller & Suspense and Thrillers & Suspense, and the like)', 'The tag filter is searchable: click it for the whole list, or start typing to narrow it down. Separate tags or genres with commas to combine them ("fantasy, romance"); "romance" also finds Dark, Fantasy and Paranormal Romance']],
   ['2.1.1.1', ['Leave a book out by hand: click its title and tick "Leave this book out". It stays in your library (marked "left out") but not in the totals, value, charts or Shelf of Shame']],
   ['2.1.1.0', ['Signed code: the phone bookmark and the sync script only run code signed with the Shelf of Shame key. Set up the bookmark once more, and update the sync script once', 'A Content Security Policy on every page, and a getting-started guide for every device at /help', 'Up to 100 unread books on at most 3 shelves, with the decorations kept', 'Truer numbers: 99.5% instead of a rounded 100%, dictionaries and returned books left out, and no dictionary as your oldest unread book', 'Status dots in the same green, yellow and red in every theme']],
