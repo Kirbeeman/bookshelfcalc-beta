@@ -13,7 +13,7 @@ Beta versions are named for the live version they're heading toward, plus a beta
 - A **Genre** box lists main genres only, and a **Sub-genre** box next to it lists the sub-genres that go with the chosen genres. Both are searchable and alphabetical, and take several entries separated by commas. Tapping a tag on a book fills in both.
 - **GameLit & LitRPG** is a main genre.
 - A book with no genre from Amazon takes it from the other books in its series, then from the author's other books, before any guess from its title. The Dungeon Anarchist's Cookbook is no longer a cookbook.
-- A **BETA mark** after the site name matches the theme: rubber stamp (Default/Light), wax seal (Cozy), bookstore flag (Zon), frosted pill (Fruit), dripping blood (Halloween).
+- A **BETA mark** after the site name matches the theme: rubber stamp (Default/Light), wax seal (Cozy), bookstore flag (Zon), frosted pill (Fruit), dripping blood (Halloween). The wax seal has a raised lip and the blood drips wet and glossy.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
