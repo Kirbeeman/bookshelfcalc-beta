@@ -6,24 +6,20 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 4 (latest)
+## 2.2 beta 5 (latest)
 
-**A bookcase that settles like a real one**
+**Sakura theme**
 
-- The first book on each shelf stands against the side of the bookcase.
-- A leaning book rests on the book (or side) next to it; thick books stand up straight.
-- A flat pile always has a book touching the upright books.
-- Plants, vases and other adornments are drawn bigger, grow to fill the space on their shelf, and sit right against the books beside them.
-- A shelf that isn't packed full ends with a bookend against the last book, plus an adornment when there's room.
-- By genre: the globe (cauldron in Halloween) and the comic are always on the shelf, on a computer as well as a phone, holding the genres too small for a book of their own.
-- The beta keeps its own Google Drive backup, **Shelf of Shame (beta).json**, apart from the main site's.
-- Halloween: drops of blood swell at the tips of the BETA mark's drips and fall (still for reduced motion).
+- New **Sakura** theme: cherry-blossom pinks with lavender and mint, round friendly letters, a blossoming branch over the title, petals drifting down behind the page (still for reduced motion), a blossom branch and plush bunny on the shelf, and a pink sticker for the beta mark.
+- Halloween is now called **Spooky**: the same theme, so nothing to pick again.
+- In Spooky, the key under the shelf says cauldron, not globe.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 4** A bookcase that settles like a real one
 - **2.2 beta 3** Separate genre and sub-genre filters, and a themed BETA mark
 - **2.2 beta 2** Tags grouped by the genre rules
 - **2.2 beta 1** Truer genres and a tag search you can combine
