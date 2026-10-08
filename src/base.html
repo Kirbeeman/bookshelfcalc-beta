@@ -268,7 +268,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .pill.stalled{color:var(--shame);border-color:var(--shame)}
 .pill.new{color:var(--warn);border-color:var(--warn)}
 .pile-title{font-size:2rem;color:var(--shame)}
-.bookcase{--row:176px;--plank-top:color-mix(in srgb,var(--wood) 70%,#fff2d6);position:relative;background:var(--wood-back);border:0 solid var(--post);border-width:12px 11px 0;border-top-color:var(--wood);border-radius:3px 3px 2px 2px;padding:0 10px;font-size:0;line-height:var(--row);min-height:var(--row);margin-top:14px;
+.bookcase{--row:176px;--plank-top:color-mix(in srgb,var(--wood) 70%,#fff2d6);position:relative;background:var(--wood-back);border:0 solid var(--post);border-width:12px 11px 0;border-top-color:var(--wood);border-radius:3px 3px 2px 2px;padding:0;font-size:0;line-height:var(--row);min-height:var(--row);margin-top:14px;
   box-shadow:0 0 0 2px var(--outline),inset 2px 0 0 var(--outline),inset -2px 0 0 var(--outline),inset 0 2px 0 var(--outline);
   background-image:repeating-linear-gradient(to bottom,transparent 0 calc(var(--row) - 17px),var(--outline) calc(var(--row) - 17px) calc(var(--row) - 15px),var(--plank-top) calc(var(--row) - 15px) calc(var(--row) - 10px),var(--outline) calc(var(--row) - 10px) calc(var(--row) - 9px),var(--wood) calc(var(--row) - 9px) calc(var(--row) - 2px),var(--outline) calc(var(--row) - 2px) var(--row)),
     repeating-linear-gradient(to bottom,rgba(0,0,0,.16) 0,transparent 14px,transparent var(--row))}
@@ -297,7 +297,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .cb-fire{transform-origin:30px 90px;animation:dkflick 1.4s ease-in-out infinite alternate}@keyframes dkflick{0%{transform:scale(1,1)}50%{transform:scale(1.06,.92)}100%{transform:scale(.95,1.05)}}
 @media (prefers-reduced-motion:reduce){.gx-spin,.cb-b,.cb-p,.cb-fire{animation:none}.cb-p{opacity:0}}
 .decor{display:inline-block;vertical-align:bottom;margin-bottom:12px;line-height:0;--dk-metal:#c99a3e;--dk-leaf:#5a9a4e;--dk-leaf2:#3d7a43;--dk-leaf3:#8cbf7a;--dk-pot:#c0663a;--dk-pot2:#ece4d4;--dk-vase:#2f7f86;--dk-bloom:#e8566a;--dk-box:#b5462f;--dk-wax:#efe4c8}
-.decor.orn{margin:0 6px 12px}
+.decor.orn{margin:0 0 12px}
 .decor svg{display:block;width:100%;height:100%;overflow:visible}
 :root[data-theme="halloween"] .decor{--dk-metal:#6b5590;--dk-wax:#d9d0ea}
 :root[data-theme="cozy"] .decor{--dk-metal:#b08d57}
@@ -1080,24 +1080,99 @@ function comicSvg(gs) {
 }
 // The last shelf's leftover space gets a bookend and these, in order; ORNAMENTS are the small things set between books now and then (Default spine colors only)
 const DECOR_SETS = {halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
+const ORN_INSET = {plant: [14, 14], succulent: [7, 7], vase: [2, 2], box: [2, 2], stack: [2, 4], pumpkin: [3, 3], potion: [4, 4]};
+const ornSize = k => { const [w, h] = DECOR[k], s = Math.max(1, Math.min(138 / h, 2, 100 / w)); return [Math.round(w * s), Math.round(h * s)]; };
 const ORNAMENTS = {halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
 let shelfMemo = {};
 // A share as a whole percent, except near the ends: 3 books read out of 659 is 99.5% unread, never a rounded-up 100%
 const pctText = p => (p > 0 && p < 1 ? Math.max(.1, Math.round(p * 10) / 10) : p > 99 && p < 100 ? Math.min(99.9, Math.floor(p * 10) / 10) : Math.round(p)) + '%';
+// ---------- settling the books like a real shelf ----------
+// After the books are laid out, each shelf is tidied: the first book stands against the side of the bookcase, a leaning book
+// rests on its neighbour (or the side), a flat pile touches the upright books next to it, knick-knacks grow to fill the gaps,
+// and a shelf that isn't packed full ends with a bookend (and something to fill the space after it when there's room).
+const LEAN = Math.sin(4 * Math.PI / 180);
+function settleShelf(bc) {
+  bc.querySelectorAll('.rowbr, .rowend').forEach(n => n.remove());
+  bc.querySelectorAll('[data-s0]').forEach(n => { n.setAttribute('style', n.dataset.s0); n.className = n.dataset.c0; delete n.dataset.s0; delete n.dataset.c0; });
+  bc.querySelectorAll(':scope > .orn').forEach(n => { n.style.marginLeft = n.style.marginRight = ''; });
+  const ornKind = n => (ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default)[[...bc.querySelectorAll(':scope > .orn')].indexOf(n) % (ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default).length];
+  // a knick-knack between books is set right against them, pot to spine, as a real one would be (or the books would lean on it)
+  bc.querySelectorAll(':scope > .orn').forEach(n => { const k = ornKind(n), [l, r] = ORN_INSET[k] || [0, 0], f = parseFloat(n.style.width) / DECOR[k][0]; n.style.marginLeft = -Math.round(l * f) + 'px'; n.style.marginRight = -Math.round(r * f) + 'px'; });
+  const keep = n => { if (!('s0' in n.dataset)) { n.dataset.s0 = n.getAttribute('style') || ''; n.dataset.c0 = n.className; } };
+  const items = [...bc.querySelectorAll(':scope > .spine, :scope > .lay, :scope > .orn')]; if (!items.length) return;
+  const cs = getComputedStyle(bc), rowH = parseFloat(cs.lineHeight) || 176, top = bc.getBoundingClientRect().top + parseFloat(cs.borderTopWidth);
+  const rows = []; items.forEach(n => { const r = Math.floor((n.getBoundingClientRect().bottom - top - 4) / rowH); (rows[r] ||= []).push(n); });
+  const list = rows.filter(Boolean);
+  // pin every shelf's line break first, so nothing below moves up while a shelf is being tidied
+  list.slice(0, -1).forEach(row => row[row.length - 1].insertAdjacentHTML('afterend', '<br class="rowbr">'));
+  const px = (n, v) => parseFloat(n.style.getPropertyValue(v)) || 0;
+  const limit = () => bc.getBoundingClientRect().right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight);
+  const oset = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default;
+  const ornScale = k => Math.min(150 / DECOR[k][1], 2.2); // as big as a shelf allows, without turning a trinket box into a trunk
+  list.forEach((row, ri) => {
+    const lastRow = ri === list.length - 1;
+    row.forEach((n, j) => {
+      const prev = row[j - 1];
+      if (n.classList.contains('spine')) {
+        if (!n.classList.contains('lean')) { if (j === 0) { keep(n); n.style.marginLeft = '0px'; } return; }
+        keep(n);
+        // a book only leans on an upright book or on the side of the bookcase
+        if (prev && (!prev.classList.contains('spine') || prev.classList.contains('lean'))) { n.classList.remove('lean'); n.style.setProperty('--r', '0deg'); n.style.marginLeft = '0px'; return; }
+        const h = px(n, '--h'), w = px(n, '--w'), rest = prev ? Math.min(h, px(prev, '--h')) : h;
+        n.style.marginLeft = Math.max(0, Math.round(rest * LEAN + w * .0024)) + 'px'; // its top just meets the book (or side) it rests on
+      } else if (n.classList.contains('lay')) {
+        keep(n); n.style.marginLeft = '0px'; n.style.marginRight = '0px';
+        // one book in the pile sits right up against the upright books
+        const fl = [...n.querySelectorAll('.spine')], dx = fl.map(f => px(f, '--dx')), m = Math.min(...dx);
+        fl.forEach((f, i) => f.style.setProperty('--dx', (dx[i] - m) + 'px'));
+      } else if (j === 0) { const k = ornKind(n); n.style.marginLeft = -Math.round(((ORN_INSET[k] || [0])[0]) * parseFloat(n.style.width) / DECOR[k][0]) + 'px'; }
+    });
+    if (lastRow) return; // the last shelf's end is decorShelf's job
+    const end = row[row.length - 1];
+    let slack = Math.floor(limit() - end.getBoundingClientRect().right) - 1;
+    // knick-knacks on this shelf grow into the gap first
+    const orns = row.filter(n => n.classList.contains('orn'));
+    orns.forEach((n, i) => {
+      if (slack < 2) return;
+      const k = oset[[...bc.querySelectorAll(':scope > .orn')].indexOf(n) % oset.length], w0 = parseFloat(n.style.width), h0 = parseFloat(n.style.height);
+      const w = Math.floor(Math.min(DECOR[k][0] * ornScale(k), w0 + slack / (orns.length - i)));
+      if (w <= w0) return; n.style.width = w + 'px'; n.style.height = Math.round(h0 * w / w0) + 'px';
+      // keep the pot against its neighbours at the new size
+      const [l, r] = ORN_INSET[k] || [0, 0], f = w / DECOR[k][0];
+      const before = parseFloat(n.style.marginLeft) + parseFloat(n.style.marginRight);
+      n.style.marginLeft = -Math.round(l * f) + 'px'; n.style.marginRight = -Math.round(r * f) + 'px';
+      slack -= (w - w0) + (parseFloat(n.style.marginLeft) + parseFloat(n.style.marginRight) - before);
+    });
+    const ins = html => { const br = end.nextElementSibling; (br && br.classList.contains('rowbr') ? br : end).insertAdjacentHTML(br && br.classList.contains('rowbr') ? 'beforebegin' : 'afterend', html); };
+    if (slack >= DECOR.bookend[0] + 4 && !end.classList.contains('lay')) {
+      // not packed full: a bookend holds the books up, and a plant or the like fills what's left when it fits
+      slack -= DECOR.bookend[0] - 7; // its upright sits right against the last book; the foot slides under it
+      let fill = '';
+      const pick = [...new Set(DECOR_SETS[document.documentElement.dataset.theme] || DECOR_SETS.default)].map(k => [k, Math.min(Math.floor(DECOR[k][0] * ornScale(k)), slack - 14)]).filter(([k, w]) => w >= DECOR[k][0] * .8).sort((a, b) => b[1] - a[1])[0];
+      if (pick) { const [k, w] = pick; fill = `<span class="decor rowend" aria-hidden="true" style="width:${w}px;height:${Math.round(DECOR[k][1] * w / DECOR[k][0])}px;margin-left:${Math.max(10, Math.floor((slack - w) / 2))}px">${DECOR[k][2]}</span>`; }
+      ins(`<span class="decor rowend" aria-hidden="true" style="width:${DECOR.bookend[0]}px;height:${DECOR.bookend[1]}px;margin-left:-7px">${DECOR.bookend[2]}</span>` + fill);
+    } else if (slack > 0) {
+      // too little room for a bookend: the books take up the slack, a pixel or two each, so the shelf is packed tight
+      const sp = row.filter(n => n.classList.contains('spine')); if (!sp.length) return;
+      sp.forEach((n, i) => { const add = Math.floor(slack / sp.length) + (i < slack % sp.length ? 1 : 0); if (!add) return; keep(n); n.style.setProperty('--w', (px(n, '--w') + add) + 'px'); });
+    }
+  });
+}
 const DECOR_ROOM = 340; // px kept free at the end of a computer's full bookcase for the bookend and decorations
 function decorShelf() {
   const bc = document.querySelector('#stack .bookcase'); if (!bc) return;
   bc.querySelectorAll('.decor:not(.orn)').forEach(n => n.remove());
   const oset = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default; // a theme change swaps the ornaments too
   bc.querySelectorAll('.gx-globe').forEach(n => { n.innerHTML = smallGenreSvg(n.dataset.g.split(' ')); }); // and the globe ↔ cauldron
-  bc.querySelectorAll('.orn').forEach((n, j) => { const k = oset[j % oset.length]; n.style.width = DECOR[k][0] + 'px'; n.style.height = DECOR[k][1] + 'px'; n.innerHTML = DECOR[k][2]; });
+  bc.querySelectorAll('.orn').forEach((n, j) => { const k = oset[j % oset.length], [ow, oh] = ornSize(k); n.style.width = ow + 'px'; n.style.height = oh + 'px'; n.innerHTML = DECOR[k][2]; });
   // The genre globe/cauldron and the comic stand to the right of the bookend, so take them out while measuring
   const gxs = [...bc.querySelectorAll(':scope > .gx')]; gxs.forEach(n => n.remove());
   const gxW = gxs.reduce((a, n) => a + (n.classList.contains('gx-globe') ? 60 : 70) + 14, 0);
+  settleShelf(bc);
   const spines = bc.querySelectorAll(':scope > .spine, :scope > .lay, :scope > .orn'); if (!spines.length) { gxs.forEach(n => bc.appendChild(n)); return; }
   const last = spines[spines.length - 1].getBoundingClientRect(), box = bc.getBoundingClientRect();
-  const free = Math.floor(box.right - 20 - last.right - 4) - gxW; // 10px frame + 10px padding on the right
-  const bookend = `<span class="decor" aria-hidden="true" style="width:${DECOR.bookend[0]}px;height:${DECOR.bookend[1]}px">${DECOR.bookend[2]}</span>`;
+  const free = Math.floor(box.right - 11 - last.right - 4) - gxW; // inside the 11px frame on the right
+  const bookend = `<span class="decor" aria-hidden="true" style="width:${DECOR.bookend[0]}px;height:${DECOR.bookend[1]}px;margin-left:-7px">${DECOR.bookend[2]}</span>`;
   if (free < DECOR.bookend[0] + 4) { if (gxs.length) { bc.insertAdjacentHTML('beforeend', bookend); gxs.forEach(n => bc.appendChild(n)); } return; }
   const t = document.documentElement.dataset.theme, set = DECOR_SETS[t] || DECOR_SETS.default;
   const picks = []; let used = DECOR.bookend[0] + 4;
@@ -1175,8 +1250,9 @@ function renderStats() {
         const groups = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; (groups[g] ||= []).push(b); });
         let slots = Math.min(SHELF, pile.length);
         let keys = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
-        // A phone's 10 spines are 10% each, too coarse for small genres: under 5% they're the lands on a spinning globe, under 3% a comic lying on the shelf
-        if (PHONE && pile.length > SHELF) {
+        // Genres too small for a spine of their own are never dropped: under one spine's share they're the lands on a spinning globe
+        // (a cauldron in Halloween), under half a spine's share a comic lying on the shelf. On a phone and on a computer alike.
+        {
           const share = g => groups[g].length / pile.length;
           // Unknown isn't a genre, so it never becomes globe land or comic panels (it stays in the key below)
           // One spine is 1/15 of the pile: under that a genre is globe land, under half that it's on the comic
@@ -1204,7 +1280,7 @@ function renderStats() {
         const h = hash(b.id + b.title), p = pagesOf(b), nw = isNew(b);
         const w = Math.round(Math.max(18, Math.min(46, 12 + p / 22)) * scale); // thinner spines when a full bookcase has to hold 100
         const ht = 112 + (h % 46);
-        const r = (!flat && h % 23 === 0 && i > 0) ? -4 : 0, lean = !nw && r !== 0;
+        const r = (!flat && h % 23 === 0 && i > 0 && 12 + p / 22 <= 30) ? -4 : 0, lean = !nw && r !== 0; // only thin books lean; a thick one stands
         const c = gmode ? `var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})` : cloth(h);
         const two = gmode && b.genre2 && GENRES[b.genre2] && b.genre2 !== b.genre;
         const cls = `spine ${two ? 'g2' : gmode ? 'plain' : 's' + (h >> 3) % 5}${nw ? ' new' : ''}${lean ? ' lean' : ''}`;
@@ -1220,12 +1296,12 @@ function renderStats() {
           if (pile2.length >= 2) { piles++; html += `<span class="lay">${pile2.map(x => spineOf(x, i, true)).join('')}</span>`; i += pile2.length - 1; continue; }
         }
         html += spineOf(b, i, false);
-        if (!gmode && i % 23 === 11 && i < shown.length - 3) { const set = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default, k = set[(i / 23 | 0) % set.length]; html += `<span class="decor orn" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px">${DECOR[k][2]}</span>`; }
+        if (!gmode && i % 23 === 11 && i < shown.length - 3) { const set = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default, k = set[(i / 23 | 0) % set.length]; const [ow, oh] = ornSize(k); html += `<span class="decor orn" aria-hidden="true" style="width:${ow}px;height:${oh}px">${DECOR[k][2]}</span>`; }
       }
       if (globeG.length || comicG.length) {
-        const pct = g => `${GENRES[g]} ${Math.round(pile.filter(b => (GENRES[b.genre] ? b.genre : 'unknown') === g).length / pile.length * 100)}%`;
-        if (globeG.length) html += `<span class="gx gx-globe" data-g="${globeG.join(' ')}" title="${globeSmallest ? 'Your smallest genre' : `Genres under ${Math.round(100 / SHELF)}% of your unread books`}: ${esc(globeG.map(pct).join(', '))}">${smallGenreSvg(globeG)}</span>`;
-        if (comicG.length) html += `<span class="gx" title="Genres under ${Math.round(50 / SHELF)}% of your unread books: ${esc(comicG.map(pct).join(', '))}">${comicSvg(comicG)}</span>`;
+        const pct = g => `${GENRES[g]} ${pctText(pile.filter(b => (GENRES[b.genre] ? b.genre : 'unknown') === g).length / pile.length * 100)}`;
+        if (globeG.length) html += `<span class="gx gx-globe" data-g="${globeG.join(' ')}" title="${globeSmallest ? 'Your smallest genre' : `Genres under ${pctText(100 / SHELF)} of your unread books`}: ${esc(globeG.map(pct).join(', '))}">${smallGenreSvg(globeG)}</span>`;
+        if (comicG.length) html += `<span class="gx" title="Genres under ${pctText(50 / SHELF)} of your unread books: ${esc(comicG.map(pct).join(', '))}">${comicSvg(comicG)}</span>`;
       }
       html += '</div>';
       const gl = $('#genreLegend');
@@ -1233,7 +1309,7 @@ function renderStats() {
         const cnt = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; cnt[g] = (cnt[g] || 0) + 1; });
         gl.innerHTML = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).map(g => `<span${g === 'nonfiction' ? ` title="${esc([...new Set(pile.filter(b => b.genre === 'nonfiction').map(b => b.genreName).filter(Boolean))].join(', '))}"` : ''}><i style="background:var(--g-${g})"></i>${GENRES[g]} <span class="num muted">${cnt[g]} · ${Math.round(cnt[g] / pile.length * 100)}%</span></span>`).join('')
           + (pile.some(b => b.genreSrc === 'guess') ? `<span class="muted">${fmtInt(pile.filter(b => b.genreSrc === 'guess').length)} genres are guessed from the book's title, because Amazon has no store page for them.</span>` : '')
-          + (globeG.length || comicG.length ? `<span class="muted">${globeG.length ? (globeSmallest ? `The globe holds your smallest genre, ${esc(GENRES[globeG[0]])}.` : `The globe holds the genres under ${Math.round(100 / SHELF)}%.`) : ''}${globeG.length && comicG.length ? ' ' : ''}${comicG.length ? `The comic holds the ones under ${Math.round(50 / SHELF)}%.` : ''}</span>` : '');
+          + (globeG.length || comicG.length ? `<span class="muted">${globeG.length ? (globeSmallest ? `The globe holds your smallest genre, ${esc(GENRES[globeG[0]])}.` : `The globe holds the genres under ${pctText(100 / SHELF)}.`) : ''}${globeG.length && comicG.length ? ' ' : ''}${comicG.length ? `The comic holds the ones under ${pctText(50 / SHELF)}.` : ''}</span>` : '');
         gl.hidden = false;
       } else gl.hidden = true;
       if (pile.length > shown.length) html += `<div class="more">+ ${fmtInt(pile.length - shown.length)} more that didn't fit on the shelf${S.settings.spineMode === 'genre' ? ', in the same proportions' : ''}</div>`;
@@ -1247,7 +1323,7 @@ function renderStats() {
       const rowOf = el => Math.floor((el.getBoundingClientRect().bottom - top - 1) / row);
       // the end of the last shelf keeps room for the bookend and its plants, vases and the like (decorShelf puts them there)
       const kids = [...bc.children], last = kids[kids.length - 1];
-      const full = rowOf(last) === 2 && bc.getBoundingClientRect().right - 20 - last.getBoundingClientRect().right < DECOR_ROOM;
+      const full = rowOf(last) === 2 && bc.getBoundingClientRect().right - 11 - last.getBoundingClientRect().right < DECOR_ROOM;
       if (!full && !kids.some(el => rowOf(el) > 2)) return 0;
       return Math.max(1, [...bc.querySelectorAll('.spine')].filter(el => rowOf(el) <= 2).length - 1);
     };
@@ -1258,7 +1334,7 @@ function renderStats() {
     for (let tries = memo ? 1 : 0; tries < 20; tries++) {
       drawShelf(cap, maxPiles, scale); const fit = shelfFit(); if (!fit) break;
       if (tries === 0) { // first guess straight from the widths: how much thinner the spines must be for 3 shelves
-        const bc = stack.querySelector('.bookcase'), room = 3 * (bc.clientWidth - 20) * .94 - DECOR_ROOM;
+        const bc = stack.querySelector('.bookcase'), room = 3 * bc.clientWidth * .94 - DECOR_ROOM;
         let sw = 0, other = 0;
         for (const el of bc.children) { const cs = getComputedStyle(el), w = el.offsetWidth + parseFloat(cs.marginLeft) + parseFloat(cs.marginRight); if (el.classList.contains('spine')) sw += w; else other += w; }
         maxPiles = 3; scale = Math.max(.38, Math.min(.98, (room - Math.min(other, 3 * 130)) / (sw || 1))); continue;

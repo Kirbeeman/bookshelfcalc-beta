@@ -6,20 +6,24 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 3 (latest)
+## 2.2 beta 4 (latest)
 
-**Separate genre and sub-genre filters**
+**A bookcase that settles like a real one**
 
-- A **Genre** box lists main genres only, and a **Sub-genre** box next to it lists the sub-genres that go with the chosen genres. Both are searchable and alphabetical, and take several entries separated by commas. Tapping a tag on a book fills in both.
-- **GameLit & LitRPG** is a main genre.
-- A book with no genre from Amazon takes it from the other books in its series, then from the author's other books, before any guess from its title. The Dungeon Anarchist's Cookbook is no longer a cookbook.
-- A **BETA mark** after the site name matches the theme: rubber stamp (Default/Light), wax seal (Cozy), bookstore flag (Zon), frosted pill (Fruit), dripping blood (Halloween). The wax seal has a raised lip and the blood drips wet and glossy.
+- The first book on each shelf stands against the side of the bookcase.
+- A leaning book rests on the book (or side) next to it; thick books stand up straight.
+- A flat pile always has a book touching the upright books.
+- Plants, vases and other adornments are drawn bigger, grow to fill the space on their shelf, and sit right against the books beside them.
+- A shelf that isn't packed full ends with a bookend against the last book, plus an adornment when there's room.
+- By genre: the globe (cauldron in Halloween) and the comic are always on the shelf, on a computer as well as a phone, holding the genres too small for a book of their own.
+- The beta keeps its own Google Drive backup, **Shelf of Shame (beta).json**, apart from the main site's.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 3** Separate genre and sub-genre filters, and a themed BETA mark
 - **2.2 beta 2** Tags grouped by the genre rules
 - **2.2 beta 1** Truer genres and a tag search you can combine
 - **2.1 beta 10** Dictionaries stay out, whatever Drive brings back (went live as 2.1.1.0)

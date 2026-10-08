@@ -736,7 +736,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .pill.stalled{color:var(--shame);border-color:var(--shame)}
 .pill.new{color:var(--warn);border-color:var(--warn)}
 .pile-title{font-size:2rem;color:var(--shame)}
-.bookcase{--row:176px;--plank-top:color-mix(in srgb,var(--wood) 70%,#fff2d6);position:relative;background:var(--wood-back);border:0 solid var(--post);border-width:12px 11px 0;border-top-color:var(--wood);border-radius:3px 3px 2px 2px;padding:0 10px;font-size:0;line-height:var(--row);min-height:var(--row);margin-top:14px;
+.bookcase{--row:176px;--plank-top:color-mix(in srgb,var(--wood) 70%,#fff2d6);position:relative;background:var(--wood-back);border:0 solid var(--post);border-width:12px 11px 0;border-top-color:var(--wood);border-radius:3px 3px 2px 2px;padding:0;font-size:0;line-height:var(--row);min-height:var(--row);margin-top:14px;
   box-shadow:0 0 0 2px var(--outline),inset 2px 0 0 var(--outline),inset -2px 0 0 var(--outline),inset 0 2px 0 var(--outline);
   background-image:repeating-linear-gradient(to bottom,transparent 0 calc(var(--row) - 17px),var(--outline) calc(var(--row) - 17px) calc(var(--row) - 15px),var(--plank-top) calc(var(--row) - 15px) calc(var(--row) - 10px),var(--outline) calc(var(--row) - 10px) calc(var(--row) - 9px),var(--wood) calc(var(--row) - 9px) calc(var(--row) - 2px),var(--outline) calc(var(--row) - 2px) var(--row)),
     repeating-linear-gradient(to bottom,rgba(0,0,0,.16) 0,transparent 14px,transparent var(--row))}
@@ -765,7 +765,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .cb-fire{transform-origin:30px 90px;animation:dkflick 1.4s ease-in-out infinite alternate}@keyframes dkflick{0%{transform:scale(1,1)}50%{transform:scale(1.06,.92)}100%{transform:scale(.95,1.05)}}
 @media (prefers-reduced-motion:reduce){.gx-spin,.cb-b,.cb-p,.cb-fire{animation:none}.cb-p{opacity:0}}
 .decor{display:inline-block;vertical-align:bottom;margin-bottom:12px;line-height:0;--dk-metal:#c99a3e;--dk-leaf:#5a9a4e;--dk-leaf2:#3d7a43;--dk-leaf3:#8cbf7a;--dk-pot:#c0663a;--dk-pot2:#ece4d4;--dk-vase:#2f7f86;--dk-bloom:#e8566a;--dk-box:#b5462f;--dk-wax:#efe4c8}
-.decor.orn{margin:0 6px 12px}
+.decor.orn{margin:0 0 12px}
 .decor svg{display:block;width:100%;height:100%;overflow:visible}
 :root[data-theme="halloween"] .decor{--dk-metal:#6b5590;--dk-wax:#d9d0ea}
 :root[data-theme="cozy"] .decor{--dk-metal:#b08d57}
@@ -1368,24 +1368,99 @@ function comicSvg(gs) {
 }
 // The last shelf's leftover space gets a bookend and these, in order; ORNAMENTS are the small things set between books now and then (Default spine colors only)
 const DECOR_SETS = {halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
+const ORN_INSET = {plant: [14, 14], succulent: [7, 7], vase: [2, 2], box: [2, 2], stack: [2, 4], pumpkin: [3, 3], potion: [4, 4]};
+const ornSize = k => { const [w, h] = DECOR[k], s = Math.max(1, Math.min(138 / h, 2, 100 / w)); return [Math.round(w * s), Math.round(h * s)]; };
 const ORNAMENTS = {halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
 let shelfMemo = {};
 // A share as a whole percent, except near the ends: 3 books read out of 659 is 99.5% unread, never a rounded-up 100%
 const pctText = p => (p > 0 && p < 1 ? Math.max(.1, Math.round(p * 10) / 10) : p > 99 && p < 100 ? Math.min(99.9, Math.floor(p * 10) / 10) : Math.round(p)) + '%';
+// ---------- settling the books like a real shelf ----------
+// After the books are laid out, each shelf is tidied: the first book stands against the side of the bookcase, a leaning book
+// rests on its neighbour (or the side), a flat pile touches the upright books next to it, knick-knacks grow to fill the gaps,
+// and a shelf that isn't packed full ends with a bookend (and something to fill the space after it when there's room).
+const LEAN = Math.sin(4 * Math.PI / 180);
+function settleShelf(bc) {
+  bc.querySelectorAll('.rowbr, .rowend').forEach(n => n.remove());
+  bc.querySelectorAll('[data-s0]').forEach(n => { n.setAttribute('style', n.dataset.s0); n.className = n.dataset.c0; delete n.dataset.s0; delete n.dataset.c0; });
+  bc.querySelectorAll(':scope > .orn').forEach(n => { n.style.marginLeft = n.style.marginRight = ''; });
+  const ornKind = n => (ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default)[[...bc.querySelectorAll(':scope > .orn')].indexOf(n) % (ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default).length];
+  // a knick-knack between books is set right against them, pot to spine, as a real one would be (or the books would lean on it)
+  bc.querySelectorAll(':scope > .orn').forEach(n => { const k = ornKind(n), [l, r] = ORN_INSET[k] || [0, 0], f = parseFloat(n.style.width) / DECOR[k][0]; n.style.marginLeft = -Math.round(l * f) + 'px'; n.style.marginRight = -Math.round(r * f) + 'px'; });
+  const keep = n => { if (!('s0' in n.dataset)) { n.dataset.s0 = n.getAttribute('style') || ''; n.dataset.c0 = n.className; } };
+  const items = [...bc.querySelectorAll(':scope > .spine, :scope > .lay, :scope > .orn')]; if (!items.length) return;
+  const cs = getComputedStyle(bc), rowH = parseFloat(cs.lineHeight) || 176, top = bc.getBoundingClientRect().top + parseFloat(cs.borderTopWidth);
+  const rows = []; items.forEach(n => { const r = Math.floor((n.getBoundingClientRect().bottom - top - 4) / rowH); (rows[r] ||= []).push(n); });
+  const list = rows.filter(Boolean);
+  // pin every shelf's line break first, so nothing below moves up while a shelf is being tidied
+  list.slice(0, -1).forEach(row => row[row.length - 1].insertAdjacentHTML('afterend', '<br class="rowbr">'));
+  const px = (n, v) => parseFloat(n.style.getPropertyValue(v)) || 0;
+  const limit = () => bc.getBoundingClientRect().right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight);
+  const oset = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default;
+  const ornScale = k => Math.min(150 / DECOR[k][1], 2.2); // as big as a shelf allows, without turning a trinket box into a trunk
+  list.forEach((row, ri) => {
+    const lastRow = ri === list.length - 1;
+    row.forEach((n, j) => {
+      const prev = row[j - 1];
+      if (n.classList.contains('spine')) {
+        if (!n.classList.contains('lean')) { if (j === 0) { keep(n); n.style.marginLeft = '0px'; } return; }
+        keep(n);
+        // a book only leans on an upright book or on the side of the bookcase
+        if (prev && (!prev.classList.contains('spine') || prev.classList.contains('lean'))) { n.classList.remove('lean'); n.style.setProperty('--r', '0deg'); n.style.marginLeft = '0px'; return; }
+        const h = px(n, '--h'), w = px(n, '--w'), rest = prev ? Math.min(h, px(prev, '--h')) : h;
+        n.style.marginLeft = Math.max(0, Math.round(rest * LEAN + w * .0024)) + 'px'; // its top just meets the book (or side) it rests on
+      } else if (n.classList.contains('lay')) {
+        keep(n); n.style.marginLeft = '0px'; n.style.marginRight = '0px';
+        // one book in the pile sits right up against the upright books
+        const fl = [...n.querySelectorAll('.spine')], dx = fl.map(f => px(f, '--dx')), m = Math.min(...dx);
+        fl.forEach((f, i) => f.style.setProperty('--dx', (dx[i] - m) + 'px'));
+      } else if (j === 0) { const k = ornKind(n); n.style.marginLeft = -Math.round(((ORN_INSET[k] || [0])[0]) * parseFloat(n.style.width) / DECOR[k][0]) + 'px'; }
+    });
+    if (lastRow) return; // the last shelf's end is decorShelf's job
+    const end = row[row.length - 1];
+    let slack = Math.floor(limit() - end.getBoundingClientRect().right) - 1;
+    // knick-knacks on this shelf grow into the gap first
+    const orns = row.filter(n => n.classList.contains('orn'));
+    orns.forEach((n, i) => {
+      if (slack < 2) return;
+      const k = oset[[...bc.querySelectorAll(':scope > .orn')].indexOf(n) % oset.length], w0 = parseFloat(n.style.width), h0 = parseFloat(n.style.height);
+      const w = Math.floor(Math.min(DECOR[k][0] * ornScale(k), w0 + slack / (orns.length - i)));
+      if (w <= w0) return; n.style.width = w + 'px'; n.style.height = Math.round(h0 * w / w0) + 'px';
+      // keep the pot against its neighbours at the new size
+      const [l, r] = ORN_INSET[k] || [0, 0], f = w / DECOR[k][0];
+      const before = parseFloat(n.style.marginLeft) + parseFloat(n.style.marginRight);
+      n.style.marginLeft = -Math.round(l * f) + 'px'; n.style.marginRight = -Math.round(r * f) + 'px';
+      slack -= (w - w0) + (parseFloat(n.style.marginLeft) + parseFloat(n.style.marginRight) - before);
+    });
+    const ins = html => { const br = end.nextElementSibling; (br && br.classList.contains('rowbr') ? br : end).insertAdjacentHTML(br && br.classList.contains('rowbr') ? 'beforebegin' : 'afterend', html); };
+    if (slack >= DECOR.bookend[0] + 4 && !end.classList.contains('lay')) {
+      // not packed full: a bookend holds the books up, and a plant or the like fills what's left when it fits
+      slack -= DECOR.bookend[0] - 7; // its upright sits right against the last book; the foot slides under it
+      let fill = '';
+      const pick = [...new Set(DECOR_SETS[document.documentElement.dataset.theme] || DECOR_SETS.default)].map(k => [k, Math.min(Math.floor(DECOR[k][0] * ornScale(k)), slack - 14)]).filter(([k, w]) => w >= DECOR[k][0] * .8).sort((a, b) => b[1] - a[1])[0];
+      if (pick) { const [k, w] = pick; fill = `<span class="decor rowend" aria-hidden="true" style="width:${w}px;height:${Math.round(DECOR[k][1] * w / DECOR[k][0])}px;margin-left:${Math.max(10, Math.floor((slack - w) / 2))}px">${DECOR[k][2]}</span>`; }
+      ins(`<span class="decor rowend" aria-hidden="true" style="width:${DECOR.bookend[0]}px;height:${DECOR.bookend[1]}px;margin-left:-7px">${DECOR.bookend[2]}</span>` + fill);
+    } else if (slack > 0) {
+      // too little room for a bookend: the books take up the slack, a pixel or two each, so the shelf is packed tight
+      const sp = row.filter(n => n.classList.contains('spine')); if (!sp.length) return;
+      sp.forEach((n, i) => { const add = Math.floor(slack / sp.length) + (i < slack % sp.length ? 1 : 0); if (!add) return; keep(n); n.style.setProperty('--w', (px(n, '--w') + add) + 'px'); });
+    }
+  });
+}
 const DECOR_ROOM = 340; // px kept free at the end of a computer's full bookcase for the bookend and decorations
 function decorShelf() {
   const bc = document.querySelector('#stack .bookcase'); if (!bc) return;
   bc.querySelectorAll('.decor:not(.orn)').forEach(n => n.remove());
   const oset = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default; // a theme change swaps the ornaments too
   bc.querySelectorAll('.gx-globe').forEach(n => { n.innerHTML = smallGenreSvg(n.dataset.g.split(' ')); }); // and the globe ↔ cauldron
-  bc.querySelectorAll('.orn').forEach((n, j) => { const k = oset[j % oset.length]; n.style.width = DECOR[k][0] + 'px'; n.style.height = DECOR[k][1] + 'px'; n.innerHTML = DECOR[k][2]; });
+  bc.querySelectorAll('.orn').forEach((n, j) => { const k = oset[j % oset.length], [ow, oh] = ornSize(k); n.style.width = ow + 'px'; n.style.height = oh + 'px'; n.innerHTML = DECOR[k][2]; });
   // The genre globe/cauldron and the comic stand to the right of the bookend, so take them out while measuring
   const gxs = [...bc.querySelectorAll(':scope > .gx')]; gxs.forEach(n => n.remove());
   const gxW = gxs.reduce((a, n) => a + (n.classList.contains('gx-globe') ? 60 : 70) + 14, 0);
+  settleShelf(bc);
   const spines = bc.querySelectorAll(':scope > .spine, :scope > .lay, :scope > .orn'); if (!spines.length) { gxs.forEach(n => bc.appendChild(n)); return; }
   const last = spines[spines.length - 1].getBoundingClientRect(), box = bc.getBoundingClientRect();
-  const free = Math.floor(box.right - 20 - last.right - 4) - gxW; // 10px frame + 10px padding on the right
-  const bookend = `<span class="decor" aria-hidden="true" style="width:${DECOR.bookend[0]}px;height:${DECOR.bookend[1]}px">${DECOR.bookend[2]}</span>`;
+  const free = Math.floor(box.right - 11 - last.right - 4) - gxW; // inside the 11px frame on the right
+  const bookend = `<span class="decor" aria-hidden="true" style="width:${DECOR.bookend[0]}px;height:${DECOR.bookend[1]}px;margin-left:-7px">${DECOR.bookend[2]}</span>`;
   if (free < DECOR.bookend[0] + 4) { if (gxs.length) { bc.insertAdjacentHTML('beforeend', bookend); gxs.forEach(n => bc.appendChild(n)); } return; }
   const t = document.documentElement.dataset.theme, set = DECOR_SETS[t] || DECOR_SETS.default;
   const picks = []; let used = DECOR.bookend[0] + 4;
@@ -1463,8 +1538,9 @@ function renderStats() {
         const groups = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; (groups[g] ||= []).push(b); });
         let slots = Math.min(SHELF, pile.length);
         let keys = Object.keys(groups).sort((a, b) => groups[b].length - groups[a].length);
-        // A phone's 10 spines are 10% each, too coarse for small genres: under 5% they're the lands on a spinning globe, under 3% a comic lying on the shelf
-        if (PHONE && pile.length > SHELF) {
+        // Genres too small for a spine of their own are never dropped: under one spine's share they're the lands on a spinning globe
+        // (a cauldron in Halloween), under half a spine's share a comic lying on the shelf. On a phone and on a computer alike.
+        {
           const share = g => groups[g].length / pile.length;
           // Unknown isn't a genre, so it never becomes globe land or comic panels (it stays in the key below)
           // One spine is 1/15 of the pile: under that a genre is globe land, under half that it's on the comic
@@ -1492,7 +1568,7 @@ function renderStats() {
         const h = hash(b.id + b.title), p = pagesOf(b), nw = isNew(b);
         const w = Math.round(Math.max(18, Math.min(46, 12 + p / 22)) * scale); // thinner spines when a full bookcase has to hold 100
         const ht = 112 + (h % 46);
-        const r = (!flat && h % 23 === 0 && i > 0) ? -4 : 0, lean = !nw && r !== 0;
+        const r = (!flat && h % 23 === 0 && i > 0 && 12 + p / 22 <= 30) ? -4 : 0, lean = !nw && r !== 0; // only thin books lean; a thick one stands
         const c = gmode ? `var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})` : cloth(h);
         const two = gmode && b.genre2 && GENRES[b.genre2] && b.genre2 !== b.genre;
         const cls = `spine ${two ? 'g2' : gmode ? 'plain' : 's' + (h >> 3) % 5}${nw ? ' new' : ''}${lean ? ' lean' : ''}`;
@@ -1508,12 +1584,12 @@ function renderStats() {
           if (pile2.length >= 2) { piles++; html += `<span class="lay">${pile2.map(x => spineOf(x, i, true)).join('')}</span>`; i += pile2.length - 1; continue; }
         }
         html += spineOf(b, i, false);
-        if (!gmode && i % 23 === 11 && i < shown.length - 3) { const set = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default, k = set[(i / 23 | 0) % set.length]; html += `<span class="decor orn" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px">${DECOR[k][2]}</span>`; }
+        if (!gmode && i % 23 === 11 && i < shown.length - 3) { const set = ORNAMENTS[document.documentElement.dataset.theme] || ORNAMENTS.default, k = set[(i / 23 | 0) % set.length]; const [ow, oh] = ornSize(k); html += `<span class="decor orn" aria-hidden="true" style="width:${ow}px;height:${oh}px">${DECOR[k][2]}</span>`; }
       }
       if (globeG.length || comicG.length) {
-        const pct = g => `${GENRES[g]} ${Math.round(pile.filter(b => (GENRES[b.genre] ? b.genre : 'unknown') === g).length / pile.length * 100)}%`;
-        if (globeG.length) html += `<span class="gx gx-globe" data-g="${globeG.join(' ')}" title="${globeSmallest ? 'Your smallest genre' : `Genres under ${Math.round(100 / SHELF)}% of your unread books`}: ${esc(globeG.map(pct).join(', '))}">${smallGenreSvg(globeG)}</span>`;
-        if (comicG.length) html += `<span class="gx" title="Genres under ${Math.round(50 / SHELF)}% of your unread books: ${esc(comicG.map(pct).join(', '))}">${comicSvg(comicG)}</span>`;
+        const pct = g => `${GENRES[g]} ${pctText(pile.filter(b => (GENRES[b.genre] ? b.genre : 'unknown') === g).length / pile.length * 100)}`;
+        if (globeG.length) html += `<span class="gx gx-globe" data-g="${globeG.join(' ')}" title="${globeSmallest ? 'Your smallest genre' : `Genres under ${pctText(100 / SHELF)} of your unread books`}: ${esc(globeG.map(pct).join(', '))}">${smallGenreSvg(globeG)}</span>`;
+        if (comicG.length) html += `<span class="gx" title="Genres under ${pctText(50 / SHELF)} of your unread books: ${esc(comicG.map(pct).join(', '))}">${comicSvg(comicG)}</span>`;
       }
       html += '</div>';
       const gl = $('#genreLegend');
@@ -1521,7 +1597,7 @@ function renderStats() {
         const cnt = {}; pile.forEach(b => { const g = GENRES[b.genre] ? b.genre : 'unknown'; cnt[g] = (cnt[g] || 0) + 1; });
         gl.innerHTML = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]).map(g => `<span${g === 'nonfiction' ? ` title="${esc([...new Set(pile.filter(b => b.genre === 'nonfiction').map(b => b.genreName).filter(Boolean))].join(', '))}"` : ''}><i style="background:var(--g-${g})"></i>${GENRES[g]} <span class="num muted">${cnt[g]} · ${Math.round(cnt[g] / pile.length * 100)}%</span></span>`).join('')
           + (pile.some(b => b.genreSrc === 'guess') ? `<span class="muted">${fmtInt(pile.filter(b => b.genreSrc === 'guess').length)} genres are guessed from the book's title, because Amazon has no store page for them.</span>` : '')
-          + (globeG.length || comicG.length ? `<span class="muted">${globeG.length ? (globeSmallest ? `The globe holds your smallest genre, ${esc(GENRES[globeG[0]])}.` : `The globe holds the genres under ${Math.round(100 / SHELF)}%.`) : ''}${globeG.length && comicG.length ? ' ' : ''}${comicG.length ? `The comic holds the ones under ${Math.round(50 / SHELF)}%.` : ''}</span>` : '');
+          + (globeG.length || comicG.length ? `<span class="muted">${globeG.length ? (globeSmallest ? `The globe holds your smallest genre, ${esc(GENRES[globeG[0]])}.` : `The globe holds the genres under ${pctText(100 / SHELF)}.`) : ''}${globeG.length && comicG.length ? ' ' : ''}${comicG.length ? `The comic holds the ones under ${pctText(50 / SHELF)}.` : ''}</span>` : '');
         gl.hidden = false;
       } else gl.hidden = true;
       if (pile.length > shown.length) html += `<div class="more">+ ${fmtInt(pile.length - shown.length)} more that didn't fit on the shelf${S.settings.spineMode === 'genre' ? ', in the same proportions' : ''}</div>`;
@@ -1535,7 +1611,7 @@ function renderStats() {
       const rowOf = el => Math.floor((el.getBoundingClientRect().bottom - top - 1) / row);
       // the end of the last shelf keeps room for the bookend and its plants, vases and the like (decorShelf puts them there)
       const kids = [...bc.children], last = kids[kids.length - 1];
-      const full = rowOf(last) === 2 && bc.getBoundingClientRect().right - 20 - last.getBoundingClientRect().right < DECOR_ROOM;
+      const full = rowOf(last) === 2 && bc.getBoundingClientRect().right - 11 - last.getBoundingClientRect().right < DECOR_ROOM;
       if (!full && !kids.some(el => rowOf(el) > 2)) return 0;
       return Math.max(1, [...bc.querySelectorAll('.spine')].filter(el => rowOf(el) <= 2).length - 1);
     };
@@ -1546,7 +1622,7 @@ function renderStats() {
     for (let tries = memo ? 1 : 0; tries < 20; tries++) {
       drawShelf(cap, maxPiles, scale); const fit = shelfFit(); if (!fit) break;
       if (tries === 0) { // first guess straight from the widths: how much thinner the spines must be for 3 shelves
-        const bc = stack.querySelector('.bookcase'), room = 3 * (bc.clientWidth - 20) * .94 - DECOR_ROOM;
+        const bc = stack.querySelector('.bookcase'), room = 3 * bc.clientWidth * .94 - DECOR_ROOM;
         let sw = 0, other = 0;
         for (const el of bc.children) { const cs = getComputedStyle(el), w = el.offsetWidth + parseFloat(cs.marginLeft) + parseFloat(cs.marginRight); if (el.classList.contains('spine')) sw += w; else other += w; }
         maxPiles = 3; scale = Math.max(.38, Math.min(.98, (room - Math.min(other, 3 * 130)) / (sw || 1))); continue;
@@ -1941,7 +2017,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.3`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.3`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.4`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.4`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2514,7 +2590,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.3';
+const LATEST_SCRIPT = '2.2.0.0.4';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2600,6 +2676,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.4', ['The bookcase is tidied like a real shelf: the first book stands against the side, a leaning book rests on the book (or side) next to it, thick books stand up straight, a flat pile touches the upright books, plants and the like are bigger, fill the space and sit right against the books, and a shelf that isn\'t packed full ends with a bookend', 'By genre: genres too small for a spine of their own are always on the shelf, as the globe (cauldron in Halloween) and the comic, on a computer as well as a phone', 'The beta site keeps its own Google Drive backup, Shelf of Shame (beta).json, apart from the main site\'s']],
   ['2.2.0.0.3', ['Two filter boxes in Your library: Genre lists only main genres, Sub-genre lists the sub-genres that go with the genres you picked. Both are searchable and take several entries separated by commas', 'A book in a series takes its genre and tags from the other books in the series (or by the same author) before its title is guessed from: The Dungeon Anarchist\'s Cookbook is not a cookbook', 'GameLit & LitRPG is a main genre']],
   ['2.2.0.0.2', ['Tags are grouped as Parent › Sub-genre by the agreed genre rules: Dark Romance is Romance › Dark, Vampire Romances is Paranormal › Romance, Humorous Fantasy is Fantasy › Humorous, Contemporary Fantasy is Fantasy › Contemporary, and a tag with two genres follows the book\'s own main genre', 'Romantasy and Romantic Fantasy now count as Fantasy; Folklore joins Fairy Tales; Health joins Fitness & Dieting']],
   ['2.2.0.0.1', ['Genres and tags come only from each book\'s own Amazon category, never from the Best Sellers Rank lists (a dark romance was showing as Instructional): the first step is the main genre and the next two are its sub-genres. Every book gets one more look at its Amazon page', 'Tags that are really the same one are combined (Time Travel Romance and Time Travel Romances, GameLit & LitRPG and GameLit & LitRPG Fiction, Thriller & Suspense and Thrillers & Suspense, and the like)', 'The tag filter is searchable: click it for the whole list, or start typing to narrow it down. Separate tags or genres with commas to combine them ("fantasy, romance"); "romance" also finds Dark, Fantasy and Paranormal Romance']],
@@ -2950,9 +3027,12 @@ function wizGo(step) {
 // and the sign-in token lives in this tab's memory. Nothing goes through any server of ours.
 const GD_CLIENT = '415875336210-7sqa3p2evj9on6be8vu7pal417g39hme.apps.googleusercontent.com';
 const GD_SCOPE = 'https://www.googleapis.com/auth/drive.file';
-const GD_NAME = 'Shelf of Shame.json';
-const GD_OLD = 'Kindle Library Calculator.json'; // the file's name before the rename; found and renamed on the next sync
-const GD_DESC = 'Your Shelf of Shame library (bookshelf.kirbee213.tv). Delete it any time.';
+// The beta site keeps its own file, so testing a beta never touches the main library's backup (and the other way round)
+const GD_BETA = /^betabookshelf\./i.test(location.hostname);
+const GD_NAME = GD_BETA ? 'Shelf of Shame (beta).json' : 'Shelf of Shame.json';
+const GD_OLD = GD_BETA ? '' : 'Kindle Library Calculator.json'; // the file's name before the rename; found and renamed on the next sync
+const GD_DESC = GD_BETA ? 'Your Shelf of Shame beta library (betabookshelf.kirbee213.tv), kept apart from the main one. Delete it any time.' : 'Your Shelf of Shame library (bookshelf.kirbee213.tv). Delete it any time.';
+const GK = k => (GD_BETA ? 'klc-gdb-' : 'klc-gd-') + k; // which file, when it last changed, and the last agreed copy, kept per site
 const gdGet = k => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
 const gdSet = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} };
 const gd = {token: '', exp: 0, client: null, busy: false, timer: 0, lastHash: '', state: '', when: 0, err: ''};
@@ -2987,8 +3067,8 @@ function mergeLibraries(local, remote, base) {
   return out;
 }
 const snapshot = books => { const m = {}; books.forEach(b => { m[bookKey(b)] = stable(b); }); return m; };
-function gdBase() { try { return JSON.parse(localStorage.getItem('klc-gd-base') || '{}'); } catch { return {}; } }
-function gdSaveBase(books) { try { localStorage.setItem('klc-gd-base', JSON.stringify(snapshot(books))); } catch {} }
+function gdBase() { try { return JSON.parse(localStorage.getItem(GK('base')) || '{}'); } catch { return {}; } }
+function gdSaveBase(books) { try { localStorage.setItem(GK('base'), JSON.stringify(snapshot(books))); } catch {} }
 
 let gisLoading = null;
 function loadGis() {
@@ -3018,17 +3098,17 @@ async function gapi(method, url, body, type) {
 // A library file saved before the rename keeps its contents and just gets the new name. If renaming fails, the old name still works.
 // The modified time read before the rename is kept, so a change saved from another device still counts as new.
 async function gdRename(f) {
-  if (f.name !== GD_OLD) return f;
+  if (!GD_OLD || f.name !== GD_OLD) return f;
   try { const r = await gapi('PATCH', `https://www.googleapis.com/drive/v3/files/${f.id}?fields=id`, JSON.stringify({name: GD_NAME, description: GD_DESC}), 'application/json'); if (r) return {...f, name: GD_NAME}; } catch {}
   return f;
 }
 async function gdFind() {
-  const id = gdGet('klc-gd-file'), F = 'id,name,modifiedTime,trashed';
+  const id = gdGet(GK('file')), F = 'id,name,modifiedTime,trashed';
   if (id) { const r = await gapi('GET', `https://www.googleapis.com/drive/v3/files/${id}?fields=${F}`); if (r) { const f = await r.json(); if (!f.trashed) return gdRename(f); } }
-  const q = encodeURIComponent(`(name = '${GD_NAME}' or name = '${GD_OLD}') and trashed = false`);
+  const q = encodeURIComponent(`(name = '${GD_NAME}'${GD_OLD ? ` or name = '${GD_OLD}'` : ''}) and trashed = false`);
   const r = await gapi('GET', `https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&orderBy=modifiedTime desc&fields=files(${F})`);
   const f = r && (await r.json()).files?.[0];
-  if (f) gdSet('klc-gd-file', f.id);
+  if (f) gdSet(GK('file'), f.id);
   return f ? gdRename(f) : null;
 }
 async function gdWrite(id, obj) {
@@ -3040,7 +3120,7 @@ async function gdWrite(id, obj) {
     const body = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name: GD_NAME, mimeType: 'application/json', description: GD_DESC})}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${data}\r\n--${b}--`;
     r = await gapi('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime', body, 'multipart/related; boundary=' + b);
   }
-  const f = await r.json(); gdSet('klc-gd-file', f.id); gdSet('klc-gd-mtime', f.modifiedTime); return f;
+  const f = await r.json(); gdSet(GK('file'), f.id); gdSet(GK('mtime'), f.modifiedTime); return f;
 }
 
 let gdApplying = false;
@@ -3053,7 +3133,7 @@ async function syncDrive(interactive) {
     await storeReady;
     const f = await gdFind();
     let changed = false;
-    if (f && f.modifiedTime !== gdGet('klc-gd-mtime')) { // someone saved from another device since we last looked
+    if (f && f.modifiedTime !== gdGet(GK('mtime'))) { // someone saved from another device since we last looked
       const remote = await (await gapi('GET', `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`)).json();
       const rb = Array.isArray(remote?.books) ? remote.books : [];
       if (S.demo) { S.books = rb; S.demo = false; if (remote.settings) S.settings = migrateSettings({...DEFAULTS, ...remote.settings}); }
@@ -3109,7 +3189,7 @@ function renderDriveSect() {
   const s = document.getElementById('gdSync'); if (s) s.onclick = () => syncDrive(true);
   const o = document.getElementById('gdOff'); if (o) o.onclick = () => {
     if (gd.token && window.google?.accounts?.oauth2) try { google.accounts.oauth2.revoke(gd.token, () => {}); } catch {}
-    gd.token = ''; ['klc-gd-on', 'klc-gd-file', 'klc-gd-mtime', 'klc-gd-base', 'klc-gd-when'].forEach(k => gdSet(k, ''));
+    gd.token = ''; ['klc-gd-on', GK('file'), GK('mtime'), GK('base'), 'klc-gd-when'].forEach(k => gdSet(k, ''));
     gdStatus('off'); renderDriveSect(); toast('Disconnected. Your library stays here, and the file stays in your Drive until you delete it.');
   };
 }

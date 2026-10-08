@@ -3,9 +3,12 @@
 // and the sign-in token lives in this tab's memory. Nothing goes through any server of ours.
 const GD_CLIENT = '415875336210-7sqa3p2evj9on6be8vu7pal417g39hme.apps.googleusercontent.com';
 const GD_SCOPE = 'https://www.googleapis.com/auth/drive.file';
-const GD_NAME = 'Shelf of Shame.json';
-const GD_OLD = 'Kindle Library Calculator.json'; // the file's name before the rename; found and renamed on the next sync
-const GD_DESC = 'Your Shelf of Shame library (bookshelf.kirbee213.tv). Delete it any time.';
+// The beta site keeps its own file, so testing a beta never touches the main library's backup (and the other way round)
+const GD_BETA = /^betabookshelf\./i.test(location.hostname);
+const GD_NAME = GD_BETA ? 'Shelf of Shame (beta).json' : 'Shelf of Shame.json';
+const GD_OLD = GD_BETA ? '' : 'Kindle Library Calculator.json'; // the file's name before the rename; found and renamed on the next sync
+const GD_DESC = GD_BETA ? 'Your Shelf of Shame beta library (betabookshelf.kirbee213.tv), kept apart from the main one. Delete it any time.' : 'Your Shelf of Shame library (bookshelf.kirbee213.tv). Delete it any time.';
+const GK = k => (GD_BETA ? 'klc-gdb-' : 'klc-gd-') + k; // which file, when it last changed, and the last agreed copy, kept per site
 const gdGet = k => { try { return localStorage.getItem(k) || ''; } catch { return ''; } };
 const gdSet = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch {} };
 const gd = {token: '', exp: 0, client: null, busy: false, timer: 0, lastHash: '', state: '', when: 0, err: ''};
@@ -40,8 +43,8 @@ function mergeLibraries(local, remote, base) {
   return out;
 }
 const snapshot = books => { const m = {}; books.forEach(b => { m[bookKey(b)] = stable(b); }); return m; };
-function gdBase() { try { return JSON.parse(localStorage.getItem('klc-gd-base') || '{}'); } catch { return {}; } }
-function gdSaveBase(books) { try { localStorage.setItem('klc-gd-base', JSON.stringify(snapshot(books))); } catch {} }
+function gdBase() { try { return JSON.parse(localStorage.getItem(GK('base')) || '{}'); } catch { return {}; } }
+function gdSaveBase(books) { try { localStorage.setItem(GK('base'), JSON.stringify(snapshot(books))); } catch {} }
 
 let gisLoading = null;
 function loadGis() {
@@ -71,17 +74,17 @@ async function gapi(method, url, body, type) {
 // A library file saved before the rename keeps its contents and just gets the new name. If renaming fails, the old name still works.
 // The modified time read before the rename is kept, so a change saved from another device still counts as new.
 async function gdRename(f) {
-  if (f.name !== GD_OLD) return f;
+  if (!GD_OLD || f.name !== GD_OLD) return f;
   try { const r = await gapi('PATCH', `https://www.googleapis.com/drive/v3/files/${f.id}?fields=id`, JSON.stringify({name: GD_NAME, description: GD_DESC}), 'application/json'); if (r) return {...f, name: GD_NAME}; } catch {}
   return f;
 }
 async function gdFind() {
-  const id = gdGet('klc-gd-file'), F = 'id,name,modifiedTime,trashed';
+  const id = gdGet(GK('file')), F = 'id,name,modifiedTime,trashed';
   if (id) { const r = await gapi('GET', `https://www.googleapis.com/drive/v3/files/${id}?fields=${F}`); if (r) { const f = await r.json(); if (!f.trashed) return gdRename(f); } }
-  const q = encodeURIComponent(`(name = '${GD_NAME}' or name = '${GD_OLD}') and trashed = false`);
+  const q = encodeURIComponent(`(name = '${GD_NAME}'${GD_OLD ? ` or name = '${GD_OLD}'` : ''}) and trashed = false`);
   const r = await gapi('GET', `https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive&orderBy=modifiedTime desc&fields=files(${F})`);
   const f = r && (await r.json()).files?.[0];
-  if (f) gdSet('klc-gd-file', f.id);
+  if (f) gdSet(GK('file'), f.id);
   return f ? gdRename(f) : null;
 }
 async function gdWrite(id, obj) {
@@ -93,7 +96,7 @@ async function gdWrite(id, obj) {
     const body = `--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name: GD_NAME, mimeType: 'application/json', description: GD_DESC})}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${data}\r\n--${b}--`;
     r = await gapi('POST', 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime', body, 'multipart/related; boundary=' + b);
   }
-  const f = await r.json(); gdSet('klc-gd-file', f.id); gdSet('klc-gd-mtime', f.modifiedTime); return f;
+  const f = await r.json(); gdSet(GK('file'), f.id); gdSet(GK('mtime'), f.modifiedTime); return f;
 }
 
 let gdApplying = false;
@@ -106,7 +109,7 @@ async function syncDrive(interactive) {
     await storeReady;
     const f = await gdFind();
     let changed = false;
-    if (f && f.modifiedTime !== gdGet('klc-gd-mtime')) { // someone saved from another device since we last looked
+    if (f && f.modifiedTime !== gdGet(GK('mtime'))) { // someone saved from another device since we last looked
       const remote = await (await gapi('GET', `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`)).json();
       const rb = Array.isArray(remote?.books) ? remote.books : [];
       if (S.demo) { S.books = rb; S.demo = false; if (remote.settings) S.settings = migrateSettings({...DEFAULTS, ...remote.settings}); }
@@ -162,7 +165,7 @@ function renderDriveSect() {
   const s = document.getElementById('gdSync'); if (s) s.onclick = () => syncDrive(true);
   const o = document.getElementById('gdOff'); if (o) o.onclick = () => {
     if (gd.token && window.google?.accounts?.oauth2) try { google.accounts.oauth2.revoke(gd.token, () => {}); } catch {}
-    gd.token = ''; ['klc-gd-on', 'klc-gd-file', 'klc-gd-mtime', 'klc-gd-base', 'klc-gd-when'].forEach(k => gdSet(k, ''));
+    gd.token = ''; ['klc-gd-on', GK('file'), GK('mtime'), GK('base'), 'klc-gd-when'].forEach(k => gdSet(k, ''));
     gdStatus('off'); renderDriveSect(); toast('Disconnected. Your library stays here, and the file stays in your Drive until you delete it.');
   };
 }
