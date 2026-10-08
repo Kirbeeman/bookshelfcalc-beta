@@ -10,6 +10,11 @@ html=R(html,"const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/boo
 html=R(html,'<div class="wrap">','<div class="betabar" role="note"><b>BETA</b> · test copy. Things may break here. Your real library is at <a href="https://bookshelf.kirbee213.tv/">bookshelf.kirbee213.tv</a> and is not affected.</div>\n<div class="wrap">')
 html=html.replace('</style>','.betabar{background:repeating-linear-gradient(45deg,#f2c14e 0 14px,#e8b23a 14px 28px);color:#1b1206;font:600 .82rem/1.4 system-ui,sans-serif;text-align:center;padding:6px 12px;position:relative;z-index:50}.betabar a{color:inherit}\n</style>',1)
 html=R(html,'<title>','<title>BETA · ')
+# themed "BETA" mark after the site name: rubber stamp (default/light), wax seal (cozy), bookstore flag (zon),
+# dripping blood (halloween), frosted pill (fruit)
+STAMPS=open(G+'/src/beta-stamps.html').read().strip()
+html=R(html,'<h1>Shelf of Shame</h1>','<h1>Shelf of Shame<span class="betamark">'+STAMPS+'</span></h1>')
+html=html.replace('</style>',open(G+'/src/beta-stamps.css').read()+'</style>',1)
 us=open(G+'/kindle-library-calculator.user.js').read()
 VER=re.search(r'@version\s+(\S+)', us).group(1)
 us=R(us,'// @name         Shelf of Shame\n','// @name         Shelf of Shame (beta)\n')
