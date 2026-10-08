@@ -350,6 +350,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.7', ['Searching the Genre box for Unknown brings up the books that have no genre information yet']],
   ['2.2.0.0.6', ['Sakura: the bar at the top is solid pink, so the page no longer shows through it when you scroll']],
   ['2.2.0.0.5', ['New Sakura theme: cherry-blossom pinks, lavender and mint, round friendly letters, a blossoming branch over the title, petals drifting down behind the page, and a plush bunny and blossom branch on the shelf', 'Halloween is now called Spooky (the same theme, so nothing to pick again)', 'In Spooky, the key under the shelf says cauldron, not globe']],
   ['2.2.0.0.4', ['The bookcase is tidied like a real shelf: the first book stands against the side, a leaning book rests on the book (or side) next to it, thick books stand up straight, a flat pile touches the upright books, plants and the like are bigger, fill the space and sit right against the books, and a shelf that isn\'t packed full ends with a bookend', 'By genre: genres too small for a spine of their own are always on the shelf, as the globe (cauldron in Spooky) and the comic, on a computer as well as a phone', 'The beta site keeps its own Google Drive backup, Shelf of Shame (beta).json, apart from the main site\'s']],

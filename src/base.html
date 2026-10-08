@@ -1620,7 +1620,8 @@ const tagTerms = v => String(v || '').split(',').map(x => x.trim()).filter(Boole
 // Women's Fiction, BDSM) is listed with the sub-genres and goes with any of the book's genres ('*')
 const isGenreTag = t => { const u = tagUnits(t); return u.length === 1 && u[0].k !== 'd'; };
 const tagSplit = t => { const i = t.indexOf(' › '); return i >= 0 ? [t.slice(0, i), t.slice(i + 3)] : isGenreTag(t) ? [t, ''] : ['*', t]; };
-const bookGenres = b => [...new Set([genreLabel(b), GENRES[b.genre2] || '', ...(b.tags || []).map(t => tagSplit(t)[0])].filter(g => g && g !== '*'))];
+// a book with no genre at all counts as Unknown, so searching the Genre box for "unknown" finds the books still missing one
+const bookGenres = b => { const gs = [...new Set([genreLabel(b), GENRES[b.genre2] || '', ...(b.tags || []).map(t => tagSplit(t)[0])].filter(g => g && g !== '*'))]; return gs.length ? gs : [GENRES.unknown]; };
 const has = (h, t) => h.toLowerCase().includes(t.toLowerCase());
 const genreMatch = (b, q) => { const gs = bookGenres(b); return tagTerms(q).every(t => gs.some(g => has(g, t))); };
 const subMatch = (b, q, gq) => { const gt = tagTerms(gq), pairs = (b.tags || []).map(tagSplit).filter(([p, s]) => s && (!gt.length || p === '*' || gt.some(t => has(p, t))));

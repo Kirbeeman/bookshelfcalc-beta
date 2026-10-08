@@ -1908,7 +1908,8 @@ const tagTerms = v => String(v || '').split(',').map(x => x.trim()).filter(Boole
 // Women's Fiction, BDSM) is listed with the sub-genres and goes with any of the book's genres ('*')
 const isGenreTag = t => { const u = tagUnits(t); return u.length === 1 && u[0].k !== 'd'; };
 const tagSplit = t => { const i = t.indexOf(' › '); return i >= 0 ? [t.slice(0, i), t.slice(i + 3)] : isGenreTag(t) ? [t, ''] : ['*', t]; };
-const bookGenres = b => [...new Set([genreLabel(b), GENRES[b.genre2] || '', ...(b.tags || []).map(t => tagSplit(t)[0])].filter(g => g && g !== '*'))];
+// a book with no genre at all counts as Unknown, so searching the Genre box for "unknown" finds the books still missing one
+const bookGenres = b => { const gs = [...new Set([genreLabel(b), GENRES[b.genre2] || '', ...(b.tags || []).map(t => tagSplit(t)[0])].filter(g => g && g !== '*'))]; return gs.length ? gs : [GENRES.unknown]; };
 const has = (h, t) => h.toLowerCase().includes(t.toLowerCase());
 const genreMatch = (b, q) => { const gs = bookGenres(b); return tagTerms(q).every(t => gs.some(g => has(g, t))); };
 const subMatch = (b, q, gq) => { const gt = tagTerms(gq), pairs = (b.tags || []).map(tagSplit).filter(([p, s]) => s && (!gt.length || p === '*' || gt.some(t => has(p, t))));
@@ -2049,7 +2050,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.6`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.6`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.7`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.7`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2622,7 +2623,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.6';
+const LATEST_SCRIPT = '2.2.0.0.7';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2708,6 +2709,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.7', ['Searching the Genre box for Unknown brings up the books that have no genre information yet']],
   ['2.2.0.0.6', ['Sakura: the bar at the top is solid pink, so the page no longer shows through it when you scroll']],
   ['2.2.0.0.5', ['New Sakura theme: cherry-blossom pinks, lavender and mint, round friendly letters, a blossoming branch over the title, petals drifting down behind the page, and a plush bunny and blossom branch on the shelf', 'Halloween is now called Spooky (the same theme, so nothing to pick again)', 'In Spooky, the key under the shelf says cauldron, not globe']],
   ['2.2.0.0.4', ['The bookcase is tidied like a real shelf: the first book stands against the side, a leaning book rests on the book (or side) next to it, thick books stand up straight, a flat pile touches the upright books, plants and the like are bigger, fill the space and sit right against the books, and a shelf that isn\'t packed full ends with a bookend', 'By genre: genres too small for a spine of their own are always on the shelf, as the globe (cauldron in Spooky) and the comic, on a computer as well as a phone', 'The beta site keeps its own Google Drive backup, Shelf of Shame (beta).json, apart from the main site\'s']],

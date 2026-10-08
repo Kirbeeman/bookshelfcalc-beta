@@ -6,17 +6,18 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 6 (latest)
+## 2.2 beta 7 (latest)
 
-**Solid Sakura header**
+**Find the books with no genre**
 
-- Sakura: the bar at the top is solid pink, so the page no longer shows through it when you scroll.
+- Searching the Genre box for **Unknown** brings up the books that have no genre information yet.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 6** Solid Sakura header
 - **2.2 beta 5** Sakura theme
 - **2.2 beta 4** A bookcase that settles like a real one
 - **2.2 beta 3** Separate genre and sub-genre filters, and a themed BETA mark
