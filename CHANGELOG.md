@@ -6,19 +6,20 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 2 (latest)
+## 2.2 beta 3 (latest)
 
-**Tags grouped by the genre rules**
+**Separate genre and sub-genre filters**
 
-- Tags are grouped as **Parent › Sub-genre**, following the agreed genre and tag rules: paranormal subjects roll up to Paranormal (Vampire Romances → Paranormal › Romance); Teen & Young Adult and New Adult & College are parents; describers like Dark, Gothic, Women's, LGBTQ+ and tropes go under their genre (Dark Romance → Romance › Dark); a tag with two genres follows the book's own main genre; Contemporary paired with fantasy is the sub-genre; a subject on its own takes the book's next genre.
-- Amazon's own tags are kept with each book, and the grouping is worked out from them on every redraw. Edit book shows both.
-- Romantasy and Romantic Fantasy count as Fantasy; Folklore joins Fairy Tales; Health joins Fitness & Dieting.
+- A **Genre** box lists main genres only, and a **Sub-genre** box next to it lists the sub-genres that go with the chosen genres. Both are searchable and alphabetical, and take several entries separated by commas. Tapping a tag on a book fills in both.
+- **GameLit & LitRPG** is a main genre.
+- A book with no genre from Amazon takes it from the other books in its series, then from the author's other books, before any guess from its title. The Dungeon Anarchist's Cookbook is no longer a cookbook.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 2** Tags grouped by the genre rules
 - **2.2 beta 1** Truer genres and a tag search you can combine
 - **2.1 beta 10** Dictionaries stay out, whatever Drive brings back (went live as 2.1.1.0)
 - **2.1 beta 9** No dictionaries as your oldest unread book
