@@ -6,17 +6,21 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.1 beta 10 (latest)
+## 2.2 beta 1 (latest)
 
-**Dictionaries stay out, whatever Drive brings back**
+**Truer genres and a tag search you can combine**
 
-- The live site and the beta share one Google Drive file. A library saved by the live site (2.0) brought dictionaries back as purchases, and the beta only set them aside once, when the page loaded. It now checks on every redraw, including right after a Drive sync, and saves the corrected copy back to Drive.
+- Genres and tags come only from each book's own Amazon category trail, never from the Best Sellers Rank lists (a dark romance was showing as "Instructional"). The first step is the main genre and the next two are its sub-genres. Every book gets one more look at its Amazon page.
+- The tag filter is a search box: click it for the whole list (alphabetical) or type to narrow it down. Separate tags or genres with commas to combine them ("fantasy, romance"); "romance" also finds Dark, Fantasy and Paranormal Romance. After the first pick, the list only offers tags those books share.
+- Tags that are the same are combined: the same words in any order, plurals, "&" vs "and", filler like Fiction/Books/Literature, and known synonyms (Romantasy = Romantic Fantasy = Fantasy Romance).
+- Also from live 2.1.1.1: leave a book out by hand.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.1 beta 10** Dictionaries stay out, whatever Drive brings back (went live as 2.1.1.0)
 - **2.1 beta 9** No dictionaries as your oldest unread book
 - **2.1 beta 8** Dictionaries and returned books left out of the count
 - **2.1 beta 7** Cleaner year chart and exact rings

@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-VKOMqYQ9gAMkcfUvaDPUx531RivNK3dFGdTIHg1dZwU=' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-Jwr6MVXOSIxeQyNeI81Z57BpAGb9P1/ZchngEEqem+Y=' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BETA · Shelf of Shame</title>
-<link rel="icon" type="image/png" href="icon-tag.png?v=2.1.0.0.10" id="favicon">
-<link rel="apple-touch-icon" href="icon-tag-180.png?v=2.1.0.0.10" id="touchicon">
+<link rel="icon" type="image/png" href="icon-tag.png?v=2.2.0.0.1" id="favicon">
+<link rel="apple-touch-icon" href="icon-tag-180.png?v=2.2.0.0.1" id="touchicon">
 <meta name="description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
 <meta property="og:title" content="Shelf of Shame">
 <meta property="og:description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
-<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v=2.1.0.0.10">
+<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v=2.2.0.0.1">
 <meta property="og:url" content="https://betabookshelf.kirbee213.tv/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -265,6 +265,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .newnote{font-size:.88rem;display:flex;align-items:center;gap:8px}
 .newnote i{width:12px;height:12px;border-radius:2px;outline:2px solid var(--warn);outline-offset:1px;background:var(--cloth-2);display:inline-block}
 .spine.new{outline:3px solid var(--warn);outline-offset:1px;position:relative;z-index:1}
+.rowex{background:none;border:0;padding:0 0 0 10px;color:var(--muted);font:inherit;font-size:.74rem;text-decoration:underline dotted;cursor:pointer;opacity:.75}.rowex:hover,.rowex:focus-visible{opacity:1;color:var(--ink)}
 .linkbtn{background:none;border:0;padding:0;color:var(--shame);text-decoration:underline;font:inherit;cursor:pointer}
 .pill.stalled{color:var(--shame);border-color:var(--shame)}
 .pill.new{color:var(--warn);border-color:var(--warn)}
@@ -402,7 +403,10 @@ tbody tr:hover{background:var(--bg)}
 .guessed{margin-left:5px;font-size:.66rem;border:1px dashed var(--muted);border-radius:999px;padding:0 6px;color:var(--muted)}
 .tag{border:1px solid var(--rule);background:none;color:var(--muted);border-radius:999px;padding:0 7px;font:inherit;font-size:.7rem;line-height:1.5;cursor:pointer;white-space:nowrap}
 .tag:hover{border-color:var(--muted);color:var(--ink)}.tag.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
-#tagSel{max-width:200px}#tagSel.on{border-color:var(--accent);color:var(--accent)}
+#tagIn{width:300px;max-width:100%}.tagpick{position:relative}.tagpick.on #tagIn{border-color:var(--accent);color:var(--accent)}
+#tagList{position:absolute;right:0;top:calc(100% + 4px);z-index:30;min-width:100%;width:max-content;max-width:min(360px,90vw);max-height:300px;overflow:auto;margin:0;padding:4px;list-style:none;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+#tagList li{display:flex;justify-content:space-between;gap:14px;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:.88rem}#tagList li .c{font-family:var(--mono);font-size:.76rem;color:var(--muted)}
+#tagList li.act,#tagList li:hover{background:var(--accent-soft)}#tagList li.sel{font-weight:600}#tagList .none{color:var(--muted);cursor:default}#tagList .none:hover{background:none}
 .etags{grid-column:1/-1;margin:0;font-size:.8rem;color:var(--muted)}
 .pill{font-family:var(--mono);font-size:.7rem;border-radius:4px;padding:1px 6px;border:1px solid var(--rule);color:var(--muted);margin-left:6px;white-space:nowrap}
 .st{border-radius:5px;padding:3px 6px;font-size:.8rem;border:1px solid var(--rule)}
@@ -528,7 +532,7 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
   <section class="shelf" aria-labelledby="shelfH">
     <div class="toolbar">
       <h2 id="shelfH">Your library</h2>
-      <div class="row"><input type="search" id="q" placeholder="Search title or author" aria-label="Search"><select id="tagSel" aria-label="Filter by tag" hidden></select><button class="btn" id="btnXlsx" type="button">Export spreadsheet</button></div>
+      <div class="row"><input type="search" id="q" placeholder="Search title or author" aria-label="Search"><div class="tagpick" id="tagPick" hidden><input type="search" id="tagIn" placeholder="Tags or genres, e.g. fantasy, romance" autocomplete="off" spellcheck="false" role="combobox" aria-label="Filter by tag" aria-expanded="false" aria-controls="tagList" aria-autocomplete="list"><ul id="tagList" role="listbox" hidden></ul></div><button class="btn" id="btnXlsx" type="button">Export spreadsheet</button></div>
     </div>
     <div class="seg libtabs" id="libTabs" role="tablist" hidden></div>
     <div class="chips" id="chips"></div>
@@ -600,6 +604,7 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
       <label>Genre<select id="eGenre"></select></label>
       <label>Second genre<select id="eGenre2"></select></label>
       <p class="etags" id="eTags" hidden></p>
+      <label class="check full"><input type="checkbox" id="eExclude"> Leave this book out. It stays in your library, but not in the totals, value, charts or Shelf of Shame.</label>
       <label>Rating<select id="eRating"><option value="0">No rating</option><option value="1">★</option><option value="2">★★</option><option value="3">★★★</option><option value="4">★★★★</option><option value="5">★★★★★</option></select></label>
     </div>
     <div class="dlg-foot">
@@ -765,9 +770,42 @@ const DEVICE_EXTRA = /dictionar|diccionario|dictionnaire|dicion[aá]rio|w[oö]rt
 // extras (not counted unless Settings says so), unless a price was really paid for one. Checked on every redraw, because
 // a copy of the library synced by an older version (through Google Drive) can bring them back as purchases.
 const isExtra = b => !b.sourceManual && DEVICE_EXTRA.test(b.title || '') && !(hasPaid(b) && +b.price > 0);
+// Amazon names the same shelf several ways ("Time Travel Romance" / "Time Travel Romances", "GameLit & LitRPG" /
+// "GameLit & LitRPG Fiction", "Paranormal Angel Romance" / "Angel Paranormal Romance"). Tags with the same words in any order,
+// ignoring plurals, "&"/"and" and filler like Fiction, Books or Literature, are one tag; so are the known synonyms below
+// (Romantasy is Romantic Fantasy). The name kept is the one most of your books use. Checked on every redraw, since book
+// lookups bring in Amazon's names again.
+const tagWords = t => (String(t).toLowerCase().replace(/&/g, ' and ').match(/[a-z0-9+]+/g) || [])
+  .filter(x => !/^(and|the|of|a|fiction|books?|novels?|stories|literature)$/.test(x))
+  .map(x => x.length > 4 && x.endsWith('ies') ? x.slice(0, -3) + 'y' : x.length > 3 && x.endsWith('s') && !x.endsWith('ss') ? x.slice(0, -1) : x);
+const TAG_SAME = [
+  ['Romantasy', 'Romantic Fantasy', 'Fantasy Romance'],
+  ['Science Fiction', 'Sci-Fi', 'SciFi'],
+  ['Science Fiction Romance', 'Sci-Fi Romance', 'SciFi Romance'],
+  ['Romantic Comedy', 'Rom-Com', 'Romcom'],
+  ['Werewolves & Shifters', 'Werewolf & Shifter', 'Shapeshifters', 'Shifters'],
+  ['Werewolves & Shifters Romance', 'Werewolf & Shifter Romance', 'Shapeshifter Romance', 'Shifter Romance'],
+  ['Teen & Young Adult', 'Young Adult', 'YA'],
+  ['GameLit & LitRPG', 'LitRPG', 'GameLit'],
+];
+const tagKey0 = t => tagWords(t).sort().join(' ');
+const TAG_SYN = new Map(TAG_SAME.flatMap(g => g.map(t => [tagKey0(t), tagKey0(g[0])])));
+const tagKey = t => { const k = tagKey0(t); return TAG_SYN.get(k) || k; };
+function mergeTags() {
+  const n = new Map(); for (const b of S.books) for (const t of b.tags || []) n.set(t, (n.get(t) || 0) + 1);
+  const best = new Map();
+  for (const [t, c] of n) { const k = tagKey(t); if (!k) continue; const cur = best.get(k); if (!cur || c > n.get(cur) || (c === n.get(cur) && t.length < cur.length)) best.set(k, t); }
+  let changed = 0;
+  for (const b of S.books) {
+    if (!b.tags || !b.tags.length) continue;
+    const nt = [...new Set(b.tags.map(t => best.get(tagKey(t)) || t))];
+    if (nt.length !== b.tags.length || nt.some((x, i) => x !== b.tags[i])) { b.tags = nt; changed++; }
+  }
+  return changed;
+}
 function markExtras() { let n = 0; for (const b of S.books) if (b.source === 'purchase' && isExtra(b)) { b.source = 'device'; n++; } return n; }
 const counted = b => {
-  if (b.returned) return false;
+  if (b.excluded || b.returned) return false;
   if (b.source === 'sample' && !S.settings.samples) return false;
   if (b.source === 'device' && !S.settings.extras) return false;
   if ((b.source === 'ku' || b.source === 'prime' || b.source === 'other' || b.source === 'shared') && !S.settings.borrowed) return false;
@@ -814,12 +852,16 @@ const GENRE_KEY = {...Object.fromEntries(Object.entries(GENRES).filter(([k]) => 
 const cleanCat = s => String(s || '').replace(/\s*Customer Reviews.*$/i, '').replace(/\s+eBooks$/i, '').trim();
 // inf: {trail:[...crumbs], best:[...best-seller lists]} from the sync script (older scripts send cats: [crumb text, ...lists])
 function amazonGenre(inf) {
-  let trail = inf.trail, best = inf.best;
-  if (!trail && inf.cats) { const c0 = inf.cats[0] || ''; trail = c0.includes('›') ? c0.split('›').map(x => x.trim()) : []; best = c0.includes('›') ? inf.cats.slice(1) : inf.cats; }
-  trail = (trail || []).map(x => String(x || '').trim()).filter(Boolean); best = (best || []).map(cleanCat).filter(x => x && !/^kindle store$/i.test(x));
+  // Only the book's own category trail ("Kindle eBooks › Romance › Dark Romance"). The "Best Sellers Rank" lists are left out:
+  // Amazon ranks books in lists that have nothing to do with them (a dark romance ranked in "Instructional").
+  let trail = inf.trail; const best = [];
+  if (!trail && inf.cats) { const c0 = inf.cats[0] || ''; trail = c0.includes('›') ? c0.split('›').map(x => x.trim()) : []; }
+  trail = (trail || []).map(x => String(x || '').trim()).filter(Boolean);
   const root = trail.findIndex(x => /^kindle ebooks$|^ebooks$|^books$/i.test(x));
   const path = root >= 0 ? trail.slice(root + 1) : trail.filter(x => !/^kindle store$/i.test(x));
-  const sub = best[0] || (path.length > 1 ? path[path.length - 1] : '');
+  // Only the first three steps that name a genre count: the first is the main genre, the next two its sub-genres
+  const steps = path.filter(x => !TAG_SKIP.test(x)).slice(0, 3);
+  const sub = steps[1] || '';
   let name = path[0] || '';
   // "Literature & Fiction" is Amazon's catch-all: when the trail names a more specific genre further down, use that one
   if (/^literature & fiction$/i.test(name)) { const more = path.slice(1).find(x => GENRE_KEY[x.toLowerCase()] && !/^literature & fiction$/i.test(x)); if (more) name = more; }
@@ -843,17 +885,18 @@ function amazonGenre(inf) {
   return {key, name, sub};
 }
 const genreLabel = b => b.genre === 'nonfiction' && b.genreName ? b.genreName : GENRES[b.genre] || '';
-// Tags: every category Amazon lists the book under (best-seller lists first, then the deeper steps of its trail), minus catch-alls
+// Tags: the first three steps of the book's own category trail that name a genre (catch-alls like "Literature & Fiction" left
+// out): the main genre, then up to two sub-genres. Never the best-seller lists, see amazonGenre.
 const TAG_SKIP = /^(literature & fiction|fiction|genre fiction|kindle ebooks|ebooks|books|kindle store|science fiction & fantasy|teen & young adult|.*short reads.*|kindle unlimited.*|.*\bebooks?\b.*)$/i;
 function amazonTags(inf) {
-  let trail = inf.trail, best = inf.best;
-  if (!trail && inf.cats) { const c0 = inf.cats[0] || ''; trail = c0.includes('›') ? c0.split('›').map(x => x.trim()) : []; best = c0.includes('›') ? inf.cats.slice(1) : inf.cats; }
-  trail = (trail || []).map(x => String(x || '').trim()).filter(Boolean); best = (best || []).map(cleanCat).filter(Boolean);
+  let trail = inf.trail;
+  if (!trail && inf.cats) { const c0 = inf.cats[0] || ''; trail = c0.includes('›') ? c0.split('›').map(x => x.trim()) : []; }
+  trail = (trail || []).map(x => String(x || '').trim()).filter(Boolean);
   const root = trail.findIndex(x => /^kindle ebooks$|^ebooks$|^books$/i.test(x));
   const path = root >= 0 ? trail.slice(root + 1) : trail.filter(x => !/^kindle store$/i.test(x));
   const seen = new Set(), out = [];
-  for (const t of [...best, ...path]) { const k = t.toLowerCase(); if (!TAG_SKIP.test(t) && t.length <= 48 && !seen.has(k)) { seen.add(k); out.push(t); } }
-  return out.slice(0, 8);
+  for (const t of path) { const k = t.toLowerCase(); if (!TAG_SKIP.test(t) && t.length <= 48 && !seen.has(k)) { seen.add(k); out.push(t); } }
+  return out.slice(0, 3);
 }
 // Second genre: the first tag that points at a different colored genre (a Fantasy book listed under "Fantasy Romance" gets Romance)
 const GENRE2_RULES = [['romance', /romance|romantic/], ['fantasy', /fantasy|sword & sorcery|dragons?|\bfae\b|witch|wizard/], ['scifi', /science fiction|sci-fi|space opera|dystopian|cyberpunk|alien/], ['mystery', /mystery|thriller|suspense|crime|detective/], ['horror', /horror/], ['erotica', /erotica/], ['comics', /comics|graphic novel|manga/], ['kids', /young adult|\bteen/], ['humor', /humor|comed/], ['history', /\bhistory\b/], ['cooking', /cooking|cookbook|recipes|baking/], ['selfhelp', /self-help/]];
@@ -887,8 +930,9 @@ function fillGuesses() {
     else if (b.genreSrc === 'guess') { b.genre = ''; b.genreSrc = ''; }
   }
 }
-// Version 4 adds tags and second genres, so every book gets one more look at its Amazon page (hand-set genres stay as they are)
-const GENRE_V = 4, needsGenre = b => !b.genreV || b.genreV < GENRE_V;
+// Version 4 added tags and second genres; version 5 drops the best-seller lists from both, so every book gets one more look at
+// its Amazon page (hand-set genres stay as they are)
+const GENRE_V = 5, needsGenre = b => !b.genreV || b.genreV < GENRE_V;
 function genreStatus(msg) { const el = $('#genreStatus'); el.hidden = !msg; el.textContent = msg || ''; }
 // Genres, page counts and today's prices all come from one look at each book's Amazon page (needs the sync script)
 function lookupGenres() {
@@ -1000,7 +1044,7 @@ function decorShelf() {
   bc.insertAdjacentHTML('beforeend', picks.map(k => `<span class="decor" aria-hidden="true" style="width:${DECOR[k][0]}px;height:${DECOR[k][1]}px;margin-left:${Math.floor(22 + extra)}px">${DECOR[k][2]}</span>`).join(''));
 }
 
-function renderAll() { if (!S.demo && markExtras()) scheduleSave(); fixEntities(); if (S.settings.theme && typeof applyTheme === 'function') { applyTheme(S.settings.theme); try { localStorage.setItem('klc-theme-picked', '1'); } catch {} } trackReading(); fillGuesses(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
+function renderAll() { if (!S.demo && (markExtras() + mergeTags())) scheduleSave(); fixEntities(); if (S.settings.theme && typeof applyTheme === 'function') { applyTheme(S.settings.theme); try { localStorage.setItem('klc-theme-picked', '1'); } catch {} } trackReading(); fillGuesses(); setStore(); $('#spDefault').setAttribute('aria-pressed', S.settings.spineMode !== 'genre'); $('#spGenre').setAttribute('aria-pressed', S.settings.spineMode === 'genre'); renderStats(); renderShelf(); setTimeout(lookupGenres, 0); }
 
 function renderStats() {
   const bs = S.books.filter(counted);
@@ -1020,8 +1064,8 @@ function renderStats() {
 
   $('#tBooks').textContent = fmtInt(n);
   const hidden = S.books.length - n;
-  const why = {returned:['returned to Amazon (or no longer in your Amazon library)', 'returned to Amazon (or no longer in your Amazon library)'], shared:['shared with you (Family Library)'], ku:['Kindle Unlimited'], prime:['Prime Reading'], other:['borrowed or library loan', 'borrowed or library loans'], sample:['sample', 'samples'], device:['dictionary or user guide that came with your Kindle', 'dictionaries and user guides that came with your Kindle']};
-  const nc = {}; S.books.forEach(b => { if (!counted(b)) { const k = b.returned ? 'returned' : b.source; nc[k] = (nc[k] || 0) + 1; } });
+  const why = {excluded:['left out by you', 'left out by you'], returned:['returned to Amazon (or no longer in your Amazon library)', 'returned to Amazon (or no longer in your Amazon library)'], shared:['shared with you (Family Library)'], ku:['Kindle Unlimited'], prime:['Prime Reading'], other:['borrowed or library loan', 'borrowed or library loans'], sample:['sample', 'samples'], device:['dictionary or user guide that came with your Kindle', 'dictionaries and user guides that came with your Kindle']};
+  const nc = {}; S.books.forEach(b => { if (!counted(b)) { const k = b.excluded ? 'excluded' : b.returned ? 'returned' : b.source; nc[k] = (nc[k] || 0) + 1; } });
   const tip = `<span class="tipbox" role="tooltip"><strong>Not counted</strong> means books you didn't buy yourself. They stay in your library but are left out of the totals, value, charts and Shelf of Shame:<ul>${Object.keys(why).filter(k => nc[k]).map(k => `<li>${nc[k]} ${why[k][nc[k] === 1 ? 0 : why[k].length - 1]}</li>`).join('')}</ul>See them with the <strong>Not counted</strong> button under Your library. To include them, turn them on in <strong>Settings</strong>, or click a book and change <strong>How you got it</strong>.</span>`;
   $('#tBooksSub').innerHTML = `${fmtInt(by.finished.length)} finished` + (hidden ? ` · <span class="tip" tabindex="0">${hidden} not counted${tip}</span>` : '');
   const mask = v => S.showMoney ? fmtMoney(v) : '••••••';
@@ -1354,15 +1398,14 @@ function renderShelf() {
   } else if (S.filter.startsWith('src:')) S.filter = 'all';
   $('#chips').innerHTML = Object.keys(labels).map(k => `<button class="chip" data-f="${k}" aria-pressed="${S.filter === k}">${labels[k]}<span class="c">${counts[k] || 0}</span></button>`).join('');
 
-  // Tag filter: every tag in this tab, most-used first; a tag click in the table picks it too
+  // Tag filter: every tag in this tab (listed alphabetically in the box); a tag click in the table picks it too
   const tc = {}; books.forEach(b => (b.tags || []).forEach(t => { tc[t] = (tc[t] || 0) + 1; }));
   const tlist = Object.keys(tc).sort((a, b) => tc[b] - tc[a] || a.localeCompare(b));
-  if (S.tag && !tc[S.tag]) S.tag = '';
-  $('#tagSel').hidden = !tlist.length;
-  $('#tagSel').innerHTML = '<option value="">All tags</option>' + tlist.map(t => `<option value="${esc(t)}"${t === S.tag ? ' selected' : ''}>${esc(t)} (${tc[t]})</option>`).join('');
-  $('#tagSel').classList.toggle('on', !!S.tag);
+  tagPick.list = tlist; tagPick.count = tc; tagPick.books = books;
+  $('#tagPick').hidden = !tlist.length; $('#tagPick').classList.toggle('on', !!S.tag);
+  if (document.activeElement !== $('#tagIn')) $('#tagIn').value = S.tag;
   const q = S.q.trim().toLowerCase();
-  let list = books.filter(b => (!S.tag || (b.tags || []).includes(S.tag)) && (S.filter === 'all' || (S.filter.startsWith('src:') ? b.source === S.filter.slice(4) : (S.filter === 'excluded' ? !counted(b) : S.filter === 'stalled' ? counted(b) && isStalled(b) : counted(b) && b.status === S.filter))) && (!q || (b.title + ' ' + b.author).toLowerCase().includes(q)));
+  let list = books.filter(b => (!S.tag || tagMatch(b, S.tag)) && (S.filter === 'all' || (S.filter.startsWith('src:') ? b.source === S.filter.slice(4) : (S.filter === 'excluded' ? !counted(b) : S.filter === 'stalled' ? counted(b) && isStalled(b) : counted(b) && b.status === S.filter))) && (!q || (b.title + ' ' + b.author).toLowerCase().includes(q)));
   const {k, dir} = S.sort;
   const rank = {unread:0, reading:1, abandoned:2, finished:3};
   list.sort((a, b) => {
@@ -1375,11 +1418,11 @@ function renderShelf() {
   document.querySelectorAll('th button').forEach(b => { if (b.dataset.k === k) b.dataset.dir = dir; else delete b.dataset.dir; });
   const shown = list.slice(0, S.limit);
   $('#rows').innerHTML = shown.length ? shown.map(b => {
-    const src = (SOURCE[b.source] ? `<span class="pill">${SOURCE[b.source]}</span>` : '') + (isNew(b) ? '<span class="pill new">new</span>' : '') + (isStalled(b) ? `<span class="pill stalled" title="Started ${b.readingSince} and still not finished. Mark it Finished, or DNF if you've given up on it.">stalled 1 yr+</span>` : '');
+    const src = (b.excluded ? '<span class="pill" title="You left this book out of the totals. Click its title to bring it back.">left out</span>' : b.returned ? '<span class="pill" title="No longer in your Amazon library, so it\'s left out of the totals">returned</span>' : '') + (SOURCE[b.source] ? `<span class="pill">${SOURCE[b.source]}</span>` : '') + (isNew(b) ? '<span class="pill new">new</span>' : '') + (isStalled(b) ? `<span class="pill stalled" title="Started ${b.readingSince} and still not finished. Mark it Finished, or DNF if you've given up on it.">stalled 1 yr+</span>` : '');
     const pr = hasPaid(b) ? fmtMoney(+b.price) : b.kp != null && b.source !== 'free' && b.source !== 'device' ? `<span class="est" title="Today's Kindle price (not what you paid)">now ${fmtMoney(b.kp)}</span>` : (b.source === 'purchase' ? `<span class="est" title="Guess from Settings">~${fmtMoney(S.settings.defPrice)}</span>` : '—');
     const pg = b.pages > 0 ? fmtInt(b.pages) : `<span class="est">~${S.settings.defPages}</span>`;
     return `<tr data-id="${esc(b.id)}">
-      <td style="min-width:220px"><div class="t-title" data-edit="${esc(b.id)}" tabindex="0">${esc(b.title)}${src}</div><div class="t-author">${esc(b.author || '')}</div>${b.genre && b.genre !== 'unknown' ? `<div class="t-genre"><span class="gsw"><i style="background:var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})"></i>${esc(genreLabel(b))}${b.genreSrc === 'guess' ? '<span class="guessed" title="No Amazon store page for this book, so the genre is guessed from its title. Click the title to change it.">guessed</span>' : ''}</span>${b.genre2 && GENRES[b.genre2] && b.genre2 !== b.genre ? `<span class="plus">+</span><span class="gsw"><i style="background:var(--g-${b.genre2})"></i>${esc(GENRES[b.genre2])}</span>` : ''}${tagsShown(b).map(t => `<button type="button" class="tag${t === S.tag ? ' on' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</td>
+      <td style="min-width:220px"><div class="t-title" data-edit="${esc(b.id)}" tabindex="0">${esc(b.title)}${src}</div><div class="t-author">${esc(b.author || '')}<button type="button" class="rowex" data-ex="${esc(b.id)}" title="${b.excluded ? 'Count this book in the totals again' : 'Leave this book out of the totals, value, charts and Shelf of Shame'}">${b.excluded ? 'count it again' : 'leave out'}</button></div>${b.genre && b.genre !== 'unknown' ? `<div class="t-genre"><span class="gsw"><i style="background:var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})"></i>${esc(genreLabel(b))}${b.genreSrc === 'guess' ? '<span class="guessed" title="No Amazon store page for this book, so the genre is guessed from its title. Click the title to change it.">guessed</span>' : ''}</span>${b.genre2 && GENRES[b.genre2] && b.genre2 !== b.genre ? `<span class="plus">+</span><span class="gsw"><i style="background:var(--g-${b.genre2})"></i>${esc(GENRES[b.genre2])}</span>` : ''}${tagsShown(b).map(t => `<button type="button" class="tag${t === S.tag ? ' on' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</td>
       <td><select class="st ${b.status}" data-st="${esc(b.id)}" aria-label="Status">${Object.entries(STATUS).map(([v,l]) => `<option value="${v}"${v === b.status ? ' selected' : ''}>${l}</option>`).join('')}</select></td>
       <td><div class="prog"><div class="track"><i style="width:${b.progress || 0}%"></i></div><span class="num muted" style="font-size:.75rem">${Math.round(b.progress || 0)}%</span></div></td>
       <td class="r num">${pg}</td>
@@ -1400,7 +1443,50 @@ document.querySelectorAll('[data-reveal]').forEach(b => b.onclick = toggleMoney)
 $('#libTabs').addEventListener('click', e => { const t = e.target.closest('[data-t]'); if (!t) return; S.libTab = t.dataset.t; S.filter = 'all'; S.limit = PAGE_ROWS; renderShelf(); });
 $('#chips').addEventListener('click', e => { const c = e.target.closest('[data-f]'); if (!c) return; S.filter = c.dataset.f; S.limit = PAGE_ROWS; renderShelf(); });
 let qT; $('#q').addEventListener('input', e => { S.q = e.target.value; S.limit = PAGE_ROWS; clearTimeout(qT); qT = setTimeout(renderShelf, 180); }); // redraw after a short pause in typing
-$('#tagSel').addEventListener('change', e => { S.tag = e.target.value; S.limit = PAGE_ROWS; renderShelf(); });
+// Tag filter: click for the whole list, or type to narrow it down. Several tags or genres separated by commas narrow it
+// further ("fantasy, romance"), and each one matches any tag, genre or second genre containing it, so "romance" also finds
+// Dark Romance, Fantasy Romance and Paranormal Romance.
+const tagPick = {list: [], count: {}, act: 0, shown: []};
+const tagTerms = v => String(v || '').split(',').map(x => x.trim()).filter(Boolean);
+const tagHay = b => [genreLabel(b), GENRES[b.genre2] || '', b.genreSub || '', ...(b.tags || [])].join(' | ').toLowerCase();
+const tagMatch = (b, q) => { const h = tagHay(b); return tagTerms(q).every(t => h.includes(t.toLowerCase())); };
+const tagParts = () => { const v = $('#tagIn').value, k = v.lastIndexOf(','); return {done: tagTerms(v.slice(0, k + 1)), last: v.slice(k + 1).trim()}; };
+let tagT;
+const tagApply = (now) => { const q = tagTerms($('#tagIn').value).join(', '); if (q === S.tag) return; S.tag = q; S.limit = PAGE_ROWS; clearTimeout(tagT); if (now) renderShelf(); else tagT = setTimeout(renderShelf, 200); };
+function tagListDraw() {
+  const {done, last} = tagParts(), q = last.toLowerCase(), ul = $('#tagList'), have = new Set(done.map(x => x.toLowerCase()));
+  // with tags already chosen, the list only offers tags those books also have, counted among them
+  let count = tagPick.count;
+  if (done.length) { count = {}; const q0 = done.join(','); for (const b of tagPick.books || []) if (tagMatch(b, q0)) for (const t of b.tags || []) count[t] = (count[t] || 0) + 1; }
+  // alphabetical, whether or not you've typed anything
+  tagPick.shown = ['', ...tagPick.list.filter(t => count[t] && !have.has(t.toLowerCase()) && (!q || t.toLowerCase().includes(q))).sort((x, y) => x.localeCompare(y, undefined, {sensitivity: 'base'}))];
+  // typing lands on the tag that starts with what you typed ("fanta" → Fantasy), else the first match
+  if (tagPick.act < 0) { const st = tagPick.shown.findIndex((t, i) => i && t.toLowerCase().startsWith(q)); tagPick.act = !q ? 0 : st > 0 ? st : tagPick.shown.length > 1 ? 1 : 0; }
+  if (tagPick.act >= tagPick.shown.length) tagPick.act = 0;
+  const cur = new Set(tagTerms(S.tag).map(x => x.toLowerCase()));
+  ul.innerHTML = tagPick.shown.map((t, i) => `<li role="option" id="tagOpt${i}" data-i="${i}" class="${i === tagPick.act ? 'act' : ''}${(t ? cur.has(t.toLowerCase()) : !S.tag) ? ' sel' : ''}" aria-selected="${t ? cur.has(t.toLowerCase()) : !S.tag}">${t ? esc(t) : done.length ? 'Clear all tags' : 'All tags'}<span class="c">${t ? count[t] : ''}</span></li>`).join('')
+    + (tagPick.shown.length === 1 && q ? `<li class="none">No tag contains "${esc(last)}", but books whose tags or genres contain it still show</li>` : '');
+  $('#tagIn').setAttribute('aria-activedescendant', 'tagOpt' + tagPick.act);
+  const a = ul.querySelector('.act'); if (a) a.scrollIntoView({block: 'nearest'});
+}
+const tagOpen = () => { tagPick.act = -1; $('#tagList').hidden = false; $('#tagIn').setAttribute('aria-expanded', 'true'); tagListDraw(); };
+const tagClose = () => { $('#tagList').hidden = true; $('#tagIn').setAttribute('aria-expanded', 'false'); tagApply(true); $('#tagIn').value = S.tag; };
+// Picking a tag swaps it in for the word being typed and leaves a comma, ready for the next one
+const tagPickSet = t => {
+  if (!t) { $('#tagIn').value = ''; tagApply(true); tagClose(); return; }
+  const {done} = tagParts(); $('#tagIn').value = [...done, t].join(', ') + ', '; tagApply(true); tagPick.act = 0; tagListDraw();
+};
+$('#tagIn').addEventListener('focus', () => { if (S.tag) $('#tagIn').value = S.tag + ', '; tagOpen(); });
+$('#tagIn').addEventListener('click', () => { if ($('#tagList').hidden) tagOpen(); });
+$('#tagIn').addEventListener('input', () => { tagPick.act = -1; if ($('#tagList').hidden) tagOpen(); else tagListDraw(); tagApply(false); });
+$('#tagIn').addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if ($('#tagList').hidden) return tagOpen(); const n = tagPick.shown.length; tagPick.act = (tagPick.act + (e.key === 'ArrowDown' ? 1 : n - 1)) % n; tagListDraw(); }
+  else if (e.key === 'Enter') { e.preventDefault(); if (!$('#tagList').hidden && tagPick.act > 0) tagPickSet(tagPick.shown[tagPick.act]); else { tagClose(); $('#tagIn').blur(); } }
+  else if (e.key === 'Escape') { if (!$('#tagList').hidden) { e.preventDefault(); tagClose(); } }
+});
+$('#tagIn').addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== $('#tagIn')) tagClose(); }, 150));
+$('#tagList').addEventListener('mousedown', e => e.preventDefault()); // keep the box focused while picking
+$('#tagList').addEventListener('click', e => { const li = e.target.closest('li[data-i]'); if (li) tagPickSet(tagPick.shown[+li.dataset.i]); });
 document.querySelector('thead').addEventListener('click', e => { const b = e.target.closest('button[data-k]'); if (!b) return; const k = b.dataset.k; S.sort = {k, dir: S.sort.k === k ? -S.sort.dir : (k === 'title' ? 1 : -1)}; renderShelf(); });
 $('#showMore').addEventListener('click', () => { S.limit += PAGE_ROWS * 2; renderShelf(); });
 $('#rows').addEventListener('change', e => {
@@ -1412,7 +1498,7 @@ $('#rows').addEventListener('change', e => {
   if (b.status === 'unread') b.progress = 0;
   leaveDemoForEdit(); renderAll(); scheduleSave();
 });
-$('#rows').addEventListener('click', e => { const g = e.target.closest('[data-tag]'); if (g) { S.tag = S.tag === g.dataset.tag ? '' : g.dataset.tag; S.limit = PAGE_ROWS; renderShelf(); return; } const t = e.target.closest('[data-edit]'); if (t) openEdit(t.dataset.edit); });
+$('#rows').addEventListener('click', e => { const x = e.target.closest('[data-ex]'); if (x) { const bk = S.books.find(b => b.id === x.dataset.ex); if (bk) { bk.excluded = !bk.excluded; leaveDemoForEdit(); renderAll(); scheduleSave(); toast(bk.excluded ? 'Left out of the totals' : 'Counted again'); } return; } const g = e.target.closest('[data-tag]'); if (g) { S.tag = S.tag === g.dataset.tag ? '' : g.dataset.tag; S.limit = PAGE_ROWS; renderShelf(); return; } const t = e.target.closest('[data-edit]'); if (t) openEdit(t.dataset.edit); });
 $('#rows').addEventListener('keydown', e => { const t = e.target.closest('[data-edit]'); if (t && e.key === 'Enter') openEdit(t.dataset.edit); });
 function leaveDemoForEdit() { /* edits to the example library stay on this page only */ }
 
@@ -1425,7 +1511,7 @@ function openEdit(id) {
   $('#eTitle').value = b.title || ''; $('#eAuthor').value = b.author || ''; $('#eAsin').value = b.asin || '';
   $('#eStatus').value = b.status; $('#eProgress').value = Math.round(b.progress || 0);
   $('#ePages').value = b.pages || ''; $('#ePrice').value = b.price ?? ''; $('#eDate').value = b.date || '';
-  $('#eSource').value = b.source || 'purchase'; $('#eRating').value = b.rating || 0;
+  $('#eSource').value = b.source || 'purchase'; $('#eRating').value = b.rating || 0; $('#eExclude').checked = !!b.excluded;
   $('#eGenre').innerHTML = '<option value="">Look up automatically</option>' + Object.entries(GENRES).filter(([k]) => k !== 'unknown').map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
   $('#eGenre').value = b.genreSrc === 'manual' ? b.genre : '';
   $('#eGenre2').innerHTML = '<option value="">Look up automatically</option><option value="none">None</option>' + Object.entries(GENRES).filter(([k]) => k !== 'unknown' && k !== 'nonfiction').map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
@@ -1446,7 +1532,7 @@ $('#editForm').addEventListener('submit', e => {
     pages: num($('#ePages').value), price: num($('#ePrice').value), date: $('#eDate').value || '',
     ...(($('#eDate').value || '') !== ((editing && editing.date) || '') ? {dateManual: true, dateEst: false} : {}),
     ...(editing && String($('#ePrice').value) !== String(editing.price ?? '') ? {priceManual: true} : {}),
-    source: $('#eSource').value, rating: +$('#eRating').value, lock: true,
+    source: $('#eSource').value, rating: +$('#eRating').value, lock: true, excluded: $('#eExclude').checked,
     ...(editing && $('#eSource').value !== editing.source ? {sourceManual: true} : {}),
     ...($('#eGenre').value ? {genre: $('#eGenre').value, genreSrc: 'manual'} : (editing && editing.genreSrc === 'manual' ? {genre: '', genreSrc: '', genreV: 0} : {})),
   };
@@ -1490,7 +1576,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.1.0.0.10`], ['touchicon', `icon-${ico}-180.png?v=2.1.0.0.10`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.1`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.1`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2022,7 +2108,7 @@ function applyBookInfo(b, inf, now) {
   if (!hasPaid(b) && inf.price != null) { b.kp = inf.price; priced = true; }
   b.kpTime = now;
   if (!(b.pages > 0) && inf.pages) { b.pages = inf.pages; b.pagesSrc = 'amazon'; }
-  if (b.genreSrc !== 'manual') { const g = amazonGenre(inf); if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = 'amazon'; } }
+  if (b.genreSrc !== 'manual') { const g = amazonGenre(inf); if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = 'amazon'; } else if (b.genreSrc === 'amazon') { b.genre = ''; b.genreName = ''; b.genreSub = ''; b.genreSrc = ''; } } // no trail: drop a genre that came from the old best-seller lists
   b.tags = amazonTags(inf);
   if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tags, b.genre);
   b.genreV = GENRE_V;
@@ -2063,7 +2149,7 @@ async function lookupBookInfo() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.1.0.0.10';
+const LATEST_SCRIPT = '2.2.0.0.1';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2149,6 +2235,9 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.1', ['Genres and tags come only from each book\'s own Amazon category, never from the Best Sellers Rank lists (a dark romance was showing as Instructional): the first step is the main genre and the next two are its sub-genres. Every book gets one more look at its Amazon page', 'Tags that are really the same one are combined (Time Travel Romance and Time Travel Romances, GameLit & LitRPG and GameLit & LitRPG Fiction, Thriller & Suspense and Thrillers & Suspense, and the like)', 'The tag filter is searchable: click it for the whole list, or start typing to narrow it down. Separate tags or genres with commas to combine them ("fantasy, romance"); "romance" also finds Dark, Fantasy and Paranormal Romance']],
+  ['2.1.1.1', ['Leave a book out by hand: click its title and tick "Leave this book out". It stays in your library (marked "left out") but not in the totals, value, charts or Shelf of Shame']],
+  ['2.1.1.0', ['Signed code: the phone bookmark and the sync script only run code signed with the Shelf of Shame key. Set up the bookmark once more, and update the sync script once', 'A Content Security Policy on every page, and a getting-started guide for every device at /help', 'Up to 100 unread books on at most 3 shelves, with the decorations kept', 'Truer numbers: 99.5% instead of a rounded 100%, dictionaries and returned books left out, and no dictionary as your oldest unread book', 'Status dots in the same green, yellow and red in every theme']],
   ['2.1.0.0.10', ['Dictionaries stay out of the count even when a copy of your library from an older version (through Google Drive) brings them back as purchases']],
   ['2.1.0.0.9', ['Your oldest unread book is never a dictionary or user guide, even with Kindle extras counted']],
   ['2.1.0.0.8', ['Dictionaries and user guides that came with your Kindle are no longer counted as bought books, even when Amazon files them with an order', 'Books you returned to Amazon are marked Returned and left out of the totals (they come back by themselves if they show up in your Amazon library again)']],

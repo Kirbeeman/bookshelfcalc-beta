@@ -223,7 +223,7 @@ function applyBookInfo(b, inf, now) {
   if (!hasPaid(b) && inf.price != null) { b.kp = inf.price; priced = true; }
   b.kpTime = now;
   if (!(b.pages > 0) && inf.pages) { b.pages = inf.pages; b.pagesSrc = 'amazon'; }
-  if (b.genreSrc !== 'manual') { const g = amazonGenre(inf); if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = 'amazon'; } }
+  if (b.genreSrc !== 'manual') { const g = amazonGenre(inf); if (g) { b.genre = g.key; b.genreName = g.name; b.genreSub = g.sub; b.genreSrc = 'amazon'; } else if (b.genreSrc === 'amazon') { b.genre = ''; b.genreName = ''; b.genreSub = ''; b.genreSrc = ''; } } // no trail: drop a genre that came from the old best-seller lists
   b.tags = amazonTags(inf);
   if (b.genre2Src !== 'manual') b.genre2 = secondGenre(b.tags, b.genre);
   b.genreV = GENRE_V;
@@ -350,6 +350,9 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.1', ['Genres and tags come only from each book\'s own Amazon category, never from the Best Sellers Rank lists (a dark romance was showing as Instructional): the first step is the main genre and the next two are its sub-genres. Every book gets one more look at its Amazon page', 'Tags that are really the same one are combined (Time Travel Romance and Time Travel Romances, GameLit & LitRPG and GameLit & LitRPG Fiction, Thriller & Suspense and Thrillers & Suspense, and the like)', 'The tag filter is searchable: click it for the whole list, or start typing to narrow it down. Separate tags or genres with commas to combine them ("fantasy, romance"); "romance" also finds Dark, Fantasy and Paranormal Romance']],
+  ['2.1.1.1', ['Leave a book out by hand: click its title and tick "Leave this book out". It stays in your library (marked "left out") but not in the totals, value, charts or Shelf of Shame']],
+  ['2.1.1.0', ['Signed code: the phone bookmark and the sync script only run code signed with the Shelf of Shame key. Set up the bookmark once more, and update the sync script once', 'A Content Security Policy on every page, and a getting-started guide for every device at /help', 'Up to 100 unread books on at most 3 shelves, with the decorations kept', 'Truer numbers: 99.5% instead of a rounded 100%, dictionaries and returned books left out, and no dictionary as your oldest unread book', 'Status dots in the same green, yellow and red in every theme']],
   ['2.1.0.0.10', ['Dictionaries stay out of the count even when a copy of your library from an older version (through Google Drive) brings them back as purchases']],
   ['2.1.0.0.9', ['Your oldest unread book is never a dictionary or user guide, even with Kindle extras counted']],
   ['2.1.0.0.8', ['Dictionaries and user guides that came with your Kindle are no longer counted as bought books, even when Amazon files them with an order', 'Books you returned to Amazon are marked Returned and left out of the totals (they come back by themselves if they show up in your Amazon library again)']],

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Shelf of Shame (beta)
 // @namespace    kindle-library-calculator-beta
-// @version      2.1.0.0.10
+// @version      2.2.0.0.1
 // @downloadURL  none
 // @description  Library value, reading time and a Shelf of Shame for your Kindle books, kept in sync with your Goodreads shelves.
 // @grant        GM_getValue
@@ -43,6 +43,9 @@ const api = TM ? [GM_getValue, GM_setValue] : [(k, d) => k in cache ? cache[k] :
 api.push(typeof GM_addStyle === 'function' ? GM_addStyle : css => { const st = document.createElement('style'); st.textContent = css; (document.head || document.documentElement).appendChild(st); return st; });
 api.push(typeof GM_xmlhttpRequest === 'function' ? GM_xmlhttpRequest : d => GM.xmlHttpRequest(d));
 api.push(typeof GM_info !== 'undefined' ? GM_info : GM.info);
+// On Goodreads, remember who's signed in (the shelves sync needs it) before anything else, so it works even where a
+// site's own security rules stop the checked code from starting
+if (location.hostname === 'www.goodreads.com') { try { const me = document.querySelector('header a[href*="/user/show/"], nav a[href*="/user/show/"], a[href*="/user/show/"]'); const id = me && (me.getAttribute('href').match(/\/user\/show\/(\d+)/) || [])[1]; if (id) api[1]('grUser', id); } catch {} }
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const utf8 = s => new TextEncoder().encode(s);
 const get = url => new Promise((ok, bad) => api[3]({method: 'GET', url, timeout: 30000,
