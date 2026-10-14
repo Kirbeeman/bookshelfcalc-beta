@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-cJEasC1yb0lfSsJ+F2yFU5k6WTJSb9wpwN93VI/gStM=' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://openlibrary.org https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-MBGpXgwWE1DFPjl/mHV0OtLlP/X8QnRJG2Q26VobQc8=' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://openlibrary.org https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BETA · Shelf of Shame</title>
-<link rel="icon" type="image/png" href="icon-tag.png?v=2.2.0.0.11" id="favicon">
-<link rel="apple-touch-icon" href="icon-tag-180.png?v=2.2.0.0.11" id="touchicon">
+<link rel="icon" type="image/png" href="icon-tag.png?v=2.2.0.0.12" id="favicon">
+<link rel="apple-touch-icon" href="icon-tag-180.png?v=2.2.0.0.12" id="touchicon">
 <meta name="description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
 <meta property="og:title" content="Shelf of Shame">
 <meta property="og:description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
-<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v=2.2.0.0.11">
+<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v=2.2.0.0.12">
 <meta property="og:url" content="https://betabookshelf.kirbee213.tv/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -552,6 +552,15 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
 .check{display:flex;gap:8px;align-items:center;font-size:.88rem}
 .note{font-size:.8rem;color:var(--muted);margin:0}
 .dlg-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.settabs{margin:0 0 12px}
+.acct{border:1px solid var(--rule);border-radius:8px;padding:12px 14px;margin:12px 0;display:grid;gap:6px}
+.acct h4{margin:0;font-size:1rem}
+.acct dl{display:grid;grid-template-columns:max-content 1fr;gap:3px 12px;margin:0;font-size:.9rem}
+.acct dt{color:var(--muted)}.acct dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.acct .ok{color:var(--ok);font-weight:600;font-size:.85rem}.acct .bad{color:var(--shame);font-weight:600;font-size:.85rem}
+.acct .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}.acct a.btn{color:var(--ink);text-decoration:none;display:inline-block}
+.acct .result:empty{display:none}
+@media (max-width:480px){.acct dl{grid-template-columns:1fr;gap:0}.acct dd{margin-bottom:6px}}
 .verline{margin:12px 0 0;font-size:.8rem;color:var(--muted);text-align:center}
 .result{font-size:.88rem;min-height:1.3em}
 .result.err{color:var(--shame)}
@@ -744,6 +753,8 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
 <dialog id="dlgSettings">
   <form class="dlg" id="setForm">
     <div class="dlg-head"><h2>Settings</h2><button type="button" class="x" id="setClose" aria-label="Close">×</button></div>
+    <div class="tabs settabs" role="tablist" id="setTabs"><button type="button" class="tab" role="tab" data-t="general" aria-selected="true">General</button><button type="button" class="tab" role="tab" data-t="accounts" aria-selected="false">Accounts</button></div>
+    <div data-sp="general">
     <div class="themesect"><h4 id="themeLbl">Theme</h4><div class="themesel" id="themeSel"><button type="button" class="themebtn" id="themeBtn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="themeLbl themeBtn"></button><ul class="themelist" id="themePick" role="listbox" aria-labelledby="themeLbl" tabindex="-1" hidden></ul></div></div>
     <div class="form">
       <label>Pages to assume when unknown<input type="number" id="sPages" min="1"></label>
@@ -761,6 +772,8 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
     <p class="note">Kindle doesn't report page counts or prices, so unknown values use the numbers above. Values you enter per book always win. About one minute per page is typical for adult fiction.</p>
     <div class="files"><h4>Files and backups</h4><p class="note">Only needed if you don't use the sync script, or to move your library to another browser.</p><div class="row"><button type="button" class="btn" id="btnImport">Import a file</button><button type="button" class="btn" id="btnExport">Back up library</button></div></div>
     <div class="dlg-foot"><div class="row"><button type="button" class="btn danger" id="wipe">Delete all books</button><span class="result err" id="wipeConfirm"></span></div><button type="submit" class="btn primary">Save</button></div>
+    </div>
+    <div data-sp="accounts" id="acctPanel" hidden></div>
     <p class="verline" id="verLine"></p>
   </form>
 </dialog>
@@ -1026,6 +1039,17 @@ const hash = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.char
 const yearsAgo = d => { const ms = Date.now() - new Date(d).getTime(); return ms / 3.156e10; };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
+// A status or progress set by hand stays put, except that a sync may carry the book forward (unread, then reading, then finished,
+// or a higher percentage). It never moves a book back, and a book given up on by hand stays given up on.
+const STATUS_RANK = {unread: 0, reading: 1, finished: 2};
+function moveForward(b, status, progress) {
+  if (b.status === 'abandoned') return false;
+  const was = b.status, wasP = b.progress || 0;
+  if (progress != null && !isNaN(progress) && progress > wasP) { b.progress = progress; const st = statusFromProgress(progress); if ((STATUS_RANK[st] ?? -1) > (STATUS_RANK[b.status] ?? 0)) b.status = st; }
+  if (status && status !== 'abandoned' && (STATUS_RANK[status] ?? -1) > (STATUS_RANK[b.status] ?? 0)) { b.status = status; if (status === 'finished') b.progress = 100; }
+  if (b.status === 'reading' && was !== 'reading' && !b.readingSince) b.readingSince = new Date().toISOString().slice(0, 10);
+  return b.status !== was || (b.progress || 0) !== wasP;
+}
 function statusFromProgress(p) {
   if (p == null || isNaN(p)) return null;
   if (p >= S.settings.doneAt) return 'finished';
@@ -1899,7 +1923,7 @@ $('#editForm').addEventListener('submit', e => {
     pages: num($('#ePages').value), price: num($('#ePrice').value), date: $('#eDate').value || '',
     ...(($('#eDate').value || '') !== ((editing && editing.date) || '') ? {dateManual: true, dateEst: false} : {}),
     ...(editing && String($('#ePrice').value) !== String(editing.price ?? '') ? {priceManual: true} : {}),
-    source: $('#eSource').value, rating: +$('#eRating').value, lock: true, excluded: $('#eExclude').checked,
+    source: $('#eSource').value, rating: +$('#eRating').value, excluded: $('#eExclude').checked,
     ...(editing && $('#eSource').value !== editing.source ? {sourceManual: true} : {}),
     ...($('#eGenre').value ? {genre: $('#eGenre').value, genreSrc: 'manual'} : (editing && editing.genreSrc === 'manual' ? {genre: '', genreSrc: '', genreV: 0} : {})),
   };
@@ -1907,6 +1931,8 @@ $('#editForm').addEventListener('submit', e => {
   const g2 = $('#eGenre2').value, mainG = data.genre !== undefined ? data.genre : editing && editing.genre;
   Object.assign(data, g2 ? {genre2: g2 === 'none' ? '' : g2, genre2Src: 'manual'} : {genre2: secondGenre(editing && (editing.tagsAmz || editing.tags), mainG), genre2Src: ''});
   if (!data.title) return;
+  // Only a status or progress actually changed here counts as set by hand; saving a genre or the leave-out box doesn't
+  data.lock = !editing || !!editing.lock || data.status !== editing.status || data.progress !== (editing.progress || 0);
   if (editing) Object.assign(editing, data);
   else { leaveDemo(true); S.books.unshift({id: uid(), ...data}); }
   $('#dlgEdit').close(); renderAll(); scheduleSave(); toast(editing ? 'Saved' : 'Book added');
@@ -1925,8 +1951,16 @@ $('#btnSettings').onclick = () => {
   $('#sPages').value = s.defPages; $('#sPrice').value = s.defPrice; $('#sMin').value = s.minPerPage; $('#sDay').value = s.pagesPerDay;
   $('#sCur').value = s.currency; $('#sDone').value = s.doneAt; $('#sBorrowed').checked = s.borrowed; $('#sSharedTab').checked = !!s.sharedTab; $('#sSamples').checked = s.samples; $('#sGrAll').checked = !!s.grAll; $('#sExtras').checked = !!s.extras;
   wipeArmed = false; $('#wipeConfirm').textContent = '';
+  setTab('general');
   $('#dlgSettings').showModal();
 };
+// Settings has two tabs: General, and Accounts (which accounts the sync reads, checked each time the tab opens)
+function setTab(t) {
+  document.querySelectorAll('#setTabs .tab').forEach(b => b.setAttribute('aria-selected', b.dataset.t === t));
+  document.querySelectorAll('#setForm [data-sp]').forEach(p => { p.hidden = p.dataset.sp !== t; });
+  if (t === 'accounts') renderAccounts();
+}
+$('#setTabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) setTab(b.dataset.t); });
 // ---------- themes ----------
 const THEMES = [
   ['default', 'Default', 'Follows your device', ['#eceeea', '#1a1e21', '#27408b', '#a3322a']],
@@ -1946,7 +1980,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the jack-o'-lantern book in Spooky, the heart boxers in Crawl, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : t === 'crawl' ? 'boxers' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.11`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.11`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.12`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.12`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2164,7 +2198,7 @@ function merge(incoming, replace, kind, addNew = true) {
         if (inc.progress != null && kind === 'kindle') m.progress = inc.progress;
         if (inc.status) m.status = inc.status;
         if (kind === 'goodreads' && inc.progress != null && (inc.status !== 'reading' || !m.progress)) m.progress = inc.progress;
-      }
+      } else moveForward(m, inc.status, kind === 'kindle' ? inc.progress : null);
       updated++;
     } else {
       const b = {
@@ -2297,7 +2331,7 @@ window.addEventListener('message', e => {
   if (!d || d.klc !== 1 || (e.origin && e.origin !== location.origin && location.origin !== 'null')) return;
   if (d.type === 'ready') { checkScriptVersion(d.version); enableSync(); }
   else if (d.type === 'progress') { syncProgress(d.msg); if (bridgeWaiters) bridgeWaiters.poke(); }
-  else if ((d.type === 'binfoResult' || d.type === 'grgenreResult') && kpWaiters[d.id]) { const w = kpWaiters[d.id]; delete kpWaiters[d.id]; try { w(JSON.parse(d.data)); } catch { w(null); } }
+  else if (/^(binfo|grgenre|accounts|forget)Result$/.test(d.type) && kpWaiters[d.id]) { const w = kpWaiters[d.id]; delete kpWaiters[d.id]; try { w(JSON.parse(d.data)); } catch { w(null); } }
   else if (d.type === 'result' && bridgeWaiters) { const w = bridgeWaiters; bridgeWaiters = null; try { w.resolve(JSON.parse(d.data)); } catch (err) { w.reject(err); } }
 });
 // ---------- phone sync bookmark: amazon.com opens this page with #bm and hands over what it read there ----------
@@ -2433,7 +2467,7 @@ function applyOwnership(items) {
     if (src && !b.sourceManual) b.source = src;
     // A "purchase" with no order behind it wasn't bought: dictionaries and user guides come with the Kindle, anything else was free
     if (src === 'purchase' && !o.orderDetailURL && !o.orderId && !b.sourceManual && !(hasPaid(b) && b.priceSrc !== 'order')) b.source = DEVICE_EXTRA.test(b.title) ? 'device' : 'free';
-    if (/^READ$/i.test(o.readStatus || '') && !b.lock && b.status !== 'finished') { b.status = 'finished'; b.progress = 100; }
+    if (/^READ$/i.test(o.readStatus || '') && b.status !== 'finished') { if (!b.lock) { b.status = 'finished'; b.progress = 100; } else moveForward(b, 'finished', null); }
   }
   markExtras();
   return n;
@@ -2539,6 +2573,61 @@ async function lookupBookInfo() {
   } finally { kpRunning = false; tryReload(); }
   setTimeout(lookupAltGenres, 1500);
 }
+// ---------- Settings > Accounts: which Goodreads and Amazon accounts the sync reads, and forgetting one ----------
+function askScript(type, extra, wait) {
+  if (hasCore) return Promise.resolve().then(() => type === 'accounts' ? KLC_CORE.accounts() : KLC_CORE.forget(extra.site)).catch(() => null);
+  return new Promise(resolve => {
+    const id = ++kpSeq; kpWaiters[id] = resolve;
+    postBridge({type, id, ...extra});
+    setTimeout(() => { if (kpWaiters[id]) { delete kpWaiters[id]; resolve(null); } }, wait); // an older script doesn't answer
+  });
+}
+const whenText = t => {
+  const d = new Date(t), now = new Date(), tm = d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+  const day = n => new Date(now.getFullYear(), now.getMonth(), now.getDate() - n).toDateString();
+  return d.toDateString() === day(0) ? 'today ' + tm : d.toDateString() === day(1) ? 'yesterday ' + tm : d.toLocaleDateString([], {month: 'short', day: 'numeric'}) + ' ' + tm;
+};
+let acctSeq = 0;
+async function renderAccounts() {
+  const el = $('#acctPanel'); if (!el) return;
+  const seq = ++acctSeq;
+  const intro = `<p class="note">The sync script reads each site with the sign-in already in this browser. It can't sign you out itself, so <b>Sign out</b> opens that site's sign-out page in a new tab. <b>Forget</b> clears what this site remembers about the account, so the next sync starts fresh. Books already on your shelf stay.</p>`;
+  const drive = driveAcctCard();
+  if (!syncOn && !hasCore) { el.innerHTML = intro + `<section class="acct"><h4>Goodreads and Amazon</h4><p class="note">The sync script isn't connected in this browser, so there are no accounts to show. Set it up under General.</p></section>` + drive; wireDriveCard(); return; }
+  const shell = (gr, amz) => intro + gr + amz + drive;
+  const wait = n => `<section class="acct"><h4>${n}</h4><p class="note">Checking who is signed in…</p></section>`;
+  el.innerHTML = shell(wait('Goodreads'), wait('Amazon (Kindle)')); wireDriveCard();
+  const data = await askScript('accounts', {}, 45000);
+  if (seq !== acctSeq) return;
+  if (!data) { el.innerHTML = shell(`<section class="acct"><h4>Goodreads and Amazon</h4><p class="note">The sync script didn't answer. Update it under General, then try again.</p></section>`, ''); wireDriveCard(); return; }
+  const card = (site, title, a, outUrl, inUrl, label, what) => {
+    const now = a.now || {}, from = a.from;
+    const nameOf = x => x.name || (x.id ? 'account #' + x.id : 'an account whose name isn\'t shown');
+    const nowTxt = now.error ? `Couldn't check (${esc(now.error)})` : now.signedIn ? esc(nameOf(now)) + (now.host ? ' · ' + esc(now.host.replace(/^www\./, '')) : '') : 'Not signed in';
+    const fromTxt = from ? `${esc(nameOf(from))}${from.host ? ' · ' + esc(from.host.replace(/^www\./, '')) : ''} · ${esc(whenText(from.time))} · ${fmtInt(from.count || 0)} books` : 'Nothing synced yet';
+    const same = site === 'gr' ? (x, y) => x.id === y.id : (x, y) => x.host === y.host && (x.cid && y.cid ? x.cid === y.cid : !!(x.name && y.name) && x.name.toLowerCase() === y.name.toLowerCase());
+    const known = x => site === 'gr' ? !!x.id : !!(x.cid || x.name);
+    let st = '';
+    if (now.signedIn && from && known(now) && known(from)) st = same(now, from) ? `<span class="ok">✓ Same account</span>` : `<span class="bad">⚠ Different account. The next sync reads ${esc(nameOf(now))}'s ${what}.</span>`;
+    else if (!now.signedIn && !now.error && from) st = `<span class="bad">Signed out of ${label}. Sign in again for the next sync to read your ${what}.</span>`;
+    return `<section class="acct"><h4>${title}</h4><dl><dt>Signed in now</dt><dd>${nowTxt}</dd><dt>Last sync used</dt><dd>${fromTxt}</dd></dl>${st}
+      <div class="row">${from || now.signedIn ? `<button type="button" class="btn" data-forget="${site}">Forget this account</button>` : ''}${now.signedIn ? `<a class="btn" href="${outUrl}" target="_blank" rel="noopener">Sign out of ${label} ↗</a>` : `<a class="btn" href="${inUrl}" target="_blank" rel="noopener">Sign in at ${label} ↗</a>`}</div>
+      <p class="result" data-fmsg="${site}"></p></section>`;
+  };
+  const host = /^www\.amazon\.[a-z.]+$/.test((data.amz.now && data.amz.now.host) || '') ? data.amz.now.host : 'www.amazon.com';
+  el.innerHTML = shell(card('gr', 'Goodreads', data.gr, 'https://www.goodreads.com/user/sign_out', 'https://www.goodreads.com/user/sign_in', 'Goodreads', 'shelves'),
+    card('amz', 'Amazon (Kindle)', data.amz, `https://${host}/gp/flex/sign-out.html?action=sign-out`, `https://${host}/hz/mycd/digital-console/contentlist/booksAll/dateDsc/`, 'Amazon', 'library'));
+  wireDriveCard();
+  el.querySelectorAll('[data-forget]').forEach(b => b.onclick = async () => {
+    const site = b.dataset.forget, msg = el.querySelector(`[data-fmsg="${site}"]`);
+    if (!b.dataset.armed) { b.dataset.armed = '1'; msg.className = 'result err'; msg.textContent = 'Click Forget again to clear it'; return; }
+    b.disabled = true;
+    const r = await askScript('forget', {site}, 15000);
+    if (!r) { msg.textContent = "The sync script didn't answer."; b.disabled = false; return; }
+    toast(site === 'gr' ? 'Goodreads account forgotten. The next sync starts fresh.' : 'Amazon account and its saved copies forgotten. The next sync reads everything fresh.');
+    renderAccounts();
+  });
+}
 // ---------- genres for books Amazon can't tell us about ----------
 // When a book's Amazon page is gone (taken off sale) or has no category trail, ask Goodreads, then Open Library. Slowly: one book
 // every ten seconds or so, at most 25 per visit, each book asked again only after a month. A title guess is the last resort.
@@ -2596,7 +2685,7 @@ async function lookupAltGenres() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.11';
+const LATEST_SCRIPT = '2.2.0.0.12';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2604,7 +2693,7 @@ const verLess = (a, b) => { const x = String(a).split('.').map(Number), y = Stri
 let scriptVer = '';
 // The oldest sync script this page works with. Raise it only when a release changes the script itself;
 // page-only releases leave it alone, so people aren't stopped for updates that don't touch their script.
-const REQUIRED_SCRIPT = '2.2.0.0.11'; // filled in by build.py: the version where the script's code last changed
+const REQUIRED_SCRIPT = '2.2.0.0.12'; // filled in by build.py: the version where the script's code last changed
 function renderVerLine() {
   const el = document.getElementById('verLine'); if (!el) return;
   const sv = scriptVer ? 'v' + verLabel(scriptVer) + (verLess(scriptVer, REQUIRED_SCRIPT) ? ' (update needed)' : '') : 'not installed';
@@ -2682,6 +2771,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.12', ['New Accounts tab in Settings: shows who is signed in at Goodreads and Amazon right now, whose books the last sync read, and which Google account the Drive backup goes to, with a warning when they differ', 'Forget an account to clear what the site remembers about it, or open the site\'s own sign-out page from there', 'When a different Amazon account is signed in than the one the saved Kindle list came from, the sync reads everything fresh instead of using the old copy', 'A book you changed by hand still moves forward when a sync finds you\'ve read further: a higher Kindle percentage, Goodreads currently reading, or finished. It never moves back, and a book you gave up on stays given up on', 'Saving a book\'s genre or the leave-out box no longer stops syncs updating its progress; only changing its status or progress by hand does']],
   ['2.2.0.0.11', ['Goodreads: every sync checks which account is signed in and uses it, replacing a remembered one that differs', 'Goodreads: the account is only ever taken from Goodreads\' own menu bar, never a reviewer\'s or author\'s link', 'Goodreads: when it shows the sync script its sign-in page instead of your shelves, the sync says so instead of finding no books']],
   ['2.2.0.0.10', ['Quest is darker and worn: dark oak around stained, scorched parchment, with a dice pouch and a tankard on the shelf', 'Crawl wears a leather jacket: stitched, studded leather panels and a zipper under the header, a Books Remaining counter in the top bar like a game display, jugs of boom (fuses not lit), red and blue potions in flask holders and one crystal tiara on the shelves, heart-print boxers by the title and as the page icon, and the crystal tiara holding the small genres in place of the globe', 'No candles on any shelf, in any theme']],
   ['2.2.0.0.9', ['Two new themes: Quest (dice, worn maps and dark oak) and Crawl (loot boxes and game system alerts), each with its own shelf adornments', 'Themes are picked from a drop-down, with every name shown in its own theme\'s style']],
@@ -3159,6 +3249,7 @@ async function syncDrive(interactive) {
       if (interactive) toast("Connected, but this Google account's Drive has no library yet. Sync from Amazon first, and it's saved there.");
       return;
     }
+    if (!gdGet(GK('who'))) { try { const u = (await (await gapi('GET', 'https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)')).json()).user || {}; gdSet(GK('who'), u.emailAddress || u.displayName || ''); } catch {} }
     if (!S.demo) await gdWrite(f && f.id, {app: 'kindle-library-calculator', saved: new Date().toISOString(), settings: S.settings, books: S.books});
     gdSaveBase(S.books); gd.lastHash = libHash(S.books);
     gdSet('klc-gd-on', '1'); gd.when = Date.now(); gdSet('klc-gd-when', String(gd.when)); gd.err = '';
@@ -3200,12 +3291,23 @@ function renderDriveSect() {
        <div class="row"><button type="button" class="btn primary" id="gdOn">Connect Google Drive</button></div>`);
   const c = document.getElementById('gdOn'); if (c) c.onclick = () => syncDrive(true);
   const s = document.getElementById('gdSync'); if (s) s.onclick = () => syncDrive(true);
-  const o = document.getElementById('gdOff'); if (o) o.onclick = () => {
-    if (gd.token && window.google?.accounts?.oauth2) try { google.accounts.oauth2.revoke(gd.token, () => {}); } catch {}
-    gd.token = ''; ['klc-gd-on', GK('file'), GK('mtime'), GK('base'), 'klc-gd-when'].forEach(k => gdSet(k, ''));
-    gdStatus('off'); renderDriveSect(); toast('Disconnected. Your library stays here, and the file stays in your Drive until you delete it.');
-  };
+  const o = document.getElementById('gdOff'); if (o) o.onclick = gdDisconnect;
 }
+function gdDisconnect() {
+  if (gd.token && window.google?.accounts?.oauth2) try { google.accounts.oauth2.revoke(gd.token, () => {}); } catch {}
+  gd.token = ''; ['klc-gd-on', GK('file'), GK('mtime'), GK('base'), GK('who'), 'klc-gd-when'].forEach(k => gdSet(k, ''));
+  gdStatus('off'); renderDriveSect(); if (document.getElementById('acctDrive')) { const c = document.getElementById('acctDrive'); c.outerHTML = driveAcctCard(); wireDriveCard(); }
+  toast('Disconnected. Your library stays here, and the file stays in your Drive until you delete it.');
+}
+// Settings > Accounts: which Google account the backup goes to
+function driveAcctCard() {
+  if (hasCore || location.protocol === 'file:') return '';
+  const t = gd.when ? whenText(gd.when) : '';
+  return `<section class="acct" id="acctDrive"><h4>Google Drive backup</h4>` + (gdOn()
+    ? `<dl><dt>Connected as</dt><dd>${esc(gdGet(GK('who')) || 'shown after the next Drive sync')}</dd><dt>Backup file</dt><dd>${esc(GD_NAME)}${t ? ' · saved ' + esc(t) : ''}</dd></dl><div class="row"><button type="button" class="btn" id="acctGdOff">Disconnect</button></div>`
+    : `<p class="note">Not connected. Connect it under General to keep your library in your own Google Drive.</p>`) + `</section>`;
+}
+function wireDriveCard() { const b = document.getElementById('acctGdOff'); if (b) b.onclick = gdDisconnect; }
 function initDrive() {
   if (hasCore || location.protocol === 'file:') return;
   if (!gdOn()) return;

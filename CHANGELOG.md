@@ -6,19 +6,23 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 11 (latest)
+## 2.2 beta 12 (latest)
 
-**Goodreads reads the right account**
+**Accounts tab, and hand-set books still move forward on sync**
 
-- Every sync checks which Goodreads account is signed in and uses it, replacing a remembered one that differs.
-- The account is only taken from Goodreads' own menu bar, never from a reviewer's or author's link on the page (which could save a stranger's account when signed out).
-- When Goodreads shows the sync script its sign-in page instead of your shelves, the sync says so instead of finding no books.
+- Settings now has two tabs, General and Accounts. Accounts shows who is signed in at Goodreads and Amazon right now, whose books the last sync read (with the time and book count), and which Google account the Drive backup goes to.
+- A warning shows when the signed-in account differs from the one the last sync used, or when it has signed out.
+- Each account can be forgotten (two clicks): this clears what the sync script remembers about it and, for Amazon, its saved Kindle list, purchases and prices. Books already on the shelf stay. Sign out and Sign in buttons open that site's own page in a new tab.
+- When a different Amazon account is signed in than the one the saved Kindle list came from, the sync reads everything fresh instead of using the old copy.
+- A book whose status or progress was changed by hand still moves forward when a sync finds more reading: a higher Kindle percentage, Goodreads currently reading, or Amazon's "read" mark. It never moves back, and a book marked Did not finish by hand stays that way.
+- Fixed: saving a book from Edit book (for a genre or the leave-out box) stopped it taking any progress from Kindle or Goodreads. Only changing its status or progress by hand counts now, and books already stuck this way update on the next sync.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 11** Goodreads reads the right account
 - **2.2 beta 10** Worn Quest, leather Crawl
 - **2.2 beta 9** Quest and Crawl themes, themed picker
 - **2.2 beta 8** Genres from Goodreads, dictionaries left out

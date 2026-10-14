@@ -23,7 +23,7 @@ window.addEventListener('message', e => {
   if (!d || d.klc !== 1 || (e.origin && e.origin !== location.origin && location.origin !== 'null')) return;
   if (d.type === 'ready') { checkScriptVersion(d.version); enableSync(); }
   else if (d.type === 'progress') { syncProgress(d.msg); if (bridgeWaiters) bridgeWaiters.poke(); }
-  else if ((d.type === 'binfoResult' || d.type === 'grgenreResult') && kpWaiters[d.id]) { const w = kpWaiters[d.id]; delete kpWaiters[d.id]; try { w(JSON.parse(d.data)); } catch { w(null); } }
+  else if (/^(binfo|grgenre|accounts|forget)Result$/.test(d.type) && kpWaiters[d.id]) { const w = kpWaiters[d.id]; delete kpWaiters[d.id]; try { w(JSON.parse(d.data)); } catch { w(null); } }
   else if (d.type === 'result' && bridgeWaiters) { const w = bridgeWaiters; bridgeWaiters = null; try { w.resolve(JSON.parse(d.data)); } catch (err) { w.reject(err); } }
 });
 // ---------- phone sync bookmark: amazon.com opens this page with #bm and hands over what it read there ----------
@@ -159,7 +159,7 @@ function applyOwnership(items) {
     if (src && !b.sourceManual) b.source = src;
     // A "purchase" with no order behind it wasn't bought: dictionaries and user guides come with the Kindle, anything else was free
     if (src === 'purchase' && !o.orderDetailURL && !o.orderId && !b.sourceManual && !(hasPaid(b) && b.priceSrc !== 'order')) b.source = DEVICE_EXTRA.test(b.title) ? 'device' : 'free';
-    if (/^READ$/i.test(o.readStatus || '') && !b.lock && b.status !== 'finished') { b.status = 'finished'; b.progress = 100; }
+    if (/^READ$/i.test(o.readStatus || '') && b.status !== 'finished') { if (!b.lock) { b.status = 'finished'; b.progress = 100; } else moveForward(b, 'finished', null); }
   }
   markExtras();
   return n;
@@ -264,6 +264,61 @@ async function lookupBookInfo() {
     stage('details', 'ok', nb(done, 'book')); cardMaybeDone();
   } finally { kpRunning = false; tryReload(); }
   setTimeout(lookupAltGenres, 1500);
+}
+// ---------- Settings > Accounts: which Goodreads and Amazon accounts the sync reads, and forgetting one ----------
+function askScript(type, extra, wait) {
+  if (hasCore) return Promise.resolve().then(() => type === 'accounts' ? KLC_CORE.accounts() : KLC_CORE.forget(extra.site)).catch(() => null);
+  return new Promise(resolve => {
+    const id = ++kpSeq; kpWaiters[id] = resolve;
+    postBridge({type, id, ...extra});
+    setTimeout(() => { if (kpWaiters[id]) { delete kpWaiters[id]; resolve(null); } }, wait); // an older script doesn't answer
+  });
+}
+const whenText = t => {
+  const d = new Date(t), now = new Date(), tm = d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'});
+  const day = n => new Date(now.getFullYear(), now.getMonth(), now.getDate() - n).toDateString();
+  return d.toDateString() === day(0) ? 'today ' + tm : d.toDateString() === day(1) ? 'yesterday ' + tm : d.toLocaleDateString([], {month: 'short', day: 'numeric'}) + ' ' + tm;
+};
+let acctSeq = 0;
+async function renderAccounts() {
+  const el = $('#acctPanel'); if (!el) return;
+  const seq = ++acctSeq;
+  const intro = `<p class="note">The sync script reads each site with the sign-in already in this browser. It can't sign you out itself, so <b>Sign out</b> opens that site's sign-out page in a new tab. <b>Forget</b> clears what this site remembers about the account, so the next sync starts fresh. Books already on your shelf stay.</p>`;
+  const drive = driveAcctCard();
+  if (!syncOn && !hasCore) { el.innerHTML = intro + `<section class="acct"><h4>Goodreads and Amazon</h4><p class="note">The sync script isn't connected in this browser, so there are no accounts to show. Set it up under General.</p></section>` + drive; wireDriveCard(); return; }
+  const shell = (gr, amz) => intro + gr + amz + drive;
+  const wait = n => `<section class="acct"><h4>${n}</h4><p class="note">Checking who is signed in…</p></section>`;
+  el.innerHTML = shell(wait('Goodreads'), wait('Amazon (Kindle)')); wireDriveCard();
+  const data = await askScript('accounts', {}, 45000);
+  if (seq !== acctSeq) return;
+  if (!data) { el.innerHTML = shell(`<section class="acct"><h4>Goodreads and Amazon</h4><p class="note">The sync script didn't answer. Update it under General, then try again.</p></section>`, ''); wireDriveCard(); return; }
+  const card = (site, title, a, outUrl, inUrl, label, what) => {
+    const now = a.now || {}, from = a.from;
+    const nameOf = x => x.name || (x.id ? 'account #' + x.id : 'an account whose name isn\'t shown');
+    const nowTxt = now.error ? `Couldn't check (${esc(now.error)})` : now.signedIn ? esc(nameOf(now)) + (now.host ? ' · ' + esc(now.host.replace(/^www\./, '')) : '') : 'Not signed in';
+    const fromTxt = from ? `${esc(nameOf(from))}${from.host ? ' · ' + esc(from.host.replace(/^www\./, '')) : ''} · ${esc(whenText(from.time))} · ${fmtInt(from.count || 0)} books` : 'Nothing synced yet';
+    const same = site === 'gr' ? (x, y) => x.id === y.id : (x, y) => x.host === y.host && (x.cid && y.cid ? x.cid === y.cid : !!(x.name && y.name) && x.name.toLowerCase() === y.name.toLowerCase());
+    const known = x => site === 'gr' ? !!x.id : !!(x.cid || x.name);
+    let st = '';
+    if (now.signedIn && from && known(now) && known(from)) st = same(now, from) ? `<span class="ok">✓ Same account</span>` : `<span class="bad">⚠ Different account. The next sync reads ${esc(nameOf(now))}'s ${what}.</span>`;
+    else if (!now.signedIn && !now.error && from) st = `<span class="bad">Signed out of ${label}. Sign in again for the next sync to read your ${what}.</span>`;
+    return `<section class="acct"><h4>${title}</h4><dl><dt>Signed in now</dt><dd>${nowTxt}</dd><dt>Last sync used</dt><dd>${fromTxt}</dd></dl>${st}
+      <div class="row">${from || now.signedIn ? `<button type="button" class="btn" data-forget="${site}">Forget this account</button>` : ''}${now.signedIn ? `<a class="btn" href="${outUrl}" target="_blank" rel="noopener">Sign out of ${label} ↗</a>` : `<a class="btn" href="${inUrl}" target="_blank" rel="noopener">Sign in at ${label} ↗</a>`}</div>
+      <p class="result" data-fmsg="${site}"></p></section>`;
+  };
+  const host = /^www\.amazon\.[a-z.]+$/.test((data.amz.now && data.amz.now.host) || '') ? data.amz.now.host : 'www.amazon.com';
+  el.innerHTML = shell(card('gr', 'Goodreads', data.gr, 'https://www.goodreads.com/user/sign_out', 'https://www.goodreads.com/user/sign_in', 'Goodreads', 'shelves'),
+    card('amz', 'Amazon (Kindle)', data.amz, `https://${host}/gp/flex/sign-out.html?action=sign-out`, `https://${host}/hz/mycd/digital-console/contentlist/booksAll/dateDsc/`, 'Amazon', 'library'));
+  wireDriveCard();
+  el.querySelectorAll('[data-forget]').forEach(b => b.onclick = async () => {
+    const site = b.dataset.forget, msg = el.querySelector(`[data-fmsg="${site}"]`);
+    if (!b.dataset.armed) { b.dataset.armed = '1'; msg.className = 'result err'; msg.textContent = 'Click Forget again to clear it'; return; }
+    b.disabled = true;
+    const r = await askScript('forget', {site}, 15000);
+    if (!r) { msg.textContent = "The sync script didn't answer."; b.disabled = false; return; }
+    toast(site === 'gr' ? 'Goodreads account forgotten. The next sync starts fresh.' : 'Amazon account and its saved copies forgotten. The next sync reads everything fresh.');
+    renderAccounts();
+  });
 }
 // ---------- genres for books Amazon can't tell us about ----------
 // When a book's Amazon page is gone (taken off sale) or has no category trail, ask Goodreads, then Open Library. Slowly: one book
@@ -408,6 +463,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.12', ['New Accounts tab in Settings: shows who is signed in at Goodreads and Amazon right now, whose books the last sync read, and which Google account the Drive backup goes to, with a warning when they differ', 'Forget an account to clear what the site remembers about it, or open the site\'s own sign-out page from there', 'When a different Amazon account is signed in than the one the saved Kindle list came from, the sync reads everything fresh instead of using the old copy', 'A book you changed by hand still moves forward when a sync finds you\'ve read further: a higher Kindle percentage, Goodreads currently reading, or finished. It never moves back, and a book you gave up on stays given up on', 'Saving a book\'s genre or the leave-out box no longer stops syncs updating its progress; only changing its status or progress by hand does']],
   ['2.2.0.0.11', ['Goodreads: every sync checks which account is signed in and uses it, replacing a remembered one that differs', 'Goodreads: the account is only ever taken from Goodreads\' own menu bar, never a reviewer\'s or author\'s link', 'Goodreads: when it shows the sync script its sign-in page instead of your shelves, the sync says so instead of finding no books']],
   ['2.2.0.0.10', ['Quest is darker and worn: dark oak around stained, scorched parchment, with a dice pouch and a tankard on the shelf', 'Crawl wears a leather jacket: stitched, studded leather panels and a zipper under the header, a Books Remaining counter in the top bar like a game display, jugs of boom (fuses not lit), red and blue potions in flask holders and one crystal tiara on the shelves, heart-print boxers by the title and as the page icon, and the crystal tiara holding the small genres in place of the globe', 'No candles on any shelf, in any theme']],
   ['2.2.0.0.9', ['Two new themes: Quest (dice, worn maps and dark oak) and Crawl (loot boxes and game system alerts), each with its own shelf adornments', 'Themes are picked from a drop-down, with every name shown in its own theme\'s style']],

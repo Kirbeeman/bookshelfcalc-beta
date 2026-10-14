@@ -550,6 +550,15 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
 .check{display:flex;gap:8px;align-items:center;font-size:.88rem}
 .note{font-size:.8rem;color:var(--muted);margin:0}
 .dlg-foot{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}
+.settabs{margin:0 0 12px}
+.acct{border:1px solid var(--rule);border-radius:8px;padding:12px 14px;margin:12px 0;display:grid;gap:6px}
+.acct h4{margin:0;font-size:1rem}
+.acct dl{display:grid;grid-template-columns:max-content 1fr;gap:3px 12px;margin:0;font-size:.9rem}
+.acct dt{color:var(--muted)}.acct dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.acct .ok{color:var(--ok);font-weight:600;font-size:.85rem}.acct .bad{color:var(--shame);font-weight:600;font-size:.85rem}
+.acct .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}.acct a.btn{color:var(--ink);text-decoration:none;display:inline-block}
+.acct .result:empty{display:none}
+@media (max-width:480px){.acct dl{grid-template-columns:1fr;gap:0}.acct dd{margin-bottom:6px}}
 .verline{margin:12px 0 0;font-size:.8rem;color:var(--muted);text-align:center}
 .result{font-size:.88rem;min-height:1.3em}
 .result.err{color:var(--shame)}
@@ -720,6 +729,8 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
 <dialog id="dlgSettings">
   <form class="dlg" id="setForm">
     <div class="dlg-head"><h2>Settings</h2><button type="button" class="x" id="setClose" aria-label="Close">×</button></div>
+    <div class="tabs settabs" role="tablist" id="setTabs"><button type="button" class="tab" role="tab" data-t="general" aria-selected="true">General</button><button type="button" class="tab" role="tab" data-t="accounts" aria-selected="false">Accounts</button></div>
+    <div data-sp="general">
     <div class="themesect"><h4 id="themeLbl">Theme</h4><div class="themesel" id="themeSel"><button type="button" class="themebtn" id="themeBtn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="themeLbl themeBtn"></button><ul class="themelist" id="themePick" role="listbox" aria-labelledby="themeLbl" tabindex="-1" hidden></ul></div></div>
     <div class="form">
       <label>Pages to assume when unknown<input type="number" id="sPages" min="1"></label>
@@ -736,6 +747,8 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
     <p class="note">Kindle doesn't report page counts or prices, so unknown values use the numbers above. Values you enter per book always win. About one minute per page is typical for adult fiction.</p>
     <div class="files"><h4>Files and backups</h4><p class="note">Only needed if you don't use the sync script, or to move your library to another browser.</p><div class="row"><button type="button" class="btn" id="btnImport">Import a file</button><button type="button" class="btn" id="btnExport">Back up library</button></div></div>
     <div class="dlg-foot"><div class="row"><button type="button" class="btn danger" id="wipe">Delete all books</button><span class="result err" id="wipeConfirm"></span></div><button type="submit" class="btn primary">Save</button></div>
+    </div>
+    <div data-sp="accounts" id="acctPanel" hidden></div>
     <p class="verline" id="verLine"></p>
   </form>
 </dialog>
@@ -1001,6 +1014,17 @@ const hash = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.char
 const yearsAgo = d => { const ms = Date.now() - new Date(d).getTime(); return ms / 3.156e10; };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
+// A status or progress set by hand stays put, except that a sync may carry the book forward (unread, then reading, then finished,
+// or a higher percentage). It never moves a book back, and a book given up on by hand stays given up on.
+const STATUS_RANK = {unread: 0, reading: 1, finished: 2};
+function moveForward(b, status, progress) {
+  if (b.status === 'abandoned') return false;
+  const was = b.status, wasP = b.progress || 0;
+  if (progress != null && !isNaN(progress) && progress > wasP) { b.progress = progress; const st = statusFromProgress(progress); if ((STATUS_RANK[st] ?? -1) > (STATUS_RANK[b.status] ?? 0)) b.status = st; }
+  if (status && status !== 'abandoned' && (STATUS_RANK[status] ?? -1) > (STATUS_RANK[b.status] ?? 0)) { b.status = status; if (status === 'finished') b.progress = 100; }
+  if (b.status === 'reading' && was !== 'reading' && !b.readingSince) b.readingSince = new Date().toISOString().slice(0, 10);
+  return b.status !== was || (b.progress || 0) !== wasP;
+}
 function statusFromProgress(p) {
   if (p == null || isNaN(p)) return null;
   if (p >= S.settings.doneAt) return 'finished';
@@ -1874,7 +1898,7 @@ $('#editForm').addEventListener('submit', e => {
     pages: num($('#ePages').value), price: num($('#ePrice').value), date: $('#eDate').value || '',
     ...(($('#eDate').value || '') !== ((editing && editing.date) || '') ? {dateManual: true, dateEst: false} : {}),
     ...(editing && String($('#ePrice').value) !== String(editing.price ?? '') ? {priceManual: true} : {}),
-    source: $('#eSource').value, rating: +$('#eRating').value, lock: true, excluded: $('#eExclude').checked,
+    source: $('#eSource').value, rating: +$('#eRating').value, excluded: $('#eExclude').checked,
     ...(editing && $('#eSource').value !== editing.source ? {sourceManual: true} : {}),
     ...($('#eGenre').value ? {genre: $('#eGenre').value, genreSrc: 'manual'} : (editing && editing.genreSrc === 'manual' ? {genre: '', genreSrc: '', genreV: 0} : {})),
   };
@@ -1882,6 +1906,8 @@ $('#editForm').addEventListener('submit', e => {
   const g2 = $('#eGenre2').value, mainG = data.genre !== undefined ? data.genre : editing && editing.genre;
   Object.assign(data, g2 ? {genre2: g2 === 'none' ? '' : g2, genre2Src: 'manual'} : {genre2: secondGenre(editing && (editing.tagsAmz || editing.tags), mainG), genre2Src: ''});
   if (!data.title) return;
+  // Only a status or progress actually changed here counts as set by hand; saving a genre or the leave-out box doesn't
+  data.lock = !editing || !!editing.lock || data.status !== editing.status || data.progress !== (editing.progress || 0);
   if (editing) Object.assign(editing, data);
   else { leaveDemo(true); S.books.unshift({id: uid(), ...data}); }
   $('#dlgEdit').close(); renderAll(); scheduleSave(); toast(editing ? 'Saved' : 'Book added');
@@ -1900,8 +1926,16 @@ $('#btnSettings').onclick = () => {
   $('#sPages').value = s.defPages; $('#sPrice').value = s.defPrice; $('#sMin').value = s.minPerPage; $('#sDay').value = s.pagesPerDay;
   $('#sCur').value = s.currency; $('#sDone').value = s.doneAt; $('#sBorrowed').checked = s.borrowed; $('#sSharedTab').checked = !!s.sharedTab; $('#sSamples').checked = s.samples; $('#sExtras').checked = !!s.extras;
   wipeArmed = false; $('#wipeConfirm').textContent = '';
+  setTab('general');
   $('#dlgSettings').showModal();
 };
+// Settings has two tabs: General, and Accounts (which accounts the sync reads, checked each time the tab opens)
+function setTab(t) {
+  document.querySelectorAll('#setTabs .tab').forEach(b => b.setAttribute('aria-selected', b.dataset.t === t));
+  document.querySelectorAll('#setForm [data-sp]').forEach(p => { p.hidden = p.dataset.sp !== t; });
+  if (t === 'accounts') renderAccounts();
+}
+$('#setTabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) setTab(b.dataset.t); });
 // ---------- themes ----------
 const THEMES = [
   ['default', 'Default', 'Follows your device', ['#eceeea', '#1a1e21', '#27408b', '#a3322a']],
@@ -2136,7 +2170,7 @@ function merge(incoming, replace, kind) {
       if (!m.lock) {
         if (inc.progress != null && kind === 'kindle') m.progress = inc.progress;
         if (inc.status) m.status = inc.status;
-      }
+      } else moveForward(m, inc.status, kind === 'kindle' ? inc.progress : null);
       updated++;
     } else {
       const b = {

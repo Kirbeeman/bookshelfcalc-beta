@@ -1,6 +1,6 @@
 // The sync script's own code. The build turns this into core.js, which the signed loader (loader.user.js) checks against
 // the signed release before running it. SITE_URL comes from the loader, so the same code serves the live site and the beta.
-// @version      2.2.0.0.11
+// @version      2.2.0.0.12
 (function (GM_getValue, GM_setValue, GM_addStyle, GM_xmlhttpRequest, GM_info, SITE_URL) {
 'use strict';
 const host = location.hostname;
@@ -25,16 +25,27 @@ const tag = (el, name) => (el.getElementsByTagName(name)[0]?.textContent || '').
 // Signed out, it falls back to the remembered account, whose shelves can still be read if they're public. The account
 // is kept under its own name (grMe): the older "grUser" could hold a stranger's account, picked up from a reviewer's link
 // while signed out, so it is no longer trusted.
+// Who is signed in at Goodreads: its "My Books" page sends you to your own list, which is titled with your name.
+async function goodreadsWho() {
+  const r = await gmGet('https://www.goodreads.com/review/list');
+  const url = r.finalUrl || '';
+  let id = '';
+  if (/\/review\/list\/\d+/.test(url)) id = url.match(/\/review\/list\/(\d+)/)[1];
+  else if (/\/review\/list\/?(\?|$)/.test(url) && !/sign_in/.test(url)) id = (r.text.match(/\/review\/list\/(\d+)/) || [])[1] || '';
+  if (!id) return {signedIn: false};
+  const title = unHtml((r.text.match(/<title>([^<]*)<\/title>/i) || [])[1] || '');
+  const name = ((title.match(/^\s*(.*?)['\u2019]s?\s+books\b/i) || [])[1] || '').trim().slice(0, 80);
+  return {signedIn: true, id, name};
+}
 async function goodreadsUserId() {
   const saved = GM_getValue('grMe', '');
-  let live = '';
-  try {
-    const r = await gmGet('https://www.goodreads.com/review/list');
-    const url = r.finalUrl || '';
-    if (/\/review\/list\/\d+/.test(url)) live = url.match(/\/review\/list\/(\d+)/)[1];
-    else if (/\/review\/list\/?(\?|$)/.test(url) && !/sign_in/.test(url)) live = (r.text.match(/\/review\/list\/(\d+)/) || [])[1] || '';
-  } catch { /* network hiccup: use the remembered account */ }
-  if (live) { if (live !== saved) GM_setValue('grMe', live); return live; }
+  let live = null;
+  try { live = await goodreadsWho(); } catch { /* network hiccup: use the remembered account */ }
+  if (live && live.signedIn) {
+    if (live.id !== saved) GM_setValue('grMe', live.id);
+    GM_setValue('grName', live.name || '');
+    return live.id;
+  }
   if (saved) return saved;
   throw new Error('sign in at goodreads.com first');
 }
@@ -92,6 +103,7 @@ async function fetchGoodreads(progress) {
     if (html) books = await shelfHtml(id, shelf);
     books.forEach(b => all.push({...b, status}));
   }
+  GM_setValue('grFrom', JSON.stringify({id, name: GM_getValue('grMe', '') === id ? GM_getValue('grName', '') : '', time: Date.now(), count: all.length}));
   return all;
 }
 async function fetchKindle(progress) {
@@ -123,10 +135,26 @@ function unHtml(s) {
   if (Array.isArray(s)) return s.map(unHtml);
   return String(s).replace(/&(?:(amp)|(lt)|(gt)|(quot)|(#39|apos)|#(\d+)|#x([0-9a-f]+));/gi, (m, a, l, g, q, ap, d, x) => a ? '&' : l ? '<' : g ? '>' : q ? '"' : ap ? "'" : String.fromCodePoint(d ? +d : parseInt(x, 16)));
 }
+// Who is signed in at Amazon, from the "Hello, ___" greeting on the Content & Devices page (and Amazon's customer ID, when
+// the page carries it, to tell two people with the same first name apart)
+const amzShop = () => GM_getValue('kindleHost', 'read.amazon.com').replace(/^read\./, 'www.');
+const CD_PAGE = shop => `https://${shop}/hz/mycd/digital-console/contentlist/booksAll/dateDsc/`;
+function amazonWhoFrom(page, shop) {
+  const text = page.text || '';
+  const hello = unHtml((text.match(/id=["']nav-link-accountList-nav-line-1["'][^>]*>\s*([^<]*)</) || [])[1] || '').replace(/^\s*hello,?\s*/i, '').trim();
+  const token = /csrfToken\s*[=:]\s*["'][^"']+/.test(text);
+  if (/\/ap\/signin/.test(page.finalUrl || '') || (!token && (!hello || /^sign in$/i.test(hello)))) return {signedIn: false, host: shop};
+  const cid = (text.match(/["']customer[Ii][Dd]["']\s*:\s*["'](A[0-9A-Z]{6,})["']/) || [])[1] || '';
+  return {signedIn: true, host: shop, name: /^sign in$/i.test(hello) ? '' : hello.slice(0, 80), cid};
+}
+async function amazonWho() { const shop = amzShop(); return amazonWhoFrom(await gmGet(CD_PAGE(shop)), shop); }
+const sameAmazon = (a, b) => !!(a && b) && a.host === b.host && (a.cid && b.cid ? a.cid === b.cid : !!(a.name && b.name) && a.name.toLowerCase() === b.name.toLowerCase());
+let amzSeen = null;
 // Purchase dates (and Kindle's own "Mark as read" flag) from Amazon's Content & Devices page
 async function fetchOwnership(progress) {
-  const shop = GM_getValue('kindleHost', 'read.amazon.com').replace(/^read\./, 'www.');
-  const page = await gmGet(`https://${shop}/hz/mycd/digital-console/contentlist/booksAll/dateDsc/`);
+  const shop = amzShop();
+  const page = await gmGet(CD_PAGE(shop));
+  try { amzSeen = amazonWhoFrom(page, shop); } catch {}
   const token = (page.text.match(/csrfToken\s*[=:]\s*["']([^"']+)/) || [])[1];
   if (!token) throw new Error(`sign in at ${shop} first`);
   const items = []; const BATCH = 100;
@@ -246,10 +274,29 @@ const KLC_CORE = {
     }
     return {info, blocked: false};
   },
+  // Settings > Accounts: who is signed in at each site right now, and whose books the last sync read
+  async accounts() {
+    const from = key => { try { return JSON.parse(GM_getValue(key, 'null')); } catch { return null; } };
+    const [gr, amz] = await Promise.all([goodreadsWho().catch(e => ({error: e.message || String(e)})), amazonWho().catch(e => ({error: e.message || String(e), host: amzShop()}))]);
+    return {gr: {now: gr, from: from('grFrom')}, amz: {now: amz, from: from('amzFrom')}};
+  },
+  // Forget an account: what the script remembers about it, and the copies of its books it kept. The site's own sign-in stays.
+  forget(site) {
+    if (site === 'gr') ['grMe', 'grName', 'grUser', 'grFrom'].forEach(k => GM_setValue(k, ''));
+    if (site === 'amz') { GM_setValue('kindle', 'null'); GM_setValue('owned', 'null'); GM_setValue('prices', '{}'); GM_setValue('amzFrom', ''); }
+    return {ok: true};
+  },
   // force = the Sync now button: always refresh the Kindle list. Otherwise reuse it for 6 hours.
   async sync(force, progress = () => {}, paid = []) {
     const out = {goodreads: [], grErr: '', kindle: null, kErr: ''};
     try { out.goodreads = await fetchGoodreads(progress); } catch (e) { out.grErr = e.message || String(e); }
+    // The saved Kindle list and purchases belong to whoever was signed in at Amazon then. Someone else signed in now: read it all fresh.
+    let amzNow = null; amzSeen = null;
+    const amzFrom = (() => { try { return JSON.parse(GM_getValue('amzFrom', 'null')); } catch { return null; } })();
+    if (!force && amzFrom) {
+      try { amzNow = await amazonWho(); } catch {}
+      if (amzNow && amzNow.signedIn && (amzNow.name || amzNow.cid) && !sameAmazon(amzNow, amzFrom)) { force = true; GM_setValue('prices', '{}'); }
+    }
     let k = null; try { k = JSON.parse(GM_getValue('kindle', 'null')); } catch {}
     if (force || !k || Date.now() - k.time > 6 * 3600e3) {
       try { progress('Reading your Kindle library…'); k = {time: Date.now(), items: await fetchKindle(progress)}; GM_setValue('kindle', JSON.stringify(k)); }
@@ -262,6 +309,12 @@ const KLC_CORE = {
       catch (e) { out.oErr = e.message || String(e); }
     }
     out.owned = o;
+    // Note whose Amazon library was just read
+    if (amzSeen || ((force || !amzFrom) && (k || o))) {
+      let who = amzSeen && amzSeen.signedIn ? amzSeen : amzNow && amzNow.signedIn ? amzNow : null;
+      if (!who) { try { const w = await amazonWho(); if (w.signedIn) who = w; } catch {} }
+      if (who) GM_setValue('amzFrom', JSON.stringify({host: who.host, name: who.name || '', cid: who.cid || '', time: Date.now(), count: (o && o.items && o.items.length) || (k && k.items && k.items.length) || 0}));
+    }
     if (o && o.items) {
       try { out.prices = await fetchPrices(o.items, progress, paid); out.pPaused = pricesPaused; } catch (e) { out.pErr = e.message || String(e); }
     }
@@ -280,6 +333,11 @@ if (onSite) {
       const data = await KLC_CORE.grGenres(d.q);
       post({type: 'grgenreResult', id: d.id, data: JSON.stringify(data)});
     }
+    else if (d.type === 'accounts') {
+      let data; try { data = await KLC_CORE.accounts(); } catch { data = null; }
+      post({type: 'accountsResult', id: d.id, data: JSON.stringify(data)});
+    }
+    else if (d.type === 'forget') post({type: 'forgetResult', id: d.id, data: JSON.stringify(KLC_CORE.forget(d.site))});
     else if (d.type === 'binfo') {
       const data = await KLC_CORE.bookInfo((d.asins || []).slice(0, 20));
       post({type: 'binfoResult', id: d.id, data: JSON.stringify(data)});

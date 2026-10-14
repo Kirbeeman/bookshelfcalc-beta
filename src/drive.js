@@ -122,6 +122,7 @@ async function syncDrive(interactive) {
       if (interactive) toast("Connected, but this Google account's Drive has no library yet. Sync from Amazon first, and it's saved there.");
       return;
     }
+    if (!gdGet(GK('who'))) { try { const u = (await (await gapi('GET', 'https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)')).json()).user || {}; gdSet(GK('who'), u.emailAddress || u.displayName || ''); } catch {} }
     if (!S.demo) await gdWrite(f && f.id, {app: 'kindle-library-calculator', saved: new Date().toISOString(), settings: S.settings, books: S.books});
     gdSaveBase(S.books); gd.lastHash = libHash(S.books);
     gdSet('klc-gd-on', '1'); gd.when = Date.now(); gdSet('klc-gd-when', String(gd.when)); gd.err = '';
@@ -163,12 +164,23 @@ function renderDriveSect() {
        <div class="row"><button type="button" class="btn primary" id="gdOn">Connect Google Drive</button></div>`);
   const c = document.getElementById('gdOn'); if (c) c.onclick = () => syncDrive(true);
   const s = document.getElementById('gdSync'); if (s) s.onclick = () => syncDrive(true);
-  const o = document.getElementById('gdOff'); if (o) o.onclick = () => {
-    if (gd.token && window.google?.accounts?.oauth2) try { google.accounts.oauth2.revoke(gd.token, () => {}); } catch {}
-    gd.token = ''; ['klc-gd-on', GK('file'), GK('mtime'), GK('base'), 'klc-gd-when'].forEach(k => gdSet(k, ''));
-    gdStatus('off'); renderDriveSect(); toast('Disconnected. Your library stays here, and the file stays in your Drive until you delete it.');
-  };
+  const o = document.getElementById('gdOff'); if (o) o.onclick = gdDisconnect;
 }
+function gdDisconnect() {
+  if (gd.token && window.google?.accounts?.oauth2) try { google.accounts.oauth2.revoke(gd.token, () => {}); } catch {}
+  gd.token = ''; ['klc-gd-on', GK('file'), GK('mtime'), GK('base'), GK('who'), 'klc-gd-when'].forEach(k => gdSet(k, ''));
+  gdStatus('off'); renderDriveSect(); if (document.getElementById('acctDrive')) { const c = document.getElementById('acctDrive'); c.outerHTML = driveAcctCard(); wireDriveCard(); }
+  toast('Disconnected. Your library stays here, and the file stays in your Drive until you delete it.');
+}
+// Settings > Accounts: which Google account the backup goes to
+function driveAcctCard() {
+  if (hasCore || location.protocol === 'file:') return '';
+  const t = gd.when ? whenText(gd.when) : '';
+  return `<section class="acct" id="acctDrive"><h4>Google Drive backup</h4>` + (gdOn()
+    ? `<dl><dt>Connected as</dt><dd>${esc(gdGet(GK('who')) || 'shown after the next Drive sync')}</dd><dt>Backup file</dt><dd>${esc(GD_NAME)}${t ? ' · saved ' + esc(t) : ''}</dd></dl><div class="row"><button type="button" class="btn" id="acctGdOff">Disconnect</button></div>`
+    : `<p class="note">Not connected. Connect it under General to keep your library in your own Google Drive.</p>`) + `</section>`;
+}
+function wireDriveCard() { const b = document.getElementById('acctGdOff'); if (b) b.onclick = gdDisconnect; }
 function initDrive() {
   if (hasCore || location.protocol === 'file:') return;
   if (!gdOn()) return;
