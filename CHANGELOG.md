@@ -6,21 +6,21 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 16 (latest)
+## 2.2 beta 17 (latest)
 
-**Quest, less cartoon and never the same piece twice**
+**Cozy becomes an old library with a fire**
 
-- Quest looks less like a cartoon: leather spines with gold bands and old-style lettering, wood grain and boards in the bookcase, shading in place of thick outlines, and soft shadows under the shelf pieces.
-- Every Quest shelf piece is redrawn and sits flat on the shelf: three d20s numbered like a real die (red and gold, midnight blue and silver, black and silver), three tankards (one lidded, two with different heads of foam), three scrolls (iron, brass or wooden ends, with a silver medallion, red wax or black wax seal), a bag of holding, a tooled shoulder bag, an oxblood satchel, an iron-bound chest and a stack of old tomes.
-- In Quest each piece appears at most once, and dice stay dice-sized instead of growing to fill a gap.
-- By genre in Quest: an old brass globe on parchment seas, and a leather journal with ribbon bookmarks in place of the comic.
-- Other themes keep their own shelf pieces and look. No candles in any theme.
+- Cozy is set in an old library: dark wood-panelled walls, a stone fireplace in the corner whose fire flickers and casts warm, flickering light across the whole page, an arched window and a brass floor lamp on the other side, and a rug along the floor.
+- Cozy books are leather-bound with gold bands and serif titles, and warm light falls onto each shelf.
+- New Cozy shelf pieces, each shown at most once: a brass banker's lamp, a mantel clock, a sailing-ship painting, a fern, a snake plant, a trailing pothos, a succulent bowl, dried lavender, a cup of tea, a mug, old books with reading glasses, a keepsake box and an hourglass.
+- The fire is still and the light steady when a device is set to reduce motion; on phones only the glow shows.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 16** Quest, less cartoon and never the same piece twice
 - **2.2 beta 15** Goodreads currently reading never misses a book
 - **2.2 beta 14** Anthologies match Goodreads, fresher Kindle progress
 - **2.2 beta 13** A lock shows which books syncs leave alone
