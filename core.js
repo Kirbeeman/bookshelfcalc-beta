@@ -530,7 +530,7 @@ document.body.innerHTML = `<div class="wrap">
   <form class="dlg" id="editForm">
     <div class="dlg-head"><h2 id="editH">Edit book</h2><button type="button" class="x" id="editClose" aria-label="Close">×</button></div>
     <div class="form">
-      <label class="full">Title<input type="text" id="eTitle" required></label>
+      <div class="etitle"><button type="button" class="lk" id="eLock" hidden></button><label>Title<input type="text" id="eTitle" required></label></div>
       <label>Author<input type="text" id="eAuthor"></label>
       <label>ASIN<input type="text" id="eAsin"></label>
       <label>Status<select id="eStatus"><option value="unread">Unread</option><option value="reading">Reading</option><option value="finished">Finished</option><option value="abandoned">DNF (Did Not Finish)</option></select></label>
@@ -1068,7 +1068,7 @@ th{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spac
 th button{background:none;border:0;padding:0;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit}
 th button[data-dir]::after{content:" ↓"} th button[data-dir="1"]::after{content:" ↑"}
 td.r,th.r{text-align:right}
-tbody tr:hover{background:var(--bg)}
+tbody tr:hover{background:var(--bg)}:root[data-theme="quest"] tbody tr:hover{background:rgba(110,66,20,.16)}
 .t-title{font-weight:600;cursor:pointer}
 .t-title:hover{text-decoration:underline}
 .t-author{color:var(--muted);font-size:.82rem}
@@ -1135,6 +1135,18 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
 
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.show{opacity:1}
+.lk{display:inline-block;vertical-align:-2px;width:13px;height:16px;margin-right:6px;padding:0;border:0;cursor:pointer;flex:none;background-color:var(--muted);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 24'%3E%3Cpath d='M5.4 10.5V7a4.6 4.6 0 0 1 9.2 0v3.5' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3Cpath fill-rule='evenodd' d='M4.5 10h11a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 19.5v-7A2.5 2.5 0 0 1 4.5 10Z M10 13.2a1.8 1.8 0 0 0-.85 3.4V19.2h1.7v-2.6A1.8 1.8 0 0 0 10 13.2Z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 24'%3E%3Cpath d='M5.4 10.5V7a4.6 4.6 0 0 1 9.2 0v3.5' fill='none' stroke='%23000' stroke-width='2.4'/%3E%3Cpath fill-rule='evenodd' d='M4.5 10h11a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 19.5v-7A2.5 2.5 0 0 1 4.5 10Z M10 13.2a1.8 1.8 0 0 0-.85 3.4V19.2h1.7v-2.6A1.8 1.8 0 0 0 10 13.2Z'/%3E%3C/svg%3E") center/contain no-repeat;opacity:.85}
+.lk:hover,.lk:focus-visible{opacity:1;background-color:var(--accent)}.lk:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:root[data-theme="cozy"] .lk,:root[data-theme="halloween"] .lk,:root[data-theme="sakura"] .lk,:root[data-theme="quest"] .lk,:root[data-theme="crawl"] .lk{-webkit-mask:none;mask:none;background:var(--lki) center/contain no-repeat;width:15px;height:18px;vertical-align:-3px;opacity:1}
+:root[data-theme="cozy"] .lk{--lki:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f7d27c'/%3E%3Cstop offset='1' stop-color='%23a8701c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M5.4 10.5V7a4.6 4.6 0 0 1 9.2 0v3.5' fill='none' stroke='%234a3a22' stroke-width='3.4'/%3E%3Cpath d='M5.4 10.5V7a4.6 4.6 0 0 1 9.2 0v3.5' fill='none' stroke='%23d9d2c0' stroke-width='1.8'/%3E%3Cpath d='M4.5 10h11a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 19.5v-7A2.5 2.5 0 0 1 4.5 10Z' fill='url(%23g)' stroke='%234a2c08' stroke-width='1.1'/%3E%3Cpath d='M3.6 12h12.8' stroke='%23fff3cf' stroke-width='.8' opacity='.7'/%3E%3Cpath d='M10 13.2a1.8 1.8 0 0 0-.85 3.4V19.2h1.7v-2.6A1.8 1.8 0 0 0 10 13.2Z' fill='%232a1806'/%3E%3C/svg%3E")}
+:root[data-theme="halloween"] .lk{--lki:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 24'%3E%3Cpath d='M5.4 10.5V7a4.6 4.6 0 0 1 9.2 0v3.5' fill='none' stroke='%231a1022' stroke-width='3.4'/%3E%3Cpath d='M5.4 10.5V7a4.6 4.6 0 0 1 9.2 0v3.5' fill='none' stroke='%238d8a9c' stroke-width='1.8'/%3E%3Cpath d='M4.5 10h11a2.5 2.5 0 0 1 2.5 2.5v7a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 2 19.5v-7A2.5 2.5 0 0 1 4.5 10Z' fill='%236a3bb0' stroke='%231a0f26' stroke-width='1.1'/%3E%3Cpath d='M3 12.4c2 .8 4-.6 6 .2' stroke='%239a6be0' stroke-width='.9' fill='none'/%3E%3Cpath d='M10 13.2a1.8 1.8 0 0 0-.85 3.4V19.2h1.7v-2.6A1.8 1.8 0 0 0 10 13.2Z' fill='%239be35a'/%3E%3Cpath d='M9.3 19.2h1.4v2.4a.7.9 0 0 1-1.4 0Z' fill='%239be35a'/%3E%3Ccircle cx='10' cy='23.2' r='.65' fill='%239be35a'/%3E%3C/svg%3E")}
+:root[data-theme="sakura"] .lk{--lki:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 24'%3E%3Cpath d='M5.6 12V7.2a4.4 4.4 0 0 1 8.8 0V12' fill='none' stroke='%23e8418e' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M5.6 12V7.2a4.4 4.4 0 0 1 8.8 0V12' fill='none' stroke='%23ffd1e3' stroke-width='1.6' stroke-linecap='round'/%3E%3Cpath d='M10 23.2C4 19.3 1.6 16.6 1.6 13.6a4.1 4.1 0 0 1 8.4-1.6 4.1 4.1 0 0 1 8.4 1.6c0 3-2.4 5.7-8.4 9.6Z' fill='%23ff7cb3' stroke='%23e8418e' stroke-width='1.1'/%3E%3Cellipse cx='6' cy='14' rx='1.8' ry='1.1' fill='%23fff' opacity='.55'/%3E%3Cpath d='M10 14.3a1.6 1.6 0 0 0-.75 3V19h1.5v-1.7a1.6 1.6 0 0 0-.75-3Z' fill='%23fff'/%3E%3C/svg%3E")}
+:root[data-theme="quest"] .lk{--lki:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 24'%3E%3Cpath d='M5.4 10.5V7a4.6 4.6 0 0 1 9.2 0v3.5' fill='none' stroke='%23120d08' stroke-width='3.6'/%3E%3Cpath d='M5.4 10.5V7a4.6 4.6 0 0 1 9.2 0v3.5' fill='none' stroke='%236e6458' stroke-width='2'/%3E%3Cpath d='M2.4 10.2h15.2v6.3a7.6 6.6 0 0 1-15.2 0Z' fill='%233d342b' stroke='%23120d08' stroke-width='1.1'/%3E%3Cpath d='M3.4 11.2h13.2v5.3a6.6 5.6 0 0 1-13.2 0Z' fill='none' stroke='%23c9a24a' stroke-width='.9'/%3E%3Ccircle cx='4.6' cy='12.4' r='.8' fill='%23c9a24a'/%3E%3Ccircle cx='15.4' cy='12.4' r='.8' fill='%23c9a24a'/%3E%3Cpath d='M10 13.4a1.7 1.7 0 0 0-.8 3.2v2.6h1.6v-2.6a1.7 1.7 0 0 0-.8-3.2Z' fill='%23e9d38c'/%3E%3C/svg%3E")}
+:root[data-theme="crawl"] .lk{--lki:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 24' shape-rendering='crispEdges'%3E%3Crect x='5' y='2' width='10' height='2' fill='%23050607'/%3E%3Crect x='3' y='4' width='4' height='7' fill='%23050607'/%3E%3Crect x='13' y='4' width='4' height='7' fill='%23050607'/%3E%3Crect x='7' y='2' width='6' height='2' fill='%2322d3ee'/%3E%3Crect x='5' y='4' width='2' height='7' fill='%2322d3ee'/%3E%3Crect x='13' y='4' width='2' height='7' fill='%2322d3ee'/%3E%3Crect x='1' y='10' width='18' height='13' fill='%23050607'/%3E%3Crect x='3' y='11' width='14' height='11' fill='%23ffcc00'/%3E%3Crect x='3' y='11' width='14' height='2' fill='%23fff07a'/%3E%3Crect x='3' y='20' width='14' height='2' fill='%23d99a00'/%3E%3Crect x='9' y='14' width='2' height='2' fill='%23050607'/%3E%3Crect x='9' y='16' width='2' height='3' fill='%23050607'/%3E%3C/svg%3E")}
+:root[data-theme="cozy"] .lk:hover,:root[data-theme="halloween"] .lk:hover,:root[data-theme="sakura"] .lk:hover,:root[data-theme="quest"] .lk:hover,:root[data-theme="crawl"] .lk:hover{transform:rotate(-8deg) scale(1.12)}
+#lockTip{position:fixed;z-index:60;max-width:260px;background:var(--paper);color:var(--ink);border:1px solid var(--rule);font-size:.8rem;line-height:1.35;padding:7px 10px;border-radius:6px;pointer-events:none;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.form .etitle{grid-column:1/-1;display:flex;align-items:flex-end;gap:2px}.form .etitle label{flex:1}.etitle .lk{margin:0 6px 11px 0}
+#toast button{all:unset;cursor:pointer;margin-left:12px;font-weight:700;text-decoration:underline}#toast.act{pointer-events:auto}
 
 @media (max-width:900px){.grid3{grid-template-columns:1fr}.pile{grid-template-columns:1fr}}
 @media (max-width:640px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tile.shame{grid-column:1/-1;order:3;border-radius:0!important}.tile.time{grid-column:1/-1;order:4;border-radius:0 0 9px 9px!important}.tile:first-child{border-radius:9px 0 0 0}.tile:nth-child(2){border-radius:0 9px 0 0}.tile:nth-child(3){border-radius:0 0 0 9px}.tile:last-child{border-radius:0 0 9px 0}.tile .big{font-size:1.35rem}h1{font-size:1.35rem}.form{grid-template-columns:1fr}.facts{grid-template-columns:1fr 1fr}}
@@ -2156,7 +2168,7 @@ function renderShelf() {
     const pr = hasPaid(b) ? fmtMoney(+b.price) : b.kp != null && b.source !== 'free' && b.source !== 'device' ? `<span class="est" title="Today's Kindle price (not what you paid)">now ${fmtMoney(b.kp)}</span>` : (b.source === 'purchase' ? `<span class="est" title="Guess from Settings">~${fmtMoney(S.settings.defPrice)}</span>` : '—');
     const pg = b.pages > 0 ? fmtInt(b.pages) : `<span class="est">~${S.settings.defPages}</span>`;
     return `<tr data-id="${esc(b.id)}">
-      <td style="min-width:220px"><div class="t-title" data-edit="${esc(b.id)}" tabindex="0">${esc(b.title)}${src}</div><div class="t-author">${esc(b.author || '')}<button type="button" class="rowex" data-ex="${esc(b.id)}" title="${b.excluded ? 'Count this book in the totals again' : 'Leave this book out of the totals, value, charts and Shelf of Shame'}">${b.excluded ? 'count it again' : 'leave out'}</button></div>${b.genre && b.genre !== 'unknown' ? `<div class="t-genre"><span class="gsw"><i style="background:var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})"></i>${esc(genreLabel(b))}${b.genreSrc === 'guess' ? '<span class="guessed" title="No Amazon store page for this book, so the genre is guessed from its title. Click the title to change it.">guessed</span>' : ''}</span>${b.genre2 && GENRES[b.genre2] && b.genre2 !== b.genre ? `<span class="plus">+</span><span class="gsw"><i style="background:var(--g-${b.genre2})"></i>${esc(GENRES[b.genre2])}</span>` : ''}${tagsShown(b).map(t => `<button type="button" class="tag${t === (S.sub ? S.tag + ' › ' + S.sub : S.tag) ? ' on' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</td>
+      <td style="min-width:220px"><div class="t-title" data-edit="${esc(b.id)}" tabindex="0">${lockBtn(b)}${esc(b.title)}${src}</div><div class="t-author">${esc(b.author || '')}<button type="button" class="rowex" data-ex="${esc(b.id)}" title="${b.excluded ? 'Count this book in the totals again' : 'Leave this book out of the totals, value, charts and Shelf of Shame'}">${b.excluded ? 'count it again' : 'leave out'}</button></div>${b.genre && b.genre !== 'unknown' ? `<div class="t-genre"><span class="gsw"><i style="background:var(--g-${GENRES[b.genre] ? b.genre : 'unknown'})"></i>${esc(genreLabel(b))}${b.genreSrc === 'guess' ? '<span class="guessed" title="No Amazon store page for this book, so the genre is guessed from its title. Click the title to change it.">guessed</span>' : ''}</span>${b.genre2 && GENRES[b.genre2] && b.genre2 !== b.genre ? `<span class="plus">+</span><span class="gsw"><i style="background:var(--g-${b.genre2})"></i>${esc(GENRES[b.genre2])}</span>` : ''}${tagsShown(b).map(t => `<button type="button" class="tag${t === (S.sub ? S.tag + ' › ' + S.sub : S.tag) ? ' on' : ''}" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}</td>
       <td><select class="st ${b.status}" data-st="${esc(b.id)}" aria-label="Status">${Object.entries(STATUS).map(([v,l]) => `<option value="${v}"${v === b.status ? ' selected' : ''}>${l}</option>`).join('')}</select></td>
       <td><div class="prog"><div class="track"><i style="width:${b.progress || 0}%"></i></div><span class="num muted" style="font-size:.75rem">${Math.round(b.progress || 0)}%</span></div></td>
       <td class="r num">${pg}</td>
@@ -2249,8 +2261,62 @@ $('#rows').addEventListener('change', e => {
   if (b.status === 'unread') b.progress = 0;
   leaveDemoForEdit(); renderAll(); scheduleSave();
 });
-$('#rows').addEventListener('click', e => { const x = e.target.closest('[data-ex]'); if (x) { const bk = S.books.find(b => b.id === x.dataset.ex); if (bk) { bk.excluded = !bk.excluded; leaveDemoForEdit(); renderAll(); scheduleSave(); toast(bk.excluded ? 'Left out of the totals' : 'Counted again'); } return; } const g = e.target.closest('[data-tag]'); if (g) { let [p, sb] = tagSplit(g.dataset.tag); if (p === '*') p = ''; const same = S.tag === p && S.sub === sb; S.tag = same ? '' : p; S.sub = same ? '' : sb; S.limit = PAGE_ROWS; renderShelf(); return; } const t = e.target.closest('[data-edit]'); if (t) openEdit(t.dataset.edit); });
-$('#rows').addEventListener('keydown', e => { const t = e.target.closest('[data-edit]'); if (t && e.key === 'Enter') openEdit(t.dataset.edit); });
+$('#rows').addEventListener('click', e => { const u = e.target.closest('[data-unlock]'); if (u) { const bk = S.books.find(b => b.id === u.dataset.unlock); if (bk) unlockBook(bk); return; } const x = e.target.closest('[data-ex]'); if (x) { const bk = S.books.find(b => b.id === x.dataset.ex); if (bk) { bk.excluded = !bk.excluded; leaveDemoForEdit(); renderAll(); scheduleSave(); toast(bk.excluded ? 'Left out of the totals' : 'Counted again'); } return; } const g = e.target.closest('[data-tag]'); if (g) { let [p, sb] = tagSplit(g.dataset.tag); if (p === '*') p = ''; const same = S.tag === p && S.sub === sb; S.tag = same ? '' : p; S.sub = same ? '' : sb; S.limit = PAGE_ROWS; renderShelf(); return; } const t = e.target.closest('[data-edit]'); if (t) openEdit(t.dataset.edit); });
+$('#rows').addEventListener('keydown', e => { if (e.target.closest('[data-unlock]')) return; const t = e.target.closest('[data-edit]'); if (t && e.key === 'Enter') openEdit(t.dataset.edit); });
+// ---------- locks: what was changed by hand, which syncs then leave alone ----------
+// Each entry: the Edit book section it came from, whether this book has it, and how to hand it back to the syncs
+const LOCKS = [
+  ['Status / Progress', b => !!b.lock, b => { b.lock = false; }],
+  ['Price paid', b => !!b.priceManual && hasPaid(b) && b.priceSrc !== 'order', b => { b.priceManual = false; b.price = null; }],
+  ['Added on', b => !!b.dateManual, b => { b.dateManual = false; }],
+  ['How you got it', b => !!b.sourceManual, b => { b.sourceManual = false; }],
+  ['Genre', b => b.genreSrc === 'manual', b => { b.genre = ''; b.genreSrc = ''; b.genreV = 0; }],
+  ['Second genre', b => b.genre2Src === 'manual', b => { b.genre2Src = ''; b.genre2 = secondGenre(b.tagsAmz || b.tags, b.genre); }],
+];
+const LOCK_FIELDS = ['lock', 'priceManual', 'price', 'priceSrc', 'dateManual', 'sourceManual', 'genre', 'genreSrc', 'genreV', 'genreName', 'genreSub', 'genre2', 'genre2Src'];
+const lockedBy = b => LOCKS.filter(([, has]) => has(b)).map(([name]) => name);
+const andList = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+const lockWhy = b => { const w = lockedBy(b); return w.length ? `Edits made to ${andList(w)} locked this book from syncing. Click to unlock.` : ''; };
+function lockBtn(b) { const why = lockWhy(b); return why ? `<button type="button" class="lk" data-unlock="${esc(b.id)}" data-why="${esc(why)}" aria-label="${esc(why)}"></button>` : ''; }
+function unlockBook(b) {
+  const names = lockedBy(b); if (!names.length) return;
+  const before = {}; LOCK_FIELDS.forEach(f => { before[f] = b[f]; });
+  LOCKS.forEach(([, has, free]) => { if (has(b)) free(b); });
+  hideLockTip(); leaveDemoForEdit(); renderAll(); scheduleSave(); refreshEditLock(b);
+  toast(`Unlocked ${andList(names)}. The next sync can update ${names.length > 1 ? 'them' : 'it'}.`, {label: 'Undo', fn: () => {
+    LOCK_FIELDS.forEach(f => { if (before[f] === undefined) delete b[f]; else b[f] = before[f]; });
+    renderAll(); scheduleSave(); refreshEditLock(b); toast('Locked again');
+  }});
+}
+// The lock beside the title in Edit book; unlocking there also resets the fields it hands back, so Save doesn't lock them again
+function refreshEditLock(b) {
+  const d = $('#dlgEdit'), lk = $('#eLock'); if (!lk) return;
+  if (!editing || editing !== b) { if (!d.open) lk.hidden = true; return; }
+  const why = lockWhy(b); lk.hidden = !why; lk.dataset.why = why; lk.setAttribute('aria-label', why);
+  $('#eGenre').value = b.genreSrc === 'manual' ? b.genre : '';
+  $('#eGenre2').value = b.genre2Src === 'manual' ? (b.genre2 || 'none') : '';
+  $('#ePrice').value = b.price ?? ''; $('#eDate').value = b.date || ''; $('#eSource').value = b.source || 'purchase';
+  $('#eStatus').value = b.status; $('#eProgress').value = Math.round(b.progress || 0);
+}
+$('#eLock').addEventListener('click', () => { if (editing) unlockBook(editing); });
+// Hovering (or tabbing to) a lock shows why it's locked
+let lockTipEl = null;
+function showLockTip(el) {
+  if (!el.dataset.why) return;
+  if (!lockTipEl) { lockTipEl = document.createElement('div'); lockTipEl.id = 'lockTip'; lockTipEl.setAttribute('role', 'tooltip'); }
+  const host = el.closest('dialog[open]') || document.body; if (lockTipEl.parentNode !== host) host.appendChild(lockTipEl);
+  lockTipEl.textContent = el.dataset.why; lockTipEl.hidden = false;
+  const r = el.getBoundingClientRect(), t = lockTipEl.getBoundingClientRect();
+  let x = Math.max(8, Math.min(r.left - 6, innerWidth - t.width - 8)), y = r.top - t.height - 8;
+  if (y < 8) y = r.bottom + 8;
+  lockTipEl.style.left = x + 'px'; lockTipEl.style.top = y + 'px';
+  // a glass or transformed dialog moves fixed things with it: measure where it landed and correct
+  const got = lockTipEl.getBoundingClientRect(); if (Math.abs(got.left - x) > 1 || Math.abs(got.top - y) > 1) { lockTipEl.style.left = (2 * x - got.left) + 'px'; lockTipEl.style.top = (2 * y - got.top) + 'px'; }
+}
+function hideLockTip() { if (lockTipEl) lockTipEl.hidden = true; }
+document.addEventListener('mouseover', e => { const l = e.target.closest && e.target.closest('.lk'); if (l) showLockTip(l); else hideLockTip(); });
+document.addEventListener('focusin', e => { const l = e.target.closest && e.target.closest('.lk'); if (l && l.matches(':focus-visible')) showLockTip(l); else hideLockTip(); });
+document.addEventListener('scroll', hideLockTip, true);
 function leaveDemoForEdit() { /* edits to the example library stay on this page only */ }
 
 // ---------- edit dialog ----------
@@ -2269,6 +2335,7 @@ function openEdit(id) {
   $('#eGenre2').value = b.genre2Src === 'manual' ? (b.genre2 || 'none') : '';
   const amz = b.tagsAmz || b.tags || []; $('#eTags').hidden = !amz.length; $('#eTags').textContent = amz.length ? 'Amazon lists it under: ' + amz.join(', ') + ((b.tags || []).length ? '. Grouped as: ' + b.tags.join(', ') : '') : '';
   $('#eDelete').hidden = !editing; delArmed = false; $('#eConfirm').textContent = '';
+  { const why = editing ? lockWhy(editing) : '', lk = $('#eLock'); lk.hidden = !why; lk.dataset.why = why; lk.setAttribute('aria-label', why); }
   $('#dlgEdit').showModal();
 }
 $('#editClose').onclick = () => $('#dlgEdit').close();
@@ -2340,7 +2407,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the jack-o'-lantern book in Spooky, the heart boxers in Crawl, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : t === 'crawl' ? 'boxers' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.12`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.12`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.13`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.13`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -3045,7 +3112,7 @@ async function lookupAltGenres() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.12';
+const LATEST_SCRIPT = '2.2.0.0.13';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -3131,6 +3198,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.13', ['A small lock beside a book\'s title (on the list and in Edit book) shows when changes made by hand keep syncs from updating it. Point at it to see which sections were changed; click it to unlock the book, with an Undo', 'Quest: the row under the pointer stays readable']],
   ['2.2.0.0.12', ['New Accounts tab in Settings: shows who is signed in at Goodreads and Amazon right now, whose books the last sync read, and which Google account the Drive backup goes to, with a warning when they differ', 'Forget an account to clear what the site remembers about it, or open the site\'s own sign-out page from there', 'When a different Amazon account is signed in than the one the saved Kindle list came from, the sync reads everything fresh instead of using the old copy', 'A book you changed by hand still moves forward when a sync finds you\'ve read further: a higher Kindle percentage, Goodreads currently reading, or finished. It never moves back, and a book you gave up on stays given up on', 'Saving a book\'s genre or the leave-out box no longer stops syncs updating its progress; only changing its status or progress by hand does']],
   ['2.2.0.0.11', ['Goodreads: every sync checks which account is signed in and uses it, replacing a remembered one that differs', 'Goodreads: the account is only ever taken from Goodreads\' own menu bar, never a reviewer\'s or author\'s link', 'Goodreads: when it shows the sync script its sign-in page instead of your shelves, the sync says so instead of finding no books']],
   ['2.2.0.0.10', ['Quest is darker and worn: dark oak around stained, scorched parchment, with a dice pouch and a tankard on the shelf', 'Crawl wears a leather jacket: stitched, studded leather panels and a zipper under the header, a Books Remaining counter in the top bar like a game display, jugs of boom (fuses not lit), red and blue potions in flask holders and one crystal tiara on the shelves, heart-print boxers by the title and as the page icon, and the crystal tiara holding the small genres in place of the globe', 'No candles on any shelf, in any theme']],
@@ -3685,7 +3753,13 @@ $('#btnExport').onclick = async () => {
 };
 
 let tt;
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2600); }
+function toast(msg, act) {
+  const t = $('#toast'); t.textContent = msg; t.classList.toggle('act', !!act);
+  // An open dialog makes the rest of the page unclickable, so the message (and its button) goes inside it
+  const host = document.querySelector('dialog[open]') || document.body; if (t.parentNode !== host) host.appendChild(t);
+  if (act) { const b = document.createElement('button'); b.type = 'button'; b.textContent = act.label; b.onclick = () => { t.classList.remove('show', 'act'); clearTimeout(tt); act.fn(); }; t.appendChild(b); }
+  t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show', 'act'), act ? 7000 : 2600);
+}
 
 renderAll();
 storeReady = initStore();

@@ -6,22 +6,22 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 12 (latest)
+## 2.2 beta 13 (latest)
 
-**Accounts tab, and hand-set books still move forward on sync**
+**A lock shows which books syncs leave alone**
 
-- Settings now has two tabs, General and Accounts. Accounts shows who is signed in at Goodreads and Amazon right now, whose books the last sync read (with the time and book count), and which Google account the Drive backup goes to.
-- A warning shows when the signed-in account differs from the one the last sync used, or when it has signed out.
-- Each account can be forgotten (two clicks): this clears what the sync script remembers about it and, for Amazon, its saved Kindle list, purchases and prices. Books already on the shelf stay. Sign out and Sign in buttons open that site's own page in a new tab.
-- When a different Amazon account is signed in than the one the saved Kindle list came from, the sync reads everything fresh instead of using the old copy.
-- A book whose status or progress was changed by hand still moves forward when a sync finds more reading: a higher Kindle percentage, Goodreads currently reading, or Amazon's "read" mark. It never moves back, and a book marked Did not finish by hand stays that way.
-- Fixed: saving a book from Edit book (for a genre or the leave-out box) stopped it taking any progress from Kindle or Goodreads. Only changing its status or progress by hand counts now, and books already stuck this way update on the next sync.
+- A small lock to the left of a book's title, on the list and in Edit book, shows when changes made by hand keep syncs from updating it. Each theme has its own lock: brass in Cozy, purple with a dripping keyhole in Spooky, a pink heart in Sakura, riveted iron in Quest, pixel-art in Crawl, and a plain padlock in the rest.
+- Pointing at the lock names the sections that were changed (Status / Progress, Price paid, Added on, How you got it, Genre, Second genre). Clicking it unlocks the book so the next sync can update those again, with an Undo in the message that follows.
+- Unlocking a price typed by hand clears it so the order history can fill it in; everything else keeps its value until the next sync.
+- Fixed: in Quest, the row under the mouse turned dark with dark text. It now stays readable.
+- Fixed: a message with a button (like Undo) can be clicked while a dialog is open.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 12** Accounts tab, and hand-set books still move forward on sync
 - **2.2 beta 11** Goodreads reads the right account
 - **2.2 beta 10** Worn Quest, leather Crawl
 - **2.2 beta 9** Quest and Crawl themes, themed picker
