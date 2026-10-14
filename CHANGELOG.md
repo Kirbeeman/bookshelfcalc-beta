@@ -6,19 +6,20 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 10 (latest)
+## 2.2 beta 11 (latest)
 
-**Worn Quest, leather Crawl**
+**Goodreads reads the right account**
 
-- **Quest** is darker and worn: dark oak around stained, scorched parchment; a dice pouch and a tankard on the shelf.
-- **Crawl** wears a leather jacket: stitched, studded leather panels and a zipper under the header; a Books Remaining counter in the top bar like a game display; jugs of boom (fuses not lit), red and blue potions in flask holders and one crystal tiara on the shelves; heart-print boxers by the title and as the page icon.
-- No candles on any shelf, in any theme.
+- Every sync checks which Goodreads account is signed in and uses it, replacing a remembered one that differs.
+- The account is only taken from Goodreads' own menu bar, never from a reviewer's or author's link on the page (which could save a stranger's account when signed out).
+- When Goodreads shows the sync script its sign-in page instead of your shelves, the sync says so instead of finding no books.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 10** Worn Quest, leather Crawl
 - **2.2 beta 9** Quest and Crawl themes, themed picker
 - **2.2 beta 8** Genres from Goodreads, dictionaries left out
 - **2.2 beta 7** Find the books with no genre

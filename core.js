@@ -17,15 +17,28 @@ function gmGet(url) {
 }
 const tag = (el, name) => (el.getElementsByTagName(name)[0]?.textContent || '').trim();
 
+// Whose shelves to read. Every sync asks Goodreads who is signed in (its "My Books" page sends you to your own list) and
+// uses that account, replacing a remembered one that differs: an account picked up wrongly once is never stuck for good.
+// Signed out, it falls back to the remembered account, whose shelves can still be read if they're public. The account
+// is kept under its own name (grMe): the older "grUser" could hold a stranger's account, picked up from a reviewer's link
+// while signed out, so it is no longer trusted.
 async function goodreadsUserId() {
-  const saved = GM_getValue('grUser', '');
+  const saved = GM_getValue('grMe', '');
+  let live = '';
+  try {
+    const r = await gmGet('https://www.goodreads.com/review/list');
+    const url = r.finalUrl || '';
+    if (/\/review\/list\/\d+/.test(url)) live = url.match(/\/review\/list\/(\d+)/)[1];
+    else if (/\/review\/list\/?(\?|$)/.test(url) && !/sign_in/.test(url)) live = (r.text.match(/\/review\/list\/(\d+)/) || [])[1] || '';
+  } catch { /* network hiccup: use the remembered account */ }
+  if (live) { if (live !== saved) GM_setValue('grMe', live); return live; }
   if (saved) return saved;
-  const r = await gmGet('https://www.goodreads.com/review/list');
-  const m = r.finalUrl.match(/\/review\/list\/(\d+)/) || r.text.match(/\/review\/list\/(\d+)/);
-  if (!m) throw new Error('sign in at goodreads.com first');
-  GM_setValue('grUser', m[1]);
-  return m[1];
+  throw new Error('sign in at goodreads.com first');
 }
+// Goodreads sometimes answers a shelf request with its sign-in page (a browser blocking the script's use of your Goodreads
+// sign-in, or a private profile): say so instead of quietly finding no books
+const GR_BLOCKED = "Goodreads didn't let the sync script see your shelves";
+const grSignInPage = r => /\/user\/sign_in|\/ap\/signin/.test(r.finalUrl || '') || /<form[^>]+(sign_in|signin)|name="user\[email\]"|id="signInForm"/i.test(r.text || '');
 async function shelfRss(id, shelf) {
   const out = [], seen = new Set();
   for (let page = 1; page <= 80; page++) {
@@ -48,8 +61,10 @@ async function shelfHtml(id, shelf) {
   const out = [], seen = new Set();
   for (let page = 1; page <= 80; page++) {
     const r = await gmGet(`https://www.goodreads.com/review/list/${id}?shelf=${encodeURIComponent(shelf)}&per_page=100&page=${page}&view=table`);
+    if (grSignInPage(r)) throw new Error(GR_BLOCKED);
     if (r.status !== 200) throw new Error(`Goodreads returned ${r.status} for your ${shelf} shelf`);
     const doc = new DOMParser().parseFromString(r.text, 'text/html');
+    if (page === 1 && !doc.querySelector('#booksBody, table#books, tr.review, tr.bookalike')) throw new Error(GR_BLOCKED); // not a shelf page at all
     let fresh = 0;
     for (const row of doc.querySelectorAll('tr.review, tr.bookalike')) {
       const a = row.querySelector('td.field.title a'); if (!a) continue;
@@ -299,11 +314,16 @@ if (onKindle) {
   return;
 }
 
-// Remember the signed-in Goodreads user id (read from the site header)
-const me = document.querySelector('header a[href*="/user/show/"], nav a[href*="/user/show/"], a[href*="/user/show/"]');
-const meId = me && (me.getAttribute('href').match(/\/user\/show\/(\d+)/) || [])[1];
-if (meId) GM_setValue('grUser', meId);
-
+// ---------- On Goodreads: remember whose account is signed in, from Goodreads' own menu bar only ----------
+// (never from a reviewer's or author's link further down the page; every sync double-checks it anyway)
+if (onGoodreads) {
+  try {
+    const bar = document.querySelector('header, .siteHeader, [class*="SiteHeader"]');
+    const me = bar && bar.querySelector('a[href*="/user/show/"]');
+    const id = me && (me.getAttribute('href').match(/\/user\/show\/(\d+)/) || [])[1];
+    if (id) GM_setValue('grMe', id);
+  } catch {}
+}
 // ---------- 3. Anywhere else on Goodreads: a small link to the calculator ----------
 if (!onCalc) {
   GM_addStyle(`#klc-open{position:fixed;right:16px;bottom:16px;z-index:2147483647;background:#1b1e20;color:#f2f2ee!important;font:600 13px/1 system-ui,sans-serif;padding:10px 14px;border-radius:8px;text-decoration:none!important;box-shadow:0 4px 18px rgba(0,0,0,.25)}#klc-open:hover{background:#27408b}`);
@@ -2228,7 +2248,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the jack-o'-lantern book in Spooky, the heart boxers in Crawl, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : t === 'crawl' ? 'boxers' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.10`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.10`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.11`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.11`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2878,7 +2898,7 @@ async function lookupAltGenres() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.10';
+const LATEST_SCRIPT = '2.2.0.0.11';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2886,7 +2906,7 @@ const verLess = (a, b) => { const x = String(a).split('.').map(Number), y = Stri
 let scriptVer = '';
 // The oldest sync script this page works with. Raise it only when a release changes the script itself;
 // page-only releases leave it alone, so people aren't stopped for updates that don't touch their script.
-const REQUIRED_SCRIPT = '2.2.0.0.8'; // filled in by build.py: the version where the script's code last changed
+const REQUIRED_SCRIPT = '2.2.0.0.11'; // filled in by build.py: the version where the script's code last changed
 function renderVerLine() {
   const el = document.getElementById('verLine'); if (!el) return;
   const sv = scriptVer ? 'v' + verLabel(scriptVer) + (verLess(scriptVer, REQUIRED_SCRIPT) ? ' (update needed)' : '') : 'not installed';
@@ -2964,6 +2984,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.11', ['Goodreads: every sync checks which account is signed in and uses it, replacing a remembered one that differs', 'Goodreads: the account is only ever taken from Goodreads\' own menu bar, never a reviewer\'s or author\'s link', 'Goodreads: when it shows the sync script its sign-in page instead of your shelves, the sync says so instead of finding no books']],
   ['2.2.0.0.10', ['Quest is darker and worn: dark oak around stained, scorched parchment, with a dice pouch and a tankard on the shelf', 'Crawl wears a leather jacket: stitched, studded leather panels and a zipper under the header, a Books Remaining counter in the top bar like a game display, jugs of boom (fuses not lit), red and blue potions in flask holders and one crystal tiara on the shelves, heart-print boxers by the title and as the page icon, and the crystal tiara holding the small genres in place of the globe', 'No candles on any shelf, in any theme']],
   ['2.2.0.0.9', ['Two new themes: Quest (dice, worn maps and dark oak) and Crawl (loot boxes and game system alerts), each with its own shelf adornments', 'Themes are picked from a drop-down, with every name shown in its own theme\'s style']],
   ['2.2.0.0.8', ['A book Amazon no longer sells gets its genre from Goodreads, then Open Library; the title is only guessed from when neither knows it. Goodreads is asked slowly, a few books each visit', 'Title guesses read the subtitle too, where publishers say what a book is ("A Dark Mafia Romance")', 'Dictionaries and thesauruses in any language are left out automatically, whatever was paid or however they arrived; "count it again" brings one back', 'The Unknown genre no longer lists dictionaries or the books that came with your Kindle']],

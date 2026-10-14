@@ -1,6 +1,6 @@
 // The sync script's own code. The build turns this into core.js, which the signed loader (loader.user.js) checks against
 // the signed release before running it. SITE_URL comes from the loader, so the same code serves the live site and the beta.
-// @version      2.2.0.0.10
+// @version      2.2.0.0.11
 (function (GM_getValue, GM_setValue, GM_addStyle, GM_xmlhttpRequest, GM_info, SITE_URL) {
 'use strict';
 const host = location.hostname;
@@ -20,15 +20,28 @@ function gmGet(url) {
 }
 const tag = (el, name) => (el.getElementsByTagName(name)[0]?.textContent || '').trim();
 
+// Whose shelves to read. Every sync asks Goodreads who is signed in (its "My Books" page sends you to your own list) and
+// uses that account, replacing a remembered one that differs: an account picked up wrongly once is never stuck for good.
+// Signed out, it falls back to the remembered account, whose shelves can still be read if they're public. The account
+// is kept under its own name (grMe): the older "grUser" could hold a stranger's account, picked up from a reviewer's link
+// while signed out, so it is no longer trusted.
 async function goodreadsUserId() {
-  const saved = GM_getValue('grUser', '');
+  const saved = GM_getValue('grMe', '');
+  let live = '';
+  try {
+    const r = await gmGet('https://www.goodreads.com/review/list');
+    const url = r.finalUrl || '';
+    if (/\/review\/list\/\d+/.test(url)) live = url.match(/\/review\/list\/(\d+)/)[1];
+    else if (/\/review\/list\/?(\?|$)/.test(url) && !/sign_in/.test(url)) live = (r.text.match(/\/review\/list\/(\d+)/) || [])[1] || '';
+  } catch { /* network hiccup: use the remembered account */ }
+  if (live) { if (live !== saved) GM_setValue('grMe', live); return live; }
   if (saved) return saved;
-  const r = await gmGet('https://www.goodreads.com/review/list');
-  const m = r.finalUrl.match(/\/review\/list\/(\d+)/) || r.text.match(/\/review\/list\/(\d+)/);
-  if (!m) throw new Error('sign in at goodreads.com first');
-  GM_setValue('grUser', m[1]);
-  return m[1];
+  throw new Error('sign in at goodreads.com first');
 }
+// Goodreads sometimes answers a shelf request with its sign-in page (a browser blocking the script's use of your Goodreads
+// sign-in, or a private profile): say so instead of quietly finding no books
+const GR_BLOCKED = "Goodreads didn't let the sync script see your shelves";
+const grSignInPage = r => /\/user\/sign_in|\/ap\/signin/.test(r.finalUrl || '') || /<form[^>]+(sign_in|signin)|name="user\[email\]"|id="signInForm"/i.test(r.text || '');
 async function shelfRss(id, shelf) {
   const out = [], seen = new Set();
   for (let page = 1; page <= 80; page++) {
@@ -51,8 +64,10 @@ async function shelfHtml(id, shelf) {
   const out = [], seen = new Set();
   for (let page = 1; page <= 80; page++) {
     const r = await gmGet(`https://www.goodreads.com/review/list/${id}?shelf=${encodeURIComponent(shelf)}&per_page=100&page=${page}&view=table`);
+    if (grSignInPage(r)) throw new Error(GR_BLOCKED);
     if (r.status !== 200) throw new Error(`Goodreads returned ${r.status} for your ${shelf} shelf`);
     const doc = new DOMParser().parseFromString(r.text, 'text/html');
+    if (page === 1 && !doc.querySelector('#booksBody, table#books, tr.review, tr.bookalike')) throw new Error(GR_BLOCKED); // not a shelf page at all
     let fresh = 0;
     for (const row of doc.querySelectorAll('tr.review, tr.bookalike')) {
       const a = row.querySelector('td.field.title a'); if (!a) continue;
@@ -302,11 +317,16 @@ if (onKindle) {
   return;
 }
 
-// Remember the signed-in Goodreads user id (read from the site header)
-const me = document.querySelector('header a[href*="/user/show/"], nav a[href*="/user/show/"], a[href*="/user/show/"]');
-const meId = me && (me.getAttribute('href').match(/\/user\/show\/(\d+)/) || [])[1];
-if (meId) GM_setValue('grUser', meId);
-
+// ---------- On Goodreads: remember whose account is signed in, from Goodreads' own menu bar only ----------
+// (never from a reviewer's or author's link further down the page; every sync double-checks it anyway)
+if (onGoodreads) {
+  try {
+    const bar = document.querySelector('header, .siteHeader, [class*="SiteHeader"]');
+    const me = bar && bar.querySelector('a[href*="/user/show/"]');
+    const id = me && (me.getAttribute('href').match(/\/user\/show\/(\d+)/) || [])[1];
+    if (id) GM_setValue('grMe', id);
+  } catch {}
+}
 // ---------- 3. Anywhere else on Goodreads: a small link to the calculator ----------
 if (!onCalc) {
   GM_addStyle(`#klc-open{position:fixed;right:16px;bottom:16px;z-index:2147483647;background:#1b1e20;color:#f2f2ee!important;font:600 13px/1 system-ui,sans-serif;padding:10px 14px;border-radius:8px;text-decoration:none!important;box-shadow:0 4px 18px rgba(0,0,0,.25)}#klc-open:hover{background:#27408b}`);

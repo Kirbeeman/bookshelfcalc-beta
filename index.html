@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-5PXpwpMI9ifY5UXBNY6NMcylk47CHlOxZzF59/ADiWs=' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://openlibrary.org https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-cJEasC1yb0lfSsJ+F2yFU5k6WTJSb9wpwN93VI/gStM=' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://openlibrary.org https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>BETA · Shelf of Shame</title>
-<link rel="icon" type="image/png" href="icon-tag.png?v=2.2.0.0.10" id="favicon">
-<link rel="apple-touch-icon" href="icon-tag-180.png?v=2.2.0.0.10" id="touchicon">
+<link rel="icon" type="image/png" href="icon-tag.png?v=2.2.0.0.11" id="favicon">
+<link rel="apple-touch-icon" href="icon-tag-180.png?v=2.2.0.0.11" id="touchicon">
 <meta name="description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
 <meta property="og:title" content="Shelf of Shame">
 <meta property="og:description" content="The Kindle books you bought and haven't read yet: how many, what they cost and how long they'd take to read.">
-<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v=2.2.0.0.10">
+<meta property="og:image" content="https://betabookshelf.kirbee213.tv/og.png?v=2.2.0.0.11">
 <meta property="og:url" content="https://betabookshelf.kirbee213.tv/">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1946,7 +1946,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the jack-o'-lantern book in Spooky, the heart boxers in Crawl, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : t === 'crawl' ? 'boxers' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.10`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.10`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.11`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.11`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2596,7 +2596,7 @@ async function lookupAltGenres() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.10';
+const LATEST_SCRIPT = '2.2.0.0.11';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc-beta/main/kindle-library-calculator-beta.user.js';
@@ -2604,7 +2604,7 @@ const verLess = (a, b) => { const x = String(a).split('.').map(Number), y = Stri
 let scriptVer = '';
 // The oldest sync script this page works with. Raise it only when a release changes the script itself;
 // page-only releases leave it alone, so people aren't stopped for updates that don't touch their script.
-const REQUIRED_SCRIPT = '2.2.0.0.8'; // filled in by build.py: the version where the script's code last changed
+const REQUIRED_SCRIPT = '2.2.0.0.11'; // filled in by build.py: the version where the script's code last changed
 function renderVerLine() {
   const el = document.getElementById('verLine'); if (!el) return;
   const sv = scriptVer ? 'v' + verLabel(scriptVer) + (verLess(scriptVer, REQUIRED_SCRIPT) ? ' (update needed)' : '') : 'not installed';
@@ -2682,6 +2682,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.11', ['Goodreads: every sync checks which account is signed in and uses it, replacing a remembered one that differs', 'Goodreads: the account is only ever taken from Goodreads\' own menu bar, never a reviewer\'s or author\'s link', 'Goodreads: when it shows the sync script its sign-in page instead of your shelves, the sync says so instead of finding no books']],
   ['2.2.0.0.10', ['Quest is darker and worn: dark oak around stained, scorched parchment, with a dice pouch and a tankard on the shelf', 'Crawl wears a leather jacket: stitched, studded leather panels and a zipper under the header, a Books Remaining counter in the top bar like a game display, jugs of boom (fuses not lit), red and blue potions in flask holders and one crystal tiara on the shelves, heart-print boxers by the title and as the page icon, and the crystal tiara holding the small genres in place of the globe', 'No candles on any shelf, in any theme']],
   ['2.2.0.0.9', ['Two new themes: Quest (dice, worn maps and dark oak) and Crawl (loot boxes and game system alerts), each with its own shelf adornments', 'Themes are picked from a drop-down, with every name shown in its own theme\'s style']],
   ['2.2.0.0.8', ['A book Amazon no longer sells gets its genre from Goodreads, then Open Library; the title is only guessed from when neither knows it. Goodreads is asked slowly, a few books each visit', 'Title guesses read the subtitle too, where publishers say what a book is ("A Dark Mafia Romance")', 'Dictionaries and thesauruses in any language are left out automatically, whatever was paid or however they arrived; "count it again" brings one back', 'The Unknown genre no longer lists dictionaries or the books that came with your Kindle']],
