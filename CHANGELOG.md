@@ -6,20 +6,21 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 14 (latest)
+## 2.2 beta 15 (latest)
 
-**Anthologies match Goodreads, fresher Kindle progress**
+**Goodreads currently reading never misses a book**
 
-- Books with many authors (anthologies, co-written books) never matched their Goodreads copy, because Amazon lists every author and only the last one's surname was compared. They now match on the first author or any shared author, so Goodreads "currently reading" reaches them.
-- A separate Goodreads-only copy of such a book, if an earlier sync made one, is folded into the Kindle copy, carrying its reading status forward.
-- Kindle reading progress is read fresh every half hour instead of every six hours.
-- A sync still never moves a book backward, and books changed by hand (with a lock) stay as they are.
+- Goodreads currently reading is checked twice, from the shelf feed and from the shelf page, and any book the feed leaves out is added.
+- Every Goodreads and Amazon request asks for a fresh answer instead of a copy the browser kept.
+- Settings > Accounts shows when the Kindle list was last read, not only when purchases were.
+- Fixed: a book added to Goodreads currently reading could be missing from the sync (seen with a book added the same morning), so it stayed Unread.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 14** Anthologies match Goodreads, fresher Kindle progress
 - **2.2 beta 13** A lock shows which books syncs leave alone
 - **2.2 beta 12** Accounts tab, and hand-set books still move forward on sync
 - **2.2 beta 11** Goodreads reads the right account

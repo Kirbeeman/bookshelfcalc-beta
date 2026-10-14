@@ -1,6 +1,6 @@
 // The sync script's own code. The build turns this into core.js, which the signed loader (loader.user.js) checks against
 // the signed release before running it. SITE_URL comes from the loader, so the same code serves the live site and the beta.
-// @version      2.2.0.0.14
+// @version      2.2.0.0.15
 (function (GM_getValue, GM_setValue, GM_addStyle, GM_xmlhttpRequest, GM_info, SITE_URL) {
 'use strict';
 const host = location.hostname;
@@ -12,7 +12,7 @@ const onSite = location.origin + '/' === SITE_URL || (host === 'kirbeeman.github
 // ---------- core: fetch Goodreads shelves and the Kindle library from any page ----------
 function gmGet(url) {
   return new Promise((resolve, reject) => GM_xmlhttpRequest({
-    method: 'GET', url, timeout: 30000,
+    method: 'GET', url, timeout: 30000, nocache: true, // always a fresh answer, never a copy the browser kept
     onload: r => resolve({status: r.status, text: r.responseText, finalUrl: r.finalUrl || url}),
     onerror: () => reject(new Error('network error')),
     ontimeout: () => reject(new Error('timed out')),
@@ -56,7 +56,7 @@ const grSignInPage = r => /\/user\/sign_in|\/ap\/signin/.test(r.finalUrl || '') 
 async function shelfRss(id, shelf) {
   const out = [], seen = new Set();
   for (let page = 1; page <= 80; page++) {
-    const r = await gmGet(`https://www.goodreads.com/review/list_rss/${id}?shelf=${encodeURIComponent(shelf)}&page=${page}`);
+    const r = await gmGet(`https://www.goodreads.com/review/list_rss/${id}?shelf=${encodeURIComponent(shelf)}&page=${page}&_=${Date.now()}`);
     if (r.status !== 200) throw new Error('rss ' + r.status);
     const x = new DOMParser().parseFromString(r.text, 'text/xml');
     if (x.querySelector('parsererror') || !x.querySelector('channel')) throw new Error('rss unavailable');
@@ -74,7 +74,7 @@ async function shelfRss(id, shelf) {
 async function shelfHtml(id, shelf) {
   const out = [], seen = new Set();
   for (let page = 1; page <= 80; page++) {
-    const r = await gmGet(`https://www.goodreads.com/review/list/${id}?shelf=${encodeURIComponent(shelf)}&per_page=100&page=${page}&view=table`);
+    const r = await gmGet(`https://www.goodreads.com/review/list/${id}?shelf=${encodeURIComponent(shelf)}&per_page=100&page=${page}&view=table&_=${Date.now()}`);
     if (grSignInPage(r)) throw new Error(GR_BLOCKED);
     if (r.status !== 200) throw new Error(`Goodreads returned ${r.status} for your ${shelf} shelf`);
     const doc = new DOMParser().parseFromString(r.text, 'text/html');
@@ -101,6 +101,10 @@ async function fetchGoodreads(progress) {
     let books;
     if (!html) { try { books = await shelfRss(id, shelf); } catch { html = true; } }
     if (html) books = await shelfHtml(id, shelf);
+    // Currently reading is small and matters most: check the shelf page too, and add any book the feed left out
+    if (!html && shelf === 'currently-reading') {
+      try { const have = new Set(books.map(b => b.title.toLowerCase())); for (const b of await shelfHtml(id, shelf)) if (!have.has(b.title.toLowerCase())) books.push(b); } catch { /* the feed's list stands */ }
+    }
     books.forEach(b => all.push({...b, status}));
   }
   GM_setValue('grFrom', JSON.stringify({id, name: GM_getValue('grMe', '') === id ? GM_getValue('grName', '') : '', time: Date.now(), count: all.length}));
@@ -298,8 +302,9 @@ const KLC_CORE = {
       if (amzNow && amzNow.signedIn && (amzNow.name || amzNow.cid) && !sameAmazon(amzNow, amzFrom)) { force = true; GM_setValue('prices', '{}'); }
     }
     let k = null; try { k = JSON.parse(GM_getValue('kindle', 'null')); } catch {}
+    let kFresh = false;
     if (force || !k || Date.now() - k.time > 30 * 60e3) {  // reading progress changes all the time: re-read every half hour
-      try { progress('Reading your Kindle library…'); k = {time: Date.now(), items: await fetchKindle(progress)}; GM_setValue('kindle', JSON.stringify(k)); }
+      try { progress('Reading your Kindle library…'); k = {time: Date.now(), items: await fetchKindle(progress)}; GM_setValue('kindle', JSON.stringify(k)); kFresh = true; }
       catch (e) { out.kErr = e.message || String(e); }
     }
     out.kindle = k;
@@ -310,7 +315,7 @@ const KLC_CORE = {
     }
     out.owned = o;
     // Note whose Amazon library was just read
-    if (amzSeen || ((force || !amzFrom) && (k || o))) {
+    if (amzSeen || ((force || kFresh || !amzFrom) && (k || o))) {
       let who = amzSeen && amzSeen.signedIn ? amzSeen : amzNow && amzNow.signedIn ? amzNow : null;
       if (!who) { try { const w = await amazonWho(); if (w.signedIn) who = w; } catch {} }
       if (who) GM_setValue('amzFrom', JSON.stringify({host: who.host, name: who.name || '', cid: who.cid || '', time: Date.now(), count: (o && o.items && o.items.length) || (k && k.items && k.items.length) || 0}));

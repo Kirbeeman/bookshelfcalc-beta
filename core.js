@@ -9,7 +9,7 @@ const onSite = location.origin + '/' === SITE_URL || (host === 'kirbeeman.github
 // ---------- core: fetch Goodreads shelves and the Kindle library from any page ----------
 function gmGet(url) {
   return new Promise((resolve, reject) => GM_xmlhttpRequest({
-    method: 'GET', url, timeout: 30000,
+    method: 'GET', url, timeout: 30000, nocache: true, // always a fresh answer, never a copy the browser kept
     onload: r => resolve({status: r.status, text: r.responseText, finalUrl: r.finalUrl || url}),
     onerror: () => reject(new Error('network error')),
     ontimeout: () => reject(new Error('timed out')),
@@ -53,7 +53,7 @@ const grSignInPage = r => /\/user\/sign_in|\/ap\/signin/.test(r.finalUrl || '') 
 async function shelfRss(id, shelf) {
   const out = [], seen = new Set();
   for (let page = 1; page <= 80; page++) {
-    const r = await gmGet(`https://www.goodreads.com/review/list_rss/${id}?shelf=${encodeURIComponent(shelf)}&page=${page}`);
+    const r = await gmGet(`https://www.goodreads.com/review/list_rss/${id}?shelf=${encodeURIComponent(shelf)}&page=${page}&_=${Date.now()}`);
     if (r.status !== 200) throw new Error('rss ' + r.status);
     const x = new DOMParser().parseFromString(r.text, 'text/xml');
     if (x.querySelector('parsererror') || !x.querySelector('channel')) throw new Error('rss unavailable');
@@ -71,7 +71,7 @@ async function shelfRss(id, shelf) {
 async function shelfHtml(id, shelf) {
   const out = [], seen = new Set();
   for (let page = 1; page <= 80; page++) {
-    const r = await gmGet(`https://www.goodreads.com/review/list/${id}?shelf=${encodeURIComponent(shelf)}&per_page=100&page=${page}&view=table`);
+    const r = await gmGet(`https://www.goodreads.com/review/list/${id}?shelf=${encodeURIComponent(shelf)}&per_page=100&page=${page}&view=table&_=${Date.now()}`);
     if (grSignInPage(r)) throw new Error(GR_BLOCKED);
     if (r.status !== 200) throw new Error(`Goodreads returned ${r.status} for your ${shelf} shelf`);
     const doc = new DOMParser().parseFromString(r.text, 'text/html');
@@ -98,6 +98,10 @@ async function fetchGoodreads(progress) {
     let books;
     if (!html) { try { books = await shelfRss(id, shelf); } catch { html = true; } }
     if (html) books = await shelfHtml(id, shelf);
+    // Currently reading is small and matters most: check the shelf page too, and add any book the feed left out
+    if (!html && shelf === 'currently-reading') {
+      try { const have = new Set(books.map(b => b.title.toLowerCase())); for (const b of await shelfHtml(id, shelf)) if (!have.has(b.title.toLowerCase())) books.push(b); } catch { /* the feed's list stands */ }
+    }
     books.forEach(b => all.push({...b, status}));
   }
   GM_setValue('grFrom', JSON.stringify({id, name: GM_getValue('grMe', '') === id ? GM_getValue('grName', '') : '', time: Date.now(), count: all.length}));
@@ -295,8 +299,9 @@ const KLC_CORE = {
       if (amzNow && amzNow.signedIn && (amzNow.name || amzNow.cid) && !sameAmazon(amzNow, amzFrom)) { force = true; GM_setValue('prices', '{}'); }
     }
     let k = null; try { k = JSON.parse(GM_getValue('kindle', 'null')); } catch {}
+    let kFresh = false;
     if (force || !k || Date.now() - k.time > 30 * 60e3) {  // reading progress changes all the time: re-read every half hour
-      try { progress('Reading your Kindle library…'); k = {time: Date.now(), items: await fetchKindle(progress)}; GM_setValue('kindle', JSON.stringify(k)); }
+      try { progress('Reading your Kindle library…'); k = {time: Date.now(), items: await fetchKindle(progress)}; GM_setValue('kindle', JSON.stringify(k)); kFresh = true; }
       catch (e) { out.kErr = e.message || String(e); }
     }
     out.kindle = k;
@@ -307,7 +312,7 @@ const KLC_CORE = {
     }
     out.owned = o;
     // Note whose Amazon library was just read
-    if (amzSeen || ((force || !amzFrom) && (k || o))) {
+    if (amzSeen || ((force || kFresh || !amzFrom) && (k || o))) {
       let who = amzSeen && amzSeen.signedIn ? amzSeen : amzNow && amzNow.signedIn ? amzNow : null;
       if (!who) { try { const w = await amazonWho(); if (w.signedIn) who = w; } catch {} }
       if (who) GM_setValue('amzFrom', JSON.stringify({host: who.host, name: who.name || '', cid: who.cid || '', time: Date.now(), count: (o && o.items && o.items.length) || (k && k.items && k.items.length) || 0}));
@@ -2407,7 +2412,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the jack-o'-lantern book in Spooky, the heart boxers in Crawl, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : t === 'crawl' ? 'boxers' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.14`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.14`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.15`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.15`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -3134,7 +3139,7 @@ async function lookupAltGenres() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.14';
+const LATEST_SCRIPT = '2.2.0.0.15';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -3142,7 +3147,7 @@ const verLess = (a, b) => { const x = String(a).split('.').map(Number), y = Stri
 let scriptVer = '';
 // The oldest sync script this page works with. Raise it only when a release changes the script itself;
 // page-only releases leave it alone, so people aren't stopped for updates that don't touch their script.
-const REQUIRED_SCRIPT = '2.2.0.0.14'; // filled in by build.py: the version where the script's code last changed
+const REQUIRED_SCRIPT = '2.2.0.0.15'; // filled in by build.py: the version where the script's code last changed
 function renderVerLine() {
   const el = document.getElementById('verLine'); if (!el) return;
   const sv = scriptVer ? 'v' + verLabel(scriptVer) + (verLess(scriptVer, REQUIRED_SCRIPT) ? ' (update needed)' : '') : 'not installed';
@@ -3220,6 +3225,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.15', ['Goodreads currently reading is checked twice, from the shelf feed and the shelf page, so a book the feed leaves out still counts', 'Every Goodreads and Amazon read asks for a fresh answer, never a copy the browser kept', 'Settings > Accounts shows when the Kindle list was last read']],
   ['2.2.0.0.14', ['Books with many authors (anthologies) now match their Goodreads copy, so Goodreads currently reading reaches them; a separate copy Goodreads made earlier is folded back in', 'Kindle reading progress is read fresh every half hour instead of every six hours']],
   ['2.2.0.0.13', ['A small lock beside a book\'s title (on the list and in Edit book) shows when changes made by hand keep syncs from updating it. Point at it to see which sections were changed; click it to unlock the book, with an Undo', 'Quest: the row under the pointer stays readable']],
   ['2.2.0.0.12', ['New Accounts tab in Settings: shows who is signed in at Goodreads and Amazon right now, whose books the last sync read, and which Google account the Drive backup goes to, with a warning when they differ', 'Forget an account to clear what the site remembers about it, or open the site\'s own sign-out page from there', 'When a different Amazon account is signed in than the one the saved Kindle list came from, the sync reads everything fresh instead of using the old copy', 'A book you changed by hand still moves forward when a sync finds you\'ve read further: a higher Kindle percentage, Goodreads currently reading, or finished. It never moves back, and a book you gave up on stays given up on', 'Saving a book\'s genre or the leave-out box no longer stops syncs updating its progress; only changing its status or progress by hand does']],
