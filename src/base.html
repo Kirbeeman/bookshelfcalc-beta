@@ -2210,7 +2210,12 @@ function parseInput(text) {
   return {books: fromRows(rows), kind:'csv'};
 }
 const normTitle = t => String(t || '').toLowerCase().replace(/\(.*?\)|\[.*?\]/g, '').split(/[:—]| - /)[0].replace(/^(the|a|an)\s+/, '').replace(/[^a-z0-9]/g, '');
-const surname = a => { const w = String(a || '').toLowerCase().replace(/[^a-z ]/g, '').trim().split(/\s+/); return w[w.length - 1] || ''; };
+// An author field can hold a whole list ("M.F. Adele, Brooklyn Cross, …", "A & B"); "Adele, M.F." is one author, surname first.
+// Matching goes by the first author's surname, or any shared surname, so an anthology's long author list still matches.
+const authorList = a => { const s = String(a || '').trim(), p = s.split(/\s*(?:,|;|&|\band\b)\s*/i).filter(Boolean); return p.length === 2 && !/\s/.test(p[1]) && s.includes(',') ? [p[1] + ' ' + p[0]] : (p.length ? p : ['']); };
+const lastName = a => { const w = String(a || '').toLowerCase().replace(/[^a-z ]/g, '').trim().split(/\s+/); return w[w.length - 1] || ''; };
+const surname = a => lastName(authorList(a)[0]);
+const sharesAuthor = (a, b) => { const x = new Set(authorList(a).map(lastName).filter(Boolean)); return authorList(b).map(lastName).some(n => n && x.has(n)); };
 
 function merge(incoming, replace, kind) {
   if (replace) S.books = [];
@@ -2226,7 +2231,7 @@ function merge(incoming, replace, kind) {
   for (const inc of incoming) {
     if (kind === 'backup') { const nb = {...inc, id: inc.id || uid()}; const m = (nb.asin && byAsin.get(nb.asin.toUpperCase())) || byKey.get(normTitle(nb.title) + '|' + surname(nb.author)); if (m) { Object.assign(m, nb, {id: m.id}); updated++; } else { S.books.push(nb); index(nb); added++; } continue; }
     let m = (inc.asin && byAsin.get(inc.asin.toUpperCase())) || byKey.get(normTitle(inc.title) + '|' + surname(inc.author));
-    if (!m && (!inc.author || true)) { const t = byTitle.get(normTitle(inc.title)); if (t && t !== 'dup' && (!inc.author || !t.author || surname(t.author) === surname(inc.author))) m = t; }
+    if (!m && (!inc.author || true)) { const t = byTitle.get(normTitle(inc.title)); if (t && t !== 'dup' && (!inc.author || !t.author || sharesAuthor(t.author, inc.author))) m = t; }
     if (m) {
       for (const f of ['asin','author','pages','date']) if ((m[f] == null || m[f] === '') && inc[f]) m[f] = inc[f];
       // Content & Devices files prices and purchase dates under its own Amazon ID, so that ID wins over another edition's

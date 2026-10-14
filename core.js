@@ -283,7 +283,7 @@ const KLC_CORE = {
     if (site === 'amz') { GM_setValue('kindle', 'null'); GM_setValue('owned', 'null'); GM_setValue('prices', '{}'); GM_setValue('amzFrom', ''); }
     return {ok: true};
   },
-  // force = the Sync now button: always refresh the Kindle list. Otherwise reuse it for 6 hours.
+  // force = the Sync now button: always refresh the Kindle list. Otherwise reuse it for half an hour.
   async sync(force, progress = () => {}, paid = []) {
     const out = {goodreads: [], grErr: '', kindle: null, kErr: ''};
     try { out.goodreads = await fetchGoodreads(progress); } catch (e) { out.grErr = e.message || String(e); }
@@ -295,7 +295,7 @@ const KLC_CORE = {
       if (amzNow && amzNow.signedIn && (amzNow.name || amzNow.cid) && !sameAmazon(amzNow, amzFrom)) { force = true; GM_setValue('prices', '{}'); }
     }
     let k = null; try { k = JSON.parse(GM_getValue('kindle', 'null')); } catch {}
-    if (force || !k || Date.now() - k.time > 6 * 3600e3) {
+    if (force || !k || Date.now() - k.time > 30 * 60e3) {  // reading progress changes all the time: re-read every half hour
       try { progress('Reading your Kindle library…'); k = {time: Date.now(), items: await fetchKindle(progress)}; GM_setValue('kindle', JSON.stringify(k)); }
       catch (e) { out.kErr = e.message || String(e); }
     }
@@ -2407,7 +2407,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the jack-o'-lantern book in Spooky, the heart boxers in Crawl, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : t === 'crawl' ? 'boxers' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.13`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.13`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.14`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.14`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -2596,7 +2596,12 @@ function parseInput(text) {
   return {books: fromRows(rows), kind:'csv'};
 }
 const normTitle = t => String(t || '').toLowerCase().replace(/\(.*?\)|\[.*?\]/g, '').split(/[:—]| - /)[0].replace(/^(the|a|an)\s+/, '').replace(/[^a-z0-9]/g, '');
-const surname = a => { const w = String(a || '').toLowerCase().replace(/[^a-z ]/g, '').trim().split(/\s+/); return w[w.length - 1] || ''; };
+// An author field can hold a whole list ("M.F. Adele, Brooklyn Cross, …", "A & B"); "Adele, M.F." is one author, surname first.
+// Matching goes by the first author's surname, or any shared surname, so an anthology's long author list still matches.
+const authorList = a => { const s = String(a || '').trim(), p = s.split(/\s*(?:,|;|&|\band\b)\s*/i).filter(Boolean); return p.length === 2 && !/\s/.test(p[1]) && s.includes(',') ? [p[1] + ' ' + p[0]] : (p.length ? p : ['']); };
+const lastName = a => { const w = String(a || '').toLowerCase().replace(/[^a-z ]/g, '').trim().split(/\s+/); return w[w.length - 1] || ''; };
+const surname = a => lastName(authorList(a)[0]);
+const sharesAuthor = (a, b) => { const x = new Set(authorList(a).map(lastName).filter(Boolean)); return authorList(b).map(lastName).some(n => n && x.has(n)); };
 
 function merge(incoming, replace, kind, addNew = true) {
   if (replace) S.books = [];
@@ -2612,7 +2617,7 @@ function merge(incoming, replace, kind, addNew = true) {
   for (const inc of incoming) {
     if (kind === 'backup') { const nb = {...inc, id: inc.id || uid()}; const m = (nb.asin && byAsin.get(nb.asin.toUpperCase())) || byKey.get(normTitle(nb.title) + '|' + surname(nb.author)); if (m) { Object.assign(m, nb, {id: m.id}); updated++; } else { S.books.push(nb); index(nb); added++; } continue; }
     let m = (inc.asin && byAsin.get(inc.asin.toUpperCase())) || byKey.get(normTitle(inc.title) + '|' + surname(inc.author));
-    if (!m && (!inc.author || true)) { const t = byTitle.get(normTitle(inc.title)); if (t && t !== 'dup' && (!inc.author || !t.author || surname(t.author) === surname(inc.author))) m = t; }
+    if (!m && (!inc.author || true)) { const t = byTitle.get(normTitle(inc.title)); if (t && t !== 'dup' && (!inc.author || !t.author || sharesAuthor(t.author, inc.author))) m = t; }
     if (!m && !addNew) continue;
     if (m) {
       for (const f of ['asin','author','pages','date','isbn']) if ((m[f] == null || m[f] === '') && inc[f]) m[f] = inc[f];
@@ -2872,6 +2877,22 @@ function normGoodreads(list) {
   })).filter(b => b.title);
 }
 
+// A copy of a book made from Goodreads alone, when its Kindle copy is here too (an anthology's long author list used to keep
+// them apart): its reading status carries forward into the Kindle copy and the extra copy goes. One changed by hand stays.
+function foldGoodreadsTwins() {
+  const byT = new Map();
+  for (const b of S.books) if (b.asin) { const t = normTitle(b.title); byT.set(t, [...(byT.get(t) || []), b]); }
+  let n = 0;
+  S.books = S.books.filter(d => {
+    if (d.asin || hasPaid(d) || d.excluded || lockedBy(d).length) return true;
+    const k = (byT.get(normTitle(d.title)) || []).filter(x => sharesAuthor(x.author, d.author));
+    if (k.length !== 1) return true;
+    moveForward(k[0], d.status, d.progress);
+    if (!k[0].rating && d.rating) k[0].rating = d.rating;
+    n++; return false;
+  });
+  return n;
+}
 const ORIGIN = {purchase:'purchase', sharing:'shared', kindleunlimited:'ku', prime:'prime', primereading:'prime', sample:'sample', publiclibrarylending:'other', personallending:'other', rental:'other', koll:'other', freetrial:'free', comicsunlimited:'ku'};
 // Real purchase dates from Amazon replace missing or estimated ones; Kindle's "Mark as read" marks a book finished
 function applyOwnership(items) {
@@ -2922,6 +2943,7 @@ async function runSync(force) {
     // its Content & Devices ID is matched by title, so it isn't added twice.
     if (fromOwned && kList.length) merge(fromKindle(kList), false, 'kindle');
     const res = merge(gr, false, 'goodreads', !kItems.length || S.settings.grAll);
+    foldGoodreadsTwins();
     const dated = applyOwnership(data.owned?.items);
     let priced = 0;
     if (data.prices) for (const b of S.books) {
@@ -3112,7 +3134,7 @@ async function lookupAltGenres() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.13';
+const LATEST_SCRIPT = '2.2.0.0.14';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -3120,7 +3142,7 @@ const verLess = (a, b) => { const x = String(a).split('.').map(Number), y = Stri
 let scriptVer = '';
 // The oldest sync script this page works with. Raise it only when a release changes the script itself;
 // page-only releases leave it alone, so people aren't stopped for updates that don't touch their script.
-const REQUIRED_SCRIPT = '2.2.0.0.12'; // filled in by build.py: the version where the script's code last changed
+const REQUIRED_SCRIPT = '2.2.0.0.14'; // filled in by build.py: the version where the script's code last changed
 function renderVerLine() {
   const el = document.getElementById('verLine'); if (!el) return;
   const sv = scriptVer ? 'v' + verLabel(scriptVer) + (verLess(scriptVer, REQUIRED_SCRIPT) ? ' (update needed)' : '') : 'not installed';
@@ -3198,6 +3220,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.14', ['Books with many authors (anthologies) now match their Goodreads copy, so Goodreads currently reading reaches them; a separate copy Goodreads made earlier is folded back in', 'Kindle reading progress is read fresh every half hour instead of every six hours']],
   ['2.2.0.0.13', ['A small lock beside a book\'s title (on the list and in Edit book) shows when changes made by hand keep syncs from updating it. Point at it to see which sections were changed; click it to unlock the book, with an Undo', 'Quest: the row under the pointer stays readable']],
   ['2.2.0.0.12', ['New Accounts tab in Settings: shows who is signed in at Goodreads and Amazon right now, whose books the last sync read, and which Google account the Drive backup goes to, with a warning when they differ', 'Forget an account to clear what the site remembers about it, or open the site\'s own sign-out page from there', 'When a different Amazon account is signed in than the one the saved Kindle list came from, the sync reads everything fresh instead of using the old copy', 'A book you changed by hand still moves forward when a sync finds you\'ve read further: a higher Kindle percentage, Goodreads currently reading, or finished. It never moves back, and a book you gave up on stays given up on', 'Saving a book\'s genre or the leave-out box no longer stops syncs updating its progress; only changing its status or progress by hand does']],
   ['2.2.0.0.11', ['Goodreads: every sync checks which account is signed in and uses it, replacing a remembered one that differs', 'Goodreads: the account is only ever taken from Goodreads\' own menu bar, never a reviewer\'s or author\'s link', 'Goodreads: when it shows the sync script its sign-in page instead of your shelves, the sync says so instead of finding no books']],

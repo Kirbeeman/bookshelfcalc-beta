@@ -6,21 +6,21 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 13 (latest)
+## 2.2 beta 14 (latest)
 
-**A lock shows which books syncs leave alone**
+**Anthologies match Goodreads, fresher Kindle progress**
 
-- A small lock to the left of a book's title, on the list and in Edit book, shows when changes made by hand keep syncs from updating it. Each theme has its own lock: brass in Cozy, purple with a dripping keyhole in Spooky, a pink heart in Sakura, riveted iron in Quest, pixel-art in Crawl, and a plain padlock in the rest.
-- Pointing at the lock names the sections that were changed (Status / Progress, Price paid, Added on, How you got it, Genre, Second genre). Clicking it unlocks the book so the next sync can update those again, with an Undo in the message that follows.
-- Unlocking a price typed by hand clears it so the order history can fill it in; everything else keeps its value until the next sync.
-- Fixed: in Quest, the row under the mouse turned dark with dark text. It now stays readable.
-- Fixed: a message with a button (like Undo) can be clicked while a dialog is open.
+- Books with many authors (anthologies, co-written books) never matched their Goodreads copy, because Amazon lists every author and only the last one's surname was compared. They now match on the first author or any shared author, so Goodreads "currently reading" reaches them.
+- A separate Goodreads-only copy of such a book, if an earlier sync made one, is folded into the Kindle copy, carrying its reading status forward.
+- Kindle reading progress is read fresh every half hour instead of every six hours.
+- A sync still never moves a book backward, and books changed by hand (with a lock) stay as they are.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 13** A lock shows which books syncs leave alone
 - **2.2 beta 12** Accounts tab, and hand-set books still move forward on sync
 - **2.2 beta 11** Goodreads reads the right account
 - **2.2 beta 10** Worn Quest, leather Crawl

@@ -1,6 +1,6 @@
 // The sync script's own code. The build turns this into core.js, which the signed loader (loader.user.js) checks against
 // the signed release before running it. SITE_URL comes from the loader, so the same code serves the live site and the beta.
-// @version      2.2.0.0.13
+// @version      2.2.0.0.14
 (function (GM_getValue, GM_setValue, GM_addStyle, GM_xmlhttpRequest, GM_info, SITE_URL) {
 'use strict';
 const host = location.hostname;
@@ -286,7 +286,7 @@ const KLC_CORE = {
     if (site === 'amz') { GM_setValue('kindle', 'null'); GM_setValue('owned', 'null'); GM_setValue('prices', '{}'); GM_setValue('amzFrom', ''); }
     return {ok: true};
   },
-  // force = the Sync now button: always refresh the Kindle list. Otherwise reuse it for 6 hours.
+  // force = the Sync now button: always refresh the Kindle list. Otherwise reuse it for half an hour.
   async sync(force, progress = () => {}, paid = []) {
     const out = {goodreads: [], grErr: '', kindle: null, kErr: ''};
     try { out.goodreads = await fetchGoodreads(progress); } catch (e) { out.grErr = e.message || String(e); }
@@ -298,7 +298,7 @@ const KLC_CORE = {
       if (amzNow && amzNow.signedIn && (amzNow.name || amzNow.cid) && !sameAmazon(amzNow, amzFrom)) { force = true; GM_setValue('prices', '{}'); }
     }
     let k = null; try { k = JSON.parse(GM_getValue('kindle', 'null')); } catch {}
-    if (force || !k || Date.now() - k.time > 6 * 3600e3) {
+    if (force || !k || Date.now() - k.time > 30 * 60e3) {  // reading progress changes all the time: re-read every half hour
       try { progress('Reading your Kindle library…'); k = {time: Date.now(), items: await fetchKindle(progress)}; GM_setValue('kindle', JSON.stringify(k)); }
       catch (e) { out.kErr = e.message || String(e); }
     }

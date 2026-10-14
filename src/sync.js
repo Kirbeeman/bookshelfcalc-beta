@@ -137,6 +137,22 @@ function normGoodreads(list) {
   })).filter(b => b.title);
 }
 
+// A copy of a book made from Goodreads alone, when its Kindle copy is here too (an anthology's long author list used to keep
+// them apart): its reading status carries forward into the Kindle copy and the extra copy goes. One changed by hand stays.
+function foldGoodreadsTwins() {
+  const byT = new Map();
+  for (const b of S.books) if (b.asin) { const t = normTitle(b.title); byT.set(t, [...(byT.get(t) || []), b]); }
+  let n = 0;
+  S.books = S.books.filter(d => {
+    if (d.asin || hasPaid(d) || d.excluded || lockedBy(d).length) return true;
+    const k = (byT.get(normTitle(d.title)) || []).filter(x => sharesAuthor(x.author, d.author));
+    if (k.length !== 1) return true;
+    moveForward(k[0], d.status, d.progress);
+    if (!k[0].rating && d.rating) k[0].rating = d.rating;
+    n++; return false;
+  });
+  return n;
+}
 const ORIGIN = {purchase:'purchase', sharing:'shared', kindleunlimited:'ku', prime:'prime', primereading:'prime', sample:'sample', publiclibrarylending:'other', personallending:'other', rental:'other', koll:'other', freetrial:'free', comicsunlimited:'ku'};
 // Real purchase dates from Amazon replace missing or estimated ones; Kindle's "Mark as read" marks a book finished
 function applyOwnership(items) {
@@ -187,6 +203,7 @@ async function runSync(force) {
     // its Content & Devices ID is matched by title, so it isn't added twice.
     if (fromOwned && kList.length) merge(fromKindle(kList), false, 'kindle');
     const res = merge(gr, false, 'goodreads', !kItems.length || S.settings.grAll);
+    foldGoodreadsTwins();
     const dated = applyOwnership(data.owned?.items);
     let priced = 0;
     if (data.prices) for (const b of S.books) {
@@ -463,6 +480,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.14', ['Books with many authors (anthologies) now match their Goodreads copy, so Goodreads currently reading reaches them; a separate copy Goodreads made earlier is folded back in', 'Kindle reading progress is read fresh every half hour instead of every six hours']],
   ['2.2.0.0.13', ['A small lock beside a book\'s title (on the list and in Edit book) shows when changes made by hand keep syncs from updating it. Point at it to see which sections were changed; click it to unlock the book, with an Undo', 'Quest: the row under the pointer stays readable']],
   ['2.2.0.0.12', ['New Accounts tab in Settings: shows who is signed in at Goodreads and Amazon right now, whose books the last sync read, and which Google account the Drive backup goes to, with a warning when they differ', 'Forget an account to clear what the site remembers about it, or open the site\'s own sign-out page from there', 'When a different Amazon account is signed in than the one the saved Kindle list came from, the sync reads everything fresh instead of using the old copy', 'A book you changed by hand still moves forward when a sync finds you\'ve read further: a higher Kindle percentage, Goodreads currently reading, or finished. It never moves back, and a book you gave up on stays given up on', 'Saving a book\'s genre or the leave-out box no longer stops syncs updating its progress; only changing its status or progress by hand does']],
   ['2.2.0.0.11', ['Goodreads: every sync checks which account is signed in and uses it, replacing a remembered one that differs', 'Goodreads: the account is only ever taken from Goodreads\' own menu bar, never a reviewer\'s or author\'s link', 'Goodreads: when it shows the sync script its sign-in page instead of your shelves, the sync says so instead of finding no books']],
