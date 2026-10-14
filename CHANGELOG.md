@@ -6,20 +6,20 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 8 (latest)
+## 2.2 beta 9 (latest)
 
-**Genres from Goodreads, dictionaries left out**
+**Quest and Crawl themes, themed picker**
 
-- A book Amazon no longer sells gets its genre from **Goodreads**, then **Open Library** (exact title and author only); the title is guessed from only when neither knows it. Goodreads is asked slowly, up to 25 books a visit, each book again only after a month.
-- Title guesses read the subtitle, where publishers say what a book is ("A Dark Mafia Romance").
-- Dictionaries and thesauruses in any language are left out automatically, however they arrived and whatever was paid; "count it again" brings one back.
-- The Unknown genre no longer lists dictionaries or the books that came with the Kindle.
+- **Quest** theme: parchment, dragon red and old gold, carved capitals, a d20 by the title, dark oak shelves with dice, candles and scrolls.
+- **Crawl** theme: dark stone and glowing game-system windows, pixel lettering, a quest alert in the header, loot boxes, health potions and trophies on the shelves.
+- Themes are picked from a drop-down with each name in its own style.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 8** Genres from Goodreads, dictionaries left out
 - **2.2 beta 7** Find the books with no genre
 - **2.2 beta 6** Solid Sakura header
 - **2.2 beta 5** Sakura theme

@@ -477,7 +477,7 @@ document.body.innerHTML = `<div class="wrap">
 <dialog id="dlgSettings">
   <form class="dlg" id="setForm">
     <div class="dlg-head"><h2>Settings</h2><button type="button" class="x" id="setClose" aria-label="Close">×</button></div>
-    <div class="themesect"><h4>Theme</h4><div class="themepick" role="radiogroup" aria-label="Theme" id="themePick"></div></div>
+    <div class="themesect"><h4 id="themeLbl">Theme</h4><div class="themesel" id="themeSel"><button type="button" class="themebtn" id="themeBtn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="themeLbl themeBtn"></button><ul class="themelist" id="themePick" role="listbox" aria-labelledby="themeLbl" tabindex="-1" hidden></ul></div></div>
     <div class="form">
       <label>Pages to assume when unknown<input type="number" id="sPages" min="1"></label>
       <label>Price to assume when unknown<input type="number" id="sPrice" min="0" step="0.01"></label>
@@ -629,9 +629,75 @@ GM_addStyle(`
 :root[data-theme="sakura"] .themepick button{border-radius:14px}
 :root[data-theme="sakura"] .bookcase{border-radius:14px 14px 4px 4px;box-shadow:0 0 0 2px var(--outline), inset 2px 0 0 var(--outline), inset -2px 0 0 var(--outline), inset 0 2px 0 var(--outline), 0 12px 30px rgba(255,95,162,.18)}
 :root[data-theme="sakura"] .decor{--dk-pot:#ff9fc4;--dk-pot2:#ffffff;--dk-vase:#c9a7eb;--dk-bloom:#ff8fb8;--dk-box:#ff8fb8;--dk-metal:#f3c45e;--dk-leaf:#7cc9a0;--dk-leaf2:#5fb38a;--dk-leaf3:#a6dfb8}
+/* Quest: a tabletop adventure. Parchment and ink, dragon red and old gold, carved capitals, a twenty-sided die by the title,
+   and the bookcase in dark oak like a tavern shelf. Always light. */
+:root[data-theme="quest"]{
+  --bg:#eadcbc; --paper:#f7eed7; --ink:#2b1d12; --muted:#6b5136; --rule:#cdb388;
+  --accent:#8e1b1b; --accent-soft:#f0d8c6; --shame:#a3121a; --shame-soft:#f3d3c9;
+  --ok:#2f6b3a; --warn:#a2620f;
+  --cloth-1:#6b1e1e; --cloth-2:#1f3d2b; --cloth-3:#3a2a55; --cloth-4:#7a4a1a; --cloth-5:#22344f; --cloth-6:#5a3d22; --spine-ink:#f1dfa8; --wood:#6b4220; --wood-dark:#3a220f; --wood-back:#2a1a10;
+  --g-mystery:#3d4f7c; --g-romance:#8e2b4a; --g-erotica:#7a2e6e; --g-scifi:#2d6a7a; --g-fantasy:#4a3a8a; --g-horror:#5a1a22; --g-fiction:#7a5a2a; --g-history:#7a4a22; --g-selfhelp:#2f6a44; --g-cooking:#8a7a22; --g-humor:#a85a1e; --g-kids:#6a4a9a; --g-comics:#9a3a22; --g-nonfiction:#4a5a62; --g-unknown:#6a625a;
+  --display:"Cinzel", "Cormorant Garamond", Georgia, serif;
+  --outline:#1c1209; --post:#3a220f;
+  color-scheme:light}
+:root[data-theme="quest"] body{background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,246,220,.7), transparent 70%), radial-gradient(ellipse 60% 50% at 0% 100%, rgba(120,70,20,.16), transparent 70%), radial-gradient(ellipse 60% 50% at 100% 100%, rgba(120,70,20,.16), transparent 70%), var(--bg);background-attachment:fixed}
+:root[data-theme="quest"] header.top{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23b8924a' stroke-width='2.4' stroke-linejoin='round'%3E%3Cpath d='M60 6L108 33V87L60 114L12 87V33Z' fill='%23f1e4c2' fill-opacity='.35'/%3E%3Cpath d='M60 6L84 50H36Z M36 50L60 94L84 50 M12 33L36 50L12 87 M108 33L84 50L108 87 M60 94V114 M60 94L12 87 M60 94L108 87 M36 50L60 6 M84 50L60 6'/%3E%3C/g%3E%3Ctext x='60' y='74' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='22' fill='%238e1b1b'%3E20%3C/text%3E%3C/svg%3E") no-repeat calc(50% + 120px) center / 64px 64px, rgba(234,220,188,.95);border-bottom:2px solid var(--rule);box-shadow:0 0 0 100vmax rgba(234,220,188,.95);clip-path:inset(0 -100vmax)}
+@media (max-width:820px){:root[data-theme="quest"] header.top{background-size:0 0, auto}}
+:root[data-theme="quest"] h1{font-weight:800;font-size:2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 1px 0 #f7e7b8, 0 2px 0 rgba(120,80,20,.25)}
+:root[data-theme="quest"] h3{font-family:var(--display);letter-spacing:.12em}
+:root[data-theme="quest"] .pile-title{font-weight:800;letter-spacing:.03em}
+:root[data-theme="quest"] :is(.card,.tiles,.pile,.tablewrap,.yearstrip){border:1px solid var(--rule);border-radius:4px;box-shadow:inset 0 0 0 3px var(--paper), inset 0 0 0 4px #c9a86a, 0 6px 18px rgba(80,50,20,.18)}
+:root[data-theme="quest"] .btn.primary{background:var(--accent);color:#f6e4b0;border-color:#5a0f0f;font-family:var(--display);letter-spacing:.06em}
+:root[data-theme="quest"] .seg button[aria-pressed="true"]{background:var(--accent);color:#f6e4b0}
+:root[data-theme="quest"] .bookcase{box-shadow:0 0 0 2px var(--outline), inset 2px 0 0 var(--outline), inset -2px 0 0 var(--outline), inset 0 2px 0 var(--outline), 0 10px 26px rgba(60,30,10,.35), inset 0 18px 30px rgba(0,0,0,.5)}
+:root[data-theme="quest"] .decor{--dk-box:#6b3f1c;--dk-metal:#c9a24a;--dk-wax:#f3e3c0;--dk-pot:#8a5a2a}
+/* Crawl: a game dungeon seen through its system screens. Dark stone, glowing cyan windows, quest-alert gold, pixel lettering,
+   loot boxes and potions on the shelves. Always dark. */
+:root[data-theme="crawl"]{
+  --bg:#0c0d10; --paper:#14161b; --ink:#e7e9ee; --muted:#9aa3ad; --rule:#262b33;
+  --accent:#ffcc00; --accent-soft:#2a2306; --shame:#ff4d4d; --shame-soft:#3a1212;
+  --ok:#39e58c; --warn:#ffb000;
+  --cloth-1:#5a1f24; --cloth-2:#1f4a3a; --cloth-3:#2a3a6a; --cloth-4:#6a4a1a; --cloth-5:#4a2a5a; --cloth-6:#3b3f4a; --spine-ink:#efe6c8; --wood:#4a4e57; --wood-dark:#24272d; --wood-back:#101114;
+  --g-mystery:#3d5a9a; --g-romance:#b8436e; --g-erotica:#9a4a9a; --g-scifi:#1f8fa6; --g-fantasy:#6a5ad0; --g-horror:#8a2a34; --g-fiction:#8a7040; --g-history:#8a5a30; --g-selfhelp:#2f8a5a; --g-cooking:#9a8a22; --g-humor:#c9702a; --g-kids:#7a5abd; --g-comics:#c4502e; --g-nonfiction:#56666e; --g-unknown:#55585e;
+  --display:"Press Start 2P", "Chakra Petch", monospace; --body:"Chakra Petch", system-ui, sans-serif; --mono:"Chakra Petch", system-ui, monospace;
+  --outline:#050607; --post:#2a2d33;
+  color-scheme:dark}
+:root[data-theme="crawl"] body{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M40 0H0V40' fill='none' stroke='%2322d3ee' stroke-opacity='.06' stroke-width='1'/%3E%3C/svg%3E") repeat 0 0 / 40px 40px, radial-gradient(ellipse 70% 50% at 50% 0%, rgba(34,211,238,.10), transparent 70%), radial-gradient(ellipse 60% 40% at 50% 110%, rgba(255,77,77,.10), transparent 70%), var(--bg);background-attachment:fixed}
+:root[data-theme="crawl"] header.top{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='230' height='64' viewBox='0 0 230 64'%3E%3Crect x='2' y='8' width='226' height='48' rx='3' fill='%230b1220' fill-opacity='.85' stroke='%2322d3ee' stroke-width='2'/%3E%3Crect x='10' y='16' width='32' height='32' fill='%23ffcc00'/%3E%3Cpath d='M23 20h6v16h-6zM23 40h6v5h-6z' fill='%230b1220'/%3E%3Ctext x='52' y='30' font-family='monospace' font-size='12' font-weight='700' fill='%23ffcc00'%3ENEW QUEST UNLOCKED%3C/text%3E%3Ctext x='52' y='46' font-family='monospace' font-size='11' fill='%239ee7f3'%3ERead the pile. All of it.%3C/text%3E%3C/svg%3E") no-repeat calc(50% + 60px) center / 230px 64px, rgba(12,13,16,.94);border-bottom:2px solid #22d3ee;box-shadow:0 0 0 100vmax rgba(12,13,16,.94), 0 2px 18px rgba(34,211,238,.25);clip-path:inset(0 -100vmax -30px)}
+@media (max-width:1000px){:root[data-theme="crawl"] header.top{background-size:0 0, auto}}
+:root[data-theme="crawl"] h1{font-weight:400;font-size:1.35rem;letter-spacing:.02em;line-height:1.5;color:var(--accent);text-shadow:3px 3px 0 #7a1010, 0 0 14px rgba(255,204,0,.35)}
+:root[data-theme="crawl"] h2,:root[data-theme="crawl"] .pile-title{font-family:var(--display);font-weight:400;font-size:1.05rem;line-height:1.5;color:var(--shame);text-shadow:2px 2px 0 #000}
+:root[data-theme="crawl"] h3{font-family:"VT323",monospace;font-size:1.15rem;letter-spacing:.08em;color:#22d3ee}
+:root[data-theme="crawl"] :is(.card,.tiles,.pile,.tablewrap,.yearstrip){border:2px solid #22d3ee;border-radius:2px;background:linear-gradient(rgba(34,211,238,.04),transparent 40%), var(--paper);box-shadow:0 0 0 1px #050607, 0 0 18px rgba(34,211,238,.18), inset 0 0 24px rgba(34,211,238,.05)}
+:root[data-theme="crawl"] .tile .big{font-family:"VT323",monospace;font-size:2.1rem}
+:root[data-theme="crawl"] .btn{border-radius:2px;border:2px solid #22d3ee;background:#0b1220;color:#9ee7f3;text-transform:uppercase;letter-spacing:.06em}
+:root[data-theme="crawl"] .btn.primary{background:var(--accent);border-color:#000;color:#111;box-shadow:3px 3px 0 #7a1010}
+:root[data-theme="crawl"] .seg button[aria-pressed="true"]{background:var(--accent);color:#111}
+:root[data-theme="crawl"] .bookcase{box-shadow:0 0 0 2px var(--outline), inset 2px 0 0 var(--outline), inset -2px 0 0 var(--outline), inset 0 2px 0 var(--outline), 0 0 30px rgba(34,211,238,.18), inset 0 18px 30px rgba(0,0,0,.6)}
+:root[data-theme="crawl"] .decor{--dk-metal:#ffcc00;--dk-box:#5a3a1a;--dk-pot:#3b3f4a;--dk-pot2:#9aa3ad}
 /* Light: the default's light colors, whatever the device is set to */
 :root[data-theme="light"]{color-scheme:light}
 .themesect{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.themesect h4{margin:0;font-size:.9rem}
+.themesel{position:relative;max-width:420px}
+.themebtn,.themelist li{display:flex;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;border-radius:8px;padding:9px 12px;font-size:.95rem;line-height:1.2}
+.themebtn{border:1px solid var(--rule);background:var(--paper);color:var(--ink);font:inherit}
+.themebtn::after{content:"";margin-left:auto;border:6px solid transparent;border-top-color:currentColor;border-bottom:0;opacity:.6}
+.themelist{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 6px);margin:0;padding:6px;list-style:none;background:var(--paper);border:1px solid var(--rule);border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.28);max-height:min(60vh,520px);overflow:auto;display:flex;flex-direction:column;gap:5px}
+.themelist li{border:2px solid transparent}
+.themelist li[aria-selected="true"]{border-color:var(--accent)}
+.themelist li.act{outline:2px solid var(--accent);outline-offset:1px}
+.tn b{font-weight:inherit}.tn small{margin-left:auto;font-size:.72rem;opacity:.8;font-family:system-ui,sans-serif;font-weight:400;letter-spacing:0;text-transform:none;text-shadow:none}
+.tn-default{background:#eceeea;color:#27408b;font-family:"Literata",Georgia,serif;font-weight:800}
+@media (prefers-color-scheme:dark){.tn-default{background:#1a1e21;color:#9fb0ff}}
+.tn-cozy{background:#211811;color:#f0b25a;font-family:"Cormorant Garamond",Georgia,serif;font-weight:700;font-size:1.12rem}
+.tn-zon{background:#131921;color:#fff;font-family:Arial,sans-serif;font-weight:700;border-bottom:3px solid #ffa41c!important}
+.tn-halloween{background:#0c0911;color:#9be35a;font-family:"Creepster","Literata",serif;font-size:1.2rem;letter-spacing:.04em;text-shadow:0 0 8px rgba(155,227,90,.5)}
+.tn-light{background:#f7f8f5;color:#1b1e20;font-family:"Literata",Georgia,serif;font-weight:600}
+.tn-fruit{background:linear-gradient(120deg,rgba(255,149,0,.25),rgba(255,45,85,.2),rgba(0,122,255,.25)),#f2f2f7;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-weight:700;letter-spacing:-.01em}
+.tn-sakura{background:#fff0f6;color:#ff4f98;font-family:"M PLUS Rounded 1c",system-ui,sans-serif;font-weight:800;text-shadow:0 1px 0 #fff}
+.tn-quest{background:#eadcbc;color:#8e1b1b;font-family:"Cinzel",Georgia,serif;font-weight:800;letter-spacing:.06em;box-shadow:inset 0 0 0 2px #eadcbc, inset 0 0 0 3px #c9a24a}
+.tn-crawl{background:#0c0d10;color:#ffcc00;font-family:"Press Start 2P",monospace;font-size:.72rem;text-shadow:2px 2px 0 #7a1010;box-shadow:inset 0 0 0 2px #22d3ee}
+.tn-crawl small{font-family:"VT323",monospace;font-size:1rem;color:#9ee7f3}
 .themepick{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
 /* Illustrated shelf: ink outline and the dark posts of the bookcase, per theme */
 :root{--outline:#2a1e16;--post:#3b3f44}
@@ -809,7 +875,8 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 @keyframes cbrise{0%{transform:translateY(0) scale(.4);opacity:0}10%{opacity:1}30%{transform:translate(2px,-12px) scale(.8)}55%{transform:translate(-2px,-26px) scale(1)}80%{transform:translate(1px,-38px) scale(1.05);opacity:1}86%{transform:translate(1px,-38px) scale(1.45);opacity:0}100%{transform:translate(1px,-38px) scale(1.45);opacity:0}}
 @keyframes cbpop{0%,80%{opacity:0;transform:scale(.6)}86%{opacity:1;transform:scale(1)}96%{opacity:0;transform:scale(1.35)}100%{opacity:0}}
 .cb-fire{transform-origin:30px 90px;animation:dkflick 1.4s ease-in-out infinite alternate}@keyframes dkflick{0%{transform:scale(1,1)}50%{transform:scale(1.06,.92)}100%{transform:scale(.95,1.05)}}
-@media (prefers-reduced-motion:reduce){.gx-spin,.cb-b,.cb-p,.cb-fire{animation:none}.cb-p{opacity:0}}
+.cdl-fire{transform-box:fill-box;transform-origin:50% 100%;animation:dkflick 1.6s ease-in-out infinite alternate}
+@media (prefers-reduced-motion:reduce){.gx-spin,.cb-b,.cb-p,.cb-fire,.cdl-fire{animation:none}.cb-p{opacity:0}}
 .decor{display:inline-block;vertical-align:bottom;margin-bottom:12px;line-height:0;--dk-metal:#c99a3e;--dk-leaf:#5a9a4e;--dk-leaf2:#3d7a43;--dk-leaf3:#8cbf7a;--dk-pot:#c0663a;--dk-pot2:#ece4d4;--dk-vase:#2f7f86;--dk-bloom:#e8566a;--dk-box:#b5462f;--dk-wax:#efe4c8}
 .decor.orn{margin:0 0 12px}
 .decor svg{display:block;width:100%;height:100%;overflow:visible}
@@ -1407,6 +1474,12 @@ const DECOR = {
     <g fill="#f3e8cc" ${OL}><rect x="84" y="40" width="5" height="12"/><rect x="78" y="24" width="5" height="12"/><rect x="78" y="8" width="5" height="12"/></g><g fill="color-mix(in srgb,#f4dca0 70%,transparent)"><rect x="12" y="9" width="3" height="10"/><rect x="18" y="25" width="3" height="10"/><rect x="14" y="41" width="3" height="10"/><rect x="64" y="9" width="3" height="10"/><rect x="68" y="41" width="3" height="10"/></g></svg>`],
   branch: [60, 132, `<svg viewBox="0 0 60 132"><path d="M30 92C29 70 22 52 12 34M29 74C34 58 42 46 50 34M27 60C24 46 26 30 30 14M44 44C48 40 52 38 56 36" stroke="#8a5a5a" stroke-width="3" fill="none" stroke-linecap="round"/><g transform="translate(12 34) scale(0.95)"><path transform="rotate(0)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(72)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(144)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(216)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(288)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><circle r="2.4" fill="#ff6f9f"/></g><g transform="translate(30 14) scale(1.05)"><path transform="rotate(0)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(72)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(144)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(216)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(288)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><circle r="2.4" fill="#ff6f9f"/></g><g transform="translate(50 34) scale(1)"><path transform="rotate(0)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(72)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(144)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(216)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(288)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><circle r="2.4" fill="#ff6f9f"/></g><g transform="translate(20 52) scale(0.75)"><path transform="rotate(0)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(72)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(144)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(216)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(288)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><circle r="2.4" fill="#ff6f9f"/></g><g transform="translate(40 50) scale(0.8)"><path transform="rotate(0)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(72)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(144)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(216)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(288)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><circle r="2.4" fill="#ff6f9f"/></g><g transform="translate(56 36) scale(0.6)"><path transform="rotate(0)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(72)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(144)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(216)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(288)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><circle r="2.4" fill="#ff6f9f"/></g><g transform="translate(28 30) scale(0.7)"><path transform="rotate(0)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(72)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(144)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(216)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><path transform="rotate(288)" d="M0 0C-5-4-5-11 0-13C5-11 5-4 0 0Z" fill="#ffb7d0" ${OL}/><circle r="2.4" fill="#ff6f9f"/></g><path d="M18 92h24l4 8c4 8 4 22-2 30H16c-6-8-6-22-2-30z" fill="var(--dk-pot2)" ${OL}/><path d="M16 104c9 4 19 4 28 0" stroke="#ff9fc4" stroke-width="3" fill="none"/><circle cx="30" cy="116" r="4" fill="#ffb7d0" ${OL}/><rect x="16" y="88" width="28" height="6" rx="2" fill="#ff9fc4" ${OL}/></svg>`],
   bunny: [56, 74, `<svg viewBox="0 0 56 74"><path d="M17 30C11 18 10 4 16 2s9 12 9 26M39 30C45 18 46 4 40 2s-9 12-9 26" fill="#ffe3ee" ${OL}/><path d="M17 26C14 17 14 8 16 6s5 9 6 20M39 26C42 17 42 8 40 6s-5 9-6 20" fill="#ff9fc4"/><ellipse cx="28" cy="58" rx="20" ry="16" fill="#ffe3ee" ${OL}/><circle cx="28" cy="36" r="15" fill="#ffe3ee" ${OL}/><circle cx="22" cy="35" r="2" fill="var(--outline)"/><circle cx="34" cy="35" r="2" fill="var(--outline)"/><ellipse cx="18.5" cy="40" rx="3.4" ry="2" fill="#ff9fc4" opacity=".8"/><ellipse cx="37.5" cy="40" rx="3.4" ry="2" fill="#ff9fc4" opacity=".8"/><path d="M26 40q2 2 4 0" stroke="var(--outline)" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M20 50l8 4 8-4-3 7h-10z" fill="#ff5fa2" ${OL}/><circle cx="28" cy="54" r="2.4" fill="#ff8fb8" ${OL}/><ellipse cx="17" cy="70" rx="7" ry="4" fill="#ffe3ee" ${OL}/><ellipse cx="39" cy="70" rx="7" ry="4" fill="#ffe3ee" ${OL}/></svg>`],
+  d20: [56, 60, `<svg viewBox="0 0 56 60"><path d="M28 2L53 16V44L28 58L3 44V16Z" fill="#8e1b1b" ${OL}/><path d="M28 2L40 24H16Z" fill="#b8302e"/><path d="M16 24L28 46L40 24Z" fill="#a52624"/><path d="M28 2L40 24H16Z M16 24L28 46L40 24 M3 16L16 24L3 44 M53 16L40 24L53 44 M28 46V58 M28 46L3 44 M28 46L53 44" fill="none" stroke="#f1dfa8" stroke-width="1.2" stroke-linejoin="round"/><text x="28" y="38" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="11" fill="#f1dfa8">20</text></svg>`],
+  scroll: [84, 44, `<svg viewBox="0 0 84 44"><rect x="10" y="10" width="64" height="26" fill="#efe0b8" ${OL}/><ellipse cx="10" cy="23" rx="7" ry="14" fill="#e2cf9e" ${OL}/><ellipse cx="74" cy="23" rx="7" ry="14" fill="#e2cf9e" ${OL}/><path d="M20 17h40M20 23h44M20 29h32" stroke="#8a6a3a" stroke-width="1.6" stroke-linecap="round"/><path d="M38 34l-3 10 5-4 5 4-3-10" fill="#8e1b1b" ${OL}/><circle cx="40" cy="34" r="5" fill="#a52624" ${OL}/></svg>`],
+  candle: [34, 96, `<svg viewBox="0 0 34 96"><path class="cdl-fire" d="M17 6c-5 7-6 12-2 16 5 3 7-3 5-7 0 0 3 4 1 8 4-2 4-9-4-17z" fill="#ffb347" ${OL}/><ellipse cx="17" cy="20" rx="2.4" ry="4" fill="#fff3c4"/><path d="M10 26h14v52H10z" fill="var(--dk-wax)" ${OL}/><path d="M10 34c3 3 3 7 0 10M24 30c-2 4-2 9 0 12" stroke="#d9c79a" stroke-width="2" fill="none"/><path d="M17 26v-4" stroke="#2b1d12" stroke-width="1.6"/><ellipse cx="17" cy="84" rx="15" ry="5" fill="var(--dk-metal)" ${OL}/><path d="M6 80h22v4H6z" fill="var(--dk-metal)" ${OL}/></svg>`],
+  loot: [72, 64, `<svg viewBox="0 0 72 64"><ellipse cx="36" cy="60" rx="32" ry="4" fill="#22d3ee" opacity=".25"/><path d="M8 28h56v30H8z" fill="#5a3a1a" ${OL}/><path d="M8 28c0-14 10-22 28-22s28 8 28 22z" fill="#6e4720" ${OL}/><path d="M8 36h56M20 28v30M52 28v30" stroke="#ffcc00" stroke-width="3"/><path d="M8 28h56" stroke="#ffcc00" stroke-width="3"/><rect x="30" y="30" width="12" height="13" rx="2" fill="#ffcc00" ${OL}/><path d="M36 34v5" stroke="#3a2a10" stroke-width="2"/><path d="M14 6l3 6M58 6l-3 6M36 0v7" stroke="#22d3ee" stroke-width="2.4" stroke-linecap="round"/></svg>`],
+  hpotion: [40, 70, `<svg viewBox="0 0 40 70"><rect x="15" y="2" width="10" height="8" rx="2" fill="#8a5a36" ${OL}/><path d="M15 9h10v12c9 4 13 11 13 21a18 18 0 0 1-36 0c0-10 4-17 13-21z" fill="rgba(220,240,255,.2)" ${OL}/><path d="M4 42a16 16 0 0 0 32 0c0-3-1-5-2-7H6c-1 2-2 4-2 7z" fill="#ff3b4a"/><path d="M15 44h10M20 39v10" stroke="#fff" stroke-width="3"/><circle cx="12" cy="49" r="2" fill="rgba(255,255,255,.55)"/></svg>`],
+  trophy: [46, 72, `<svg viewBox="0 0 46 72"><path d="M10 6h26v14a13 13 0 0 1-26 0z" fill="#ffcc00" ${OL}/><path d="M10 10H3c0 9 4 14 9 15M36 10h7c0 9-4 14-9 15" fill="none" stroke="#ffcc00" stroke-width="3.4"/><path d="M20 33h6v14h-6z" fill="#e0a800" ${OL}/><path d="M11 47h24v8H11z" fill="#e0a800" ${OL}/><rect x="6" y="55" width="34" height="14" fill="#3b3f4a" ${OL}/><path d="M14 62h18" stroke="#ffcc00" stroke-width="2"/><path d="M17 12v8" stroke="#fff6c4" stroke-width="3" stroke-linecap="round"/></svg>`],
   pumpkin: [66, 60, `<svg viewBox="0 0 66 60"><path d="M33 13c1-6 4-9 8-10" stroke="#3f6b1f" stroke-width="4.5" fill="none" stroke-linecap="round"/><ellipse cx="18" cy="39" rx="15" ry="20" fill="#e2701c" ${OL}/><ellipse cx="48" cy="39" rx="15" ry="20" fill="#e2701c" ${OL}/><ellipse cx="33" cy="38" rx="15" ry="21" fill="#f58a2a" ${OL}/><path d="M26 22c-3 10-3 22 0 34M40 22c3 10 3 22 0 34" stroke="rgba(120,50,0,.4)" stroke-width="1.5" fill="none"/><path d="M24 30a10 6 0 0 1 8-6" stroke="rgba(255,255,255,.4)" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`],
   potion: [44, 80, `<svg viewBox="-2 0 44 80"><rect x="15" y="2" width="10" height="9" rx="2" fill="#8a5a36" ${OL}/><path d="M15 10h10v14c9 4 13 11 13 22a18 18 0 0 1-36 0c0-11 4-18 13-22z" fill="rgba(220,210,255,.18)" ${OL}/><path d="M4 46a16 16 0 0 0 32 0c0-3-1-6-2-8H6c-1 2-2 5-2 8z" fill="#9be35a"/><circle cx="14" cy="50" r="2.5" fill="rgba(255,255,255,.5)"/><circle cx="22" cy="44" r="1.6" fill="rgba(255,255,255,.5)"/><path d="M-1 60h42v6H-1z" fill="#6e4a2e" ${OL}/><path d="M1 66h5v14H1zM34 66h5v14h-5z" fill="#5a3b24" ${OL}/><path d="M-2 76h44v4H-2z" fill="#6e4a2e" ${OL}/></svg>`],
 };
@@ -1445,10 +1518,10 @@ function comicSvg(gs) {
     <path d="M0 16h60v5H0z" fill="#e8dcc0" stroke="var(--outline)" stroke-width="1.6"/><path d="M60 16l8-16v5l-8 16z" fill="#d9cba8" stroke="var(--outline)" stroke-width="1.6"/></svg>`;
 }
 // The last shelf's leftover space gets a bookend and these, in order; ORNAMENTS are the small things set between books now and then (Default spine colors only)
-const DECOR_SETS = {sakura: ['branch', 'bunny', 'box', 'succulent', 'branch', 'bunny'], halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
-const ORN_INSET = {branch: [14, 14], bunny: [8, 8], plant: [14, 14], succulent: [7, 7], vase: [2, 2], box: [2, 2], stack: [2, 4], pumpkin: [3, 3], potion: [4, 4]};
+const DECOR_SETS = {quest: ['candle', 'd20', 'scroll', 'box', 'candle', 'stack'], crawl: ['loot', 'hpotion', 'trophy', 'loot', 'hpotion', 'stack'], sakura: ['branch', 'bunny', 'box', 'succulent', 'branch', 'bunny'], halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
+const ORN_INSET = {d20: [3, 3], scroll: [3, 3], candle: [4, 4], loot: [8, 8], hpotion: [2, 2], trophy: [3, 3], branch: [14, 14], bunny: [8, 8], plant: [14, 14], succulent: [7, 7], vase: [2, 2], box: [2, 2], stack: [2, 4], pumpkin: [3, 3], potion: [4, 4]};
 const ornSize = k => { const [w, h] = DECOR[k], s = Math.max(1, Math.min(138 / h, 2, 100 / w)); return [Math.round(w * s), Math.round(h * s)]; };
-const ORNAMENTS = {sakura: ['branch', 'bunny', 'box', 'succulent'], halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
+const ORNAMENTS = {quest: ['d20', 'candle', 'scroll', 'box'], crawl: ['hpotion', 'loot', 'trophy', 'hpotion'], sakura: ['branch', 'bunny', 'box', 'succulent'], halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
 let shelfMemo = {};
 // A share as a whole percent, except near the ends: 3 books read out of 659 is 99.5% unread, never a rounded-up 100%
 const pctText = p => (p > 0 && p < 1 ? Math.max(.1, Math.round(p * 10) / 10) : p > 99 && p < 100 ? Math.min(99.9, Math.floor(p * 10) / 10) : Math.round(p)) + '%';
@@ -2090,6 +2163,8 @@ const THEMES = [
   ['light', 'Light', 'Always light', ['#f7f8f5', '#eceeea', '#27408b', '#2f6b45']],
   ['fruit', 'Fruit', 'Frosted glass and bright colors', ['#f2f2f7', '#ffffff', '#007aff', '#ff3b30']],
   ['sakura', 'Sakura', 'Cherry blossoms, all pink', ['#fff0f6', '#ffd1e3', '#ff5fa2', '#c9a7eb']],
+  ['quest', 'Quest', 'Dice, parchment and candlelight', ['#eadcbc', '#6b4220', '#8e1b1b', '#c9a24a']],
+  ['crawl', 'Crawl', 'Loot boxes and system alerts', ['#0c0d10', '#22d3ee', '#ffcc00', '#ff4d4d']],
 ];
 function applyTheme(t) {
   if (!t || t === 'default') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = t;
@@ -2098,18 +2173,37 @@ function applyTheme(t) {
   // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.8`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.8`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.9`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.9`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
-  const p = document.getElementById('themePick'); if (p) p.querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', b.dataset.t === (t || 'default')));
+  const p = document.getElementById('themePick'); if (p) p.querySelectorAll('li').forEach(li => li.setAttribute('aria-selected', li.dataset.t === (t || 'default')));
+  const tb = document.getElementById('themeBtn'), th = THEMES.find(x => x[0] === (t || 'default')) || THEMES[0]; if (tb) { tb.className = 'themebtn tn tn-' + th[0]; tb.innerHTML = `<b>${th[1]}</b><small>${th[2]}</small>`; }
 }
-$('#themePick').innerHTML = THEMES.map(([k, n, d, sw]) => `<button type="button" role="radio" aria-checked="false" data-t="${k}"><span class="sw">${sw.map(c => `<i style="background:${c}"></i>`).join('')}</span>${n}<small>${d}</small></button>`).join('');
+$('#themePick').innerHTML = THEMES.map(([k, n, d]) => `<li role="option" id="thm-${k}" data-t="${k}" aria-selected="false" class="tn tn-${k}"><b>${n}</b><small>${d}</small></li>`).join('');
 // Until someone picks a theme, it follows their device: Fruit on iPhone, iPad and Mac, Default everywhere else
 const deviceTheme = () => /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) ? 'fruit' : 'default';
 const themePicked = () => { try { return !!localStorage.getItem('klc-theme-picked'); } catch { return false; } };
 try { applyTheme(themePicked() ? (localStorage.getItem('klc-theme') || 'default') : deviceTheme()); } catch {} // before the library loads, so there's no flash
-$('#themePick').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; try { localStorage.setItem('klc-theme-picked', '1'); } catch {} S.settings.theme = b.dataset.t; applyTheme(b.dataset.t); scheduleSave(); });
+// The theme drop-down: each name is drawn in its own theme's look. Arrow keys move, Enter or a click picks, Esc closes.
+{ const btn = $('#themeBtn'), list = $('#themePick'), items = () => [...list.querySelectorAll('li')];
+  let act = 0;
+  const mark = () => { items().forEach((li, i) => li.classList.toggle('act', i === act)); const a = items()[act]; if (a) { list.setAttribute('aria-activedescendant', a.id); a.scrollIntoView({block: 'nearest'}); } };
+  const open = () => { list.hidden = false; btn.setAttribute('aria-expanded', 'true'); act = Math.max(0, items().findIndex(li => li.getAttribute('aria-selected') === 'true')); mark(); list.focus(); };
+  const close = (refocus = true) => { list.hidden = true; btn.setAttribute('aria-expanded', 'false'); if (refocus) btn.focus(); };
+  const choose = t => { try { localStorage.setItem('klc-theme-picked', '1'); } catch {} S.settings.theme = t; applyTheme(t); scheduleSave(); close(); };
+  btn.addEventListener('click', () => list.hidden ? open() : close());
+  btn.addEventListener('keydown', e => { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); } });
+  list.addEventListener('click', e => { const li = e.target.closest('li[data-t]'); if (li) choose(li.dataset.t); });
+  list.addEventListener('keydown', e => {
+    const n = items().length;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); act = (act + (e.key === 'ArrowDown' ? 1 : n - 1)) % n; mark(); }
+    else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); act = e.key === 'Home' ? 0 : n - 1; mark(); }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(items()[act].dataset.t); }
+    else if (e.key === 'Escape' || e.key === 'Tab') { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); } close(e.key === 'Escape'); }
+  });
+  document.addEventListener('pointerdown', e => { if (!list.hidden && !e.target.closest('#themeSel')) close(false); });
+}
 $('#setClose').onclick = () => $('#dlgSettings').close();
 // Clicking the dimmed area around Settings closes it, like the ×. A press that starts inside (e.g. selecting text) doesn't count.
 { const d = $('#dlgSettings'); let downOut = false; d.addEventListener('pointerdown', e => { downOut = e.target === d; }); d.addEventListener('click', e => { if (downOut && e.target === d) d.close(); downOut = false; }); }
@@ -2729,7 +2823,7 @@ async function lookupAltGenres() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.8';
+const LATEST_SCRIPT = '2.2.0.0.9';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -2815,6 +2909,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.9', ['Two new themes: Quest (dice, parchment and candlelight) and Crawl (loot boxes and game system alerts), each with its own shelf adornments', 'Themes are picked from a drop-down, with every name shown in its own theme\'s style']],
   ['2.2.0.0.8', ['A book Amazon no longer sells gets its genre from Goodreads, then Open Library; the title is only guessed from when neither knows it. Goodreads is asked slowly, a few books each visit', 'Title guesses read the subtitle too, where publishers say what a book is ("A Dark Mafia Romance")', 'Dictionaries and thesauruses in any language are left out automatically, whatever was paid or however they arrived; "count it again" brings one back', 'The Unknown genre no longer lists dictionaries or the books that came with your Kindle']],
   ['2.2.0.0.7', ['Searching the Genre box for Unknown brings up the books that have no genre information yet']],
   ['2.2.0.0.6', ['Sakura: the bar at the top is solid pink, so the page no longer shows through it when you scroll']],

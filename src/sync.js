@@ -408,6 +408,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.9', ['Two new themes: Quest (dice, parchment and candlelight) and Crawl (loot boxes and game system alerts), each with its own shelf adornments', 'Themes are picked from a drop-down, with every name shown in its own theme\'s style']],
   ['2.2.0.0.8', ['A book Amazon no longer sells gets its genre from Goodreads, then Open Library; the title is only guessed from when neither knows it. Goodreads is asked slowly, a few books each visit', 'Title guesses read the subtitle too, where publishers say what a book is ("A Dark Mafia Romance")', 'Dictionaries and thesauruses in any language are left out automatically, whatever was paid or however they arrived; "count it again" brings one back', 'The Unknown genre no longer lists dictionaries or the books that came with your Kindle']],
   ['2.2.0.0.7', ['Searching the Genre box for Unknown brings up the books that have no genre information yet']],
   ['2.2.0.0.6', ['Sakura: the bar at the top is solid pink, so the page no longer shows through it when you scroll']],
