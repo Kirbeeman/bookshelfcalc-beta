@@ -40,7 +40,7 @@ open(O+'/iphone.html','w').write(ios)
 os.makedirs(O+'/ioshelp', exist_ok=True); open(O+'/ioshelp/index.html','w').write(ios)
 hlp=open(G+'/help.html').read().replace('bookshelf.kirbee213.tv', 'betabookshelf.kirbee213.tv')
 open(O+'/help.html','w').write(hlp); os.makedirs(O+'/help', exist_ok=True); open(O+'/help/index.html','w').write(hlp)
-for f in ['icon-tag.png', 'icon-tag-180.png', 'icon-web.png', 'icon-web-180.png', 'og.png']: shutil.copy(G+'/'+f, O+'/'+f)
+for f in ['icon-tag.png', 'icon-tag-180.png', 'icon-web.png', 'icon-web-180.png', 'icon-boxers.png', 'icon-boxers-180.png', 'og.png']: shutil.copy(G+'/'+f, O+'/'+f)
 open(O+'/CNAME','w').write('betabookshelf.kirbee213.tv\n')
 # the beta changes the page's script, so its fingerprint in the Content Security Policy is worked out again
 import sys; sys.dont_write_bytecode = True; sys.path.insert(0, G+'/src'); import csp; csp.apply_all(O)

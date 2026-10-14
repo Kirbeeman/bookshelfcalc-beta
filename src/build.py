@@ -44,7 +44,7 @@ open('/tmp/klc-bm.js','w').write(_bm)
 _min=subprocess.run(['terser','/tmp/klc-bm.js','--compress','--mangle','--ecma','2020'],capture_output=True,text=True,check=True).stdout.strip()
 open('../bm.js','w').write(_min + '\n')
 import shutil; shutil.copy('privacy.html', '../privacy.html'); open('../bookmark.html','w').write(open('bookmark.html').read().replace('__SIGN_KEY__', open('signing-key.pub').read().strip())); shutil.copy('iphone.html', '../iphone.html'); os.makedirs('../ioshelp', exist_ok=True); shutil.copy('iphone.html', '../ioshelp/index.html'); shutil.copy('help.html', '../help.html'); os.makedirs('../help', exist_ok=True); shutil.copy('help.html', '../help/index.html')
-for _f in ['icon-tag.png', 'icon-tag-180.png', 'icon-web.png', 'icon-web-180.png', 'og.png']: shutil.copy(_f, '../' + _f)  # drawn by icons/make_icons.js  # served next to the page; the bookmark itself just loads this file
+for _f in ['icon-tag.png', 'icon-tag-180.png', 'icon-web.png', 'icon-web-180.png', 'icon-boxers.png', 'icon-boxers-180.png', 'og.png']: shutil.copy(_f, '../' + _f)  # drawn by icons/make_icons.js  # served next to the page; the bookmark itself just loads this file
 _sync=(open('sync.js').read() + '\n' + open('drive.js').read()).replace('__SCRIPT_VERSION__', VER).replace('__REQUIRED_SCRIPT__', REQ).replace('__SIGN_KEY__', open('signing-key.pub').read().strip())
 src=R(src,"// ---------- export ----------", _sync+"\n// ---------- export ----------")
 standalone=src.replace('<label class="check full" data-us>','<label class="check full" data-us hidden>')

@@ -143,28 +143,32 @@
 :root[data-theme="sakura"] .themepick button{border-radius:14px}
 :root[data-theme="sakura"] .bookcase{border-radius:14px 14px 4px 4px;box-shadow:0 0 0 2px var(--outline), inset 2px 0 0 var(--outline), inset -2px 0 0 var(--outline), inset 0 2px 0 var(--outline), 0 12px 30px rgba(255,95,162,.18)}
 :root[data-theme="sakura"] .decor{--dk-pot:#ff9fc4;--dk-pot2:#ffffff;--dk-vase:#c9a7eb;--dk-bloom:#ff8fb8;--dk-box:#ff8fb8;--dk-metal:#f3c45e;--dk-leaf:#7cc9a0;--dk-leaf2:#5fb38a;--dk-leaf3:#a6dfb8}
-/* Quest: a tabletop adventure. Parchment and ink, dragon red and old gold, carved capitals, a twenty-sided die by the title,
-   and the bookcase in dark oak like a tavern shelf. Always light. */
+/* Quest: a tabletop adventure after a long campaign. Dark oak and old leather around the page, panels of stained, scorched
+   parchment, dragon red and tarnished gold, carved capitals, a twenty-sided die by the title. */
 :root[data-theme="quest"]{
-  --bg:#eadcbc; --paper:#f7eed7; --ink:#2b1d12; --muted:#6b5136; --rule:#cdb388;
-  --accent:#8e1b1b; --accent-soft:#f0d8c6; --shame:#a3121a; --shame-soft:#f3d3c9;
-  --ok:#2f6b3a; --warn:#a2620f;
-  --cloth-1:#6b1e1e; --cloth-2:#1f3d2b; --cloth-3:#3a2a55; --cloth-4:#7a4a1a; --cloth-5:#22344f; --cloth-6:#5a3d22; --spine-ink:#f1dfa8; --wood:#6b4220; --wood-dark:#3a220f; --wood-back:#2a1a10;
+  --bg:#18110b; --paper:#d6c08e; --ink:#22160b; --muted:#56401f; --rule:#9c7f4d;
+  --accent:#9e2320; --accent-soft:#e3c9a2; --shame:#8f1414; --shame-soft:#e8c4a8;
+  --ok:#2c5e33; --warn:#8f540c;
+  --cloth-1:#5a1818; --cloth-2:#1c3626; --cloth-3:#33264b; --cloth-4:#6a3f17; --cloth-5:#1e2e45; --cloth-6:#4e341c; --spine-ink:#e6cf8c; --wood:#4a2e17; --wood-dark:#24160a; --wood-back:#140d07;
   --g-mystery:#3d4f7c; --g-romance:#8e2b4a; --g-erotica:#7a2e6e; --g-scifi:#2d6a7a; --g-fantasy:#4a3a8a; --g-horror:#5a1a22; --g-fiction:#7a5a2a; --g-history:#7a4a22; --g-selfhelp:#2f6a44; --g-cooking:#8a7a22; --g-humor:#a85a1e; --g-kids:#6a4a9a; --g-comics:#9a3a22; --g-nonfiction:#4a5a62; --g-unknown:#6a625a;
   --display:"Cinzel", "Cormorant Garamond", Georgia, serif;
-  --outline:#1c1209; --post:#3a220f;
+  --outline:#0e0905; --post:#24160a;
   color-scheme:light}
-:root[data-theme="quest"] body{background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,246,220,.7), transparent 70%), radial-gradient(ellipse 60% 50% at 0% 100%, rgba(120,70,20,.16), transparent 70%), radial-gradient(ellipse 60% 50% at 100% 100%, rgba(120,70,20,.16), transparent 70%), var(--bg);background-attachment:fixed}
-:root[data-theme="quest"] header.top{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23b8924a' stroke-width='2.4' stroke-linejoin='round'%3E%3Cpath d='M60 6L108 33V87L60 114L12 87V33Z' fill='%23f1e4c2' fill-opacity='.35'/%3E%3Cpath d='M60 6L84 50H36Z M36 50L60 94L84 50 M12 33L36 50L12 87 M108 33L84 50L108 87 M60 94V114 M60 94L12 87 M60 94L108 87 M36 50L60 6 M84 50L60 6'/%3E%3C/g%3E%3Ctext x='60' y='74' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='22' fill='%238e1b1b'%3E20%3C/text%3E%3C/svg%3E") no-repeat calc(50% + 120px) center / 64px 64px, rgba(234,220,188,.95);border-bottom:2px solid var(--rule);box-shadow:0 0 0 100vmax rgba(234,220,188,.95);clip-path:inset(0 -100vmax)}
+:root[data-theme="quest"] body{background:radial-gradient(ellipse 90% 70% at 50% 30%, rgba(90,58,26,.35), transparent 75%), repeating-linear-gradient(92deg, rgba(255,220,160,.025) 0 2px, transparent 2px 9px), radial-gradient(ellipse 120% 90% at 50% 50%, transparent 55%, rgba(0,0,0,.55)), var(--bg);background-attachment:fixed}
+:root[data-theme="quest"] header.top{--ink:#ecd9ac;--muted:#c2a571;color:var(--ink);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23b8924a' stroke-width='2.4' stroke-linejoin='round'%3E%3Cpath d='M60 6L108 33V87L60 114L12 87V33Z' fill='%23f1e4c2' fill-opacity='.35'/%3E%3Cpath d='M60 6L84 50H36Z M36 50L60 94L84 50 M12 33L36 50L12 87 M108 33L84 50L108 87 M60 94V114 M60 94L12 87 M60 94L108 87 M36 50L60 6 M84 50L60 6'/%3E%3C/g%3E%3Ctext x='60' y='74' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='22' fill='%238e1b1b'%3E20%3C/text%3E%3C/svg%3E") no-repeat calc(50% + 120px) center / 64px 64px, rgba(24,17,11,.95);border-bottom:2px solid #5a3e1e;box-shadow:0 0 0 100vmax rgba(24,17,11,.95);clip-path:inset(0 -100vmax)}
+:root[data-theme="quest"] header.top a{color:#e6c37a}
+:root[data-theme="quest"] header.top .btn{background:#2a1c10;color:#ecd9ac;border-color:#6b4a22}
 @media (max-width:820px){:root[data-theme="quest"] header.top{background-size:0 0, auto}}
-:root[data-theme="quest"] h1{font-weight:800;font-size:2rem;letter-spacing:.04em;color:var(--accent);text-shadow:0 1px 0 #f7e7b8, 0 2px 0 rgba(120,80,20,.25)}
+:root[data-theme="quest"] h1{font-weight:800;font-size:2rem;letter-spacing:.04em;color:#c9302c;text-shadow:0 1px 0 #3a0a08, 0 0 12px rgba(201,48,44,.25)}
 :root[data-theme="quest"] h3{font-family:var(--display);letter-spacing:.12em}
 :root[data-theme="quest"] .pile-title{font-weight:800;letter-spacing:.03em}
-:root[data-theme="quest"] :is(.card,.tiles,.pile,.tablewrap,.yearstrip){border:1px solid var(--rule);border-radius:4px;box-shadow:inset 0 0 0 3px var(--paper), inset 0 0 0 4px #c9a86a, 0 6px 18px rgba(80,50,20,.18)}
-:root[data-theme="quest"] .btn.primary{background:var(--accent);color:#f6e4b0;border-color:#5a0f0f;font-family:var(--display);letter-spacing:.06em}
-:root[data-theme="quest"] .seg button[aria-pressed="true"]{background:var(--accent);color:#f6e4b0}
-:root[data-theme="quest"] .bookcase{box-shadow:0 0 0 2px var(--outline), inset 2px 0 0 var(--outline), inset -2px 0 0 var(--outline), inset 0 2px 0 var(--outline), 0 10px 26px rgba(60,30,10,.35), inset 0 18px 30px rgba(0,0,0,.5)}
-:root[data-theme="quest"] .decor{--dk-box:#6b3f1c;--dk-metal:#c9a24a;--dk-wax:#f3e3c0;--dk-pot:#8a5a2a}
+:root[data-theme="quest"] :is(.card,.tiles,.pile,.tablewrap,.yearstrip,.notice){border:1px solid #5a3e1e;border-radius:3px;background:radial-gradient(circle at 12% 18%, rgba(110,66,20,.20) 0 34px, transparent 80px), radial-gradient(circle at 88% 74%, rgba(90,50,12,.18) 0 26px, transparent 96px), radial-gradient(circle at 60% 8%, rgba(120,80,30,.12) 0 18px, transparent 60px), linear-gradient(170deg,#dcc797,#cdb27c 60%,#c4a56d);box-shadow:inset 0 0 34px rgba(70,38,8,.55), inset 0 0 6px rgba(40,20,4,.6), 0 10px 26px rgba(0,0,0,.55)}
+:root[data-theme="quest"] .tile{background:transparent}
+:root[data-theme="quest"] .btn{background:#cfb47e;border-color:#6b4a22;color:var(--ink)}
+:root[data-theme="quest"] .btn.primary{background:var(--accent);color:#f0d9a0;border-color:#4a0c0a;font-family:var(--display);letter-spacing:.06em}
+:root[data-theme="quest"] .seg button[aria-pressed="true"]{background:var(--accent);color:#f0d9a0}
+:root[data-theme="quest"] .bookcase{box-shadow:0 0 0 2px var(--outline), inset 2px 0 0 var(--outline), inset -2px 0 0 var(--outline), inset 0 2px 0 var(--outline), 0 12px 30px rgba(0,0,0,.6), inset 0 18px 30px rgba(0,0,0,.6)}
+:root[data-theme="quest"] .decor{--dk-box:#5a3618;--dk-metal:#b8923a;--dk-wax:#e6d6b0;--dk-pot:#7a4e24}
 /* Crawl: a game dungeon seen through its system screens. Dark stone, glowing cyan windows, quest-alert gold, pixel lettering,
    loot boxes and potions on the shelves. Always dark. */
 :root[data-theme="crawl"]{
@@ -177,18 +181,28 @@
   --outline:#050607; --post:#2a2d33;
   color-scheme:dark}
 :root[data-theme="crawl"] body{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath d='M40 0H0V40' fill='none' stroke='%2322d3ee' stroke-opacity='.06' stroke-width='1'/%3E%3C/svg%3E") repeat 0 0 / 40px 40px, radial-gradient(ellipse 70% 50% at 50% 0%, rgba(34,211,238,.10), transparent 70%), radial-gradient(ellipse 60% 40% at 50% 110%, rgba(255,77,77,.10), transparent 70%), var(--bg);background-attachment:fixed}
-:root[data-theme="crawl"] header.top{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='230' height='64' viewBox='0 0 230 64'%3E%3Crect x='2' y='8' width='226' height='48' rx='3' fill='%230b1220' fill-opacity='.85' stroke='%2322d3ee' stroke-width='2'/%3E%3Crect x='10' y='16' width='32' height='32' fill='%23ffcc00'/%3E%3Cpath d='M23 20h6v16h-6zM23 40h6v5h-6z' fill='%230b1220'/%3E%3Ctext x='52' y='30' font-family='monospace' font-size='12' font-weight='700' fill='%23ffcc00'%3ENEW QUEST UNLOCKED%3C/text%3E%3Ctext x='52' y='46' font-family='monospace' font-size='11' fill='%239ee7f3'%3ERead the pile. All of it.%3C/text%3E%3C/svg%3E") no-repeat calc(50% + 60px) center / 230px 64px, rgba(12,13,16,.94);border-bottom:2px solid #22d3ee;box-shadow:0 0 0 100vmax rgba(12,13,16,.94), 0 2px 18px rgba(34,211,238,.25);clip-path:inset(0 -100vmax -30px)}
-@media (max-width:1000px){:root[data-theme="crawl"] header.top{background-size:0 0, auto}}
+:root[data-theme="crawl"] header.top{background:rgba(12,13,16,.94);border-bottom:5px solid transparent;border-image:repeating-linear-gradient(90deg,#c9ccd1 0 4px,#3a3d43 4px 7px) 5;box-shadow:0 0 0 100vmax rgba(12,13,16,.94), 0 2px 18px rgba(34,211,238,.2);clip-path:inset(0 -100vmax -30px)}
+:root[data-theme="crawl"] h1::before{content:"";display:inline-block;width:1.7em;height:1.45em;margin-right:.4em;vertical-align:-.3em;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='3 7 58 50'%3E%3Cpath d='M10 17 Q32 13 54 17 L58 50 Q50 54 37 51 L33 36 Q32 34.5 31 36 L27 51 Q14 54 6 50 Z' fill='%23fbeef4' stroke='%23050607' stroke-width='1.8' stroke-linejoin='round'/%3E%3Cpath transform='translate(13 23) scale(0.8)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(22 21.5) scale(0.75)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(31 24) scale(0.7)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(40 21.5) scale(0.75)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(48 23) scale(0.8)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(15 31) scale(0.8)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(25 30.5) scale(0.7)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(37 30.5) scale(0.7)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(46 31) scale(0.8)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(11 40) scale(0.75)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(19 40) scale(0.7)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(41 40) scale(0.7)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath transform='translate(49 40) scale(0.75)' d='M0 1.6C0-.8 3.2-1.6 4-.2 4.8-1.6 8-.8 8 1.6 8 4.6 4 7 4 7S0 4.6 0 1.6Z' fill='%23e0283f'/%3E%3Cpath d='M6 50 Q14 54 27 51 L26.5 53.5 Q14 57 5.5 53 Z' fill='%232b2d33' stroke='%23050607' stroke-width='1.4' stroke-linejoin='round'/%3E%3Cpath d='M58 50 Q50 54 37 51 L37.5 53.5 Q50 57 58.5 53 Z' fill='%232b2d33' stroke='%23050607' stroke-width='1.4' stroke-linejoin='round'/%3E%3Cpath d='M10 12 Q32 8 54 12 L54 18 Q32 14 10 18 Z' fill='%232b2d33' stroke='%23050607' stroke-width='1.8' stroke-linejoin='round'/%3E%3Cpath d='M16 13v4M22 12v4.4M28 11.6v4.6M34 11.6v4.6M40 12v4.4M46 12.6v4' stroke='%235a5d66' stroke-width='1'/%3E%3Cpath d='M32 18v12' stroke='%23c9a3b3' stroke-width='1.2'/%3E%3C/svg%3E") no-repeat center/contain;filter:drop-shadow(2px 2px 0 #7a1010)}
 :root[data-theme="crawl"] h1{font-weight:400;font-size:1.35rem;letter-spacing:.02em;line-height:1.5;color:var(--accent);text-shadow:3px 3px 0 #7a1010, 0 0 14px rgba(255,204,0,.35)}
 :root[data-theme="crawl"] h2,:root[data-theme="crawl"] .pile-title{font-family:var(--display);font-weight:400;font-size:1.05rem;line-height:1.5;color:var(--shame);text-shadow:2px 2px 0 #000}
 :root[data-theme="crawl"] h3{font-family:"VT323",monospace;font-size:1.15rem;letter-spacing:.08em;color:#22d3ee}
-:root[data-theme="crawl"] :is(.card,.tiles,.pile,.tablewrap,.yearstrip){border:2px solid #22d3ee;border-radius:2px;background:linear-gradient(rgba(34,211,238,.04),transparent 40%), var(--paper);box-shadow:0 0 0 1px #050607, 0 0 18px rgba(34,211,238,.18), inset 0 0 24px rgba(34,211,238,.05)}
+:root[data-theme="crawl"] :is(.card,.tiles,.pile,.tablewrap,.yearstrip,.notice){border:2px solid #050403;border-radius:6px;background:radial-gradient(circle at 12px 12px,#d9dce1 0 2.4px,#6b6f76 2.6px 3.2px,transparent 3.6px),radial-gradient(circle at calc(100% - 12px) 12px,#d9dce1 0 2.4px,#6b6f76 2.6px 3.2px,transparent 3.6px),radial-gradient(circle at 12px calc(100% - 12px),#d9dce1 0 2.4px,#6b6f76 2.6px 3.2px,transparent 3.6px),radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),#d9dce1 0 2.4px,#6b6f76 2.6px 3.2px,transparent 3.6px),radial-gradient(120% 70% at 18% 0%, rgba(255,240,220,.07), transparent 55%),radial-gradient(90% 60% at 100% 100%, rgba(255,240,220,.04), transparent 60%),repeating-radial-gradient(circle at 37% 41%, rgba(255,255,255,.018) 0 1px, transparent 1px 3px),#16110e;outline:1.5px dashed rgba(214,186,150,.38);outline-offset:-8px;box-shadow:0 0 0 1px #2a211c, 0 0 16px rgba(34,211,238,.12), 0 10px 26px rgba(0,0,0,.6)}
+:root[data-theme="crawl"] .tile{background:transparent}
 :root[data-theme="crawl"] .tile .big{font-family:"VT323",monospace;font-size:2.1rem}
-:root[data-theme="crawl"] .btn{border-radius:2px;border:2px solid #22d3ee;background:#0b1220;color:#9ee7f3;text-transform:uppercase;letter-spacing:.06em}
+:root[data-theme="crawl"] .btn{border-radius:5px;border:2px solid #050403;background:radial-gradient(120% 90% at 20% 0%, rgba(255,240,220,.08), transparent 60%),#1d1612;color:#ecdcc6;text-transform:uppercase;letter-spacing:.06em;outline:1px dashed rgba(214,186,150,.4);outline-offset:-5px}
 :root[data-theme="crawl"] .btn.primary{background:var(--accent);border-color:#000;color:#111;box-shadow:3px 3px 0 #7a1010}
 :root[data-theme="crawl"] .seg button[aria-pressed="true"]{background:var(--accent);color:#111}
 :root[data-theme="crawl"] .bookcase{box-shadow:0 0 0 2px var(--outline), inset 2px 0 0 var(--outline), inset -2px 0 0 var(--outline), inset 0 2px 0 var(--outline), 0 0 30px rgba(34,211,238,.18), inset 0 18px 30px rgba(0,0,0,.6)}
 :root[data-theme="crawl"] .decor{--dk-metal:#ffcc00;--dk-box:#5a3a1a;--dk-pot:#3b3f4a;--dk-pot2:#9aa3ad}
+.hud{display:none}
+:root[data-theme="crawl"] .hud{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:6px 14px 8px;background:#020406;border:2px solid #0e3a44;border-radius:4px;color:#3ff2ff;box-shadow:0 0 0 1px #000, inset 0 0 18px rgba(34,211,238,.12), 0 0 14px rgba(34,211,238,.18)}
+:root[data-theme="crawl"] .hud span{font:600 .78rem/1 "Chakra Petch",sans-serif;letter-spacing:.14em;text-transform:uppercase;text-shadow:0 0 8px rgba(63,242,255,.8)}
+:root[data-theme="crawl"] .hud b{display:block;font-size:2.1rem;line-height:1;filter:drop-shadow(0 0 4px rgba(63,242,255,.85))}
+:root[data-theme="crawl"] .hud b svg{display:block;height:1em;width:auto}
+:root[data-theme="crawl"] .hud b.tick{animation:hudtick .9s steps(3)}
+@keyframes hudtick{0%{opacity:.25}35%{opacity:1}55%{opacity:.5}100%{opacity:1}}
+@media (prefers-reduced-motion:reduce){:root[data-theme="crawl"] .hud b.tick{animation:none}}
+@media (max-width:640px){:root[data-theme="crawl"] .hud{order:5;width:100%;flex-direction:row;align-items:center;justify-content:space-between}:root[data-theme="crawl"] .hud b{font-size:1.6rem}}
 /* Light: the default's light colors, whatever the device is set to */
 :root[data-theme="light"]{color-scheme:light}
 .themesect{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}.themesect h4{margin:0;font-size:.9rem}
@@ -388,8 +402,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 @keyframes cbrise{0%{transform:translateY(0) scale(.4);opacity:0}10%{opacity:1}30%{transform:translate(2px,-12px) scale(.8)}55%{transform:translate(-2px,-26px) scale(1)}80%{transform:translate(1px,-38px) scale(1.05);opacity:1}86%{transform:translate(1px,-38px) scale(1.45);opacity:0}100%{transform:translate(1px,-38px) scale(1.45);opacity:0}}
 @keyframes cbpop{0%,80%{opacity:0;transform:scale(.6)}86%{opacity:1;transform:scale(1)}96%{opacity:0;transform:scale(1.35)}100%{opacity:0}}
 .cb-fire{transform-origin:30px 90px;animation:dkflick 1.4s ease-in-out infinite alternate}@keyframes dkflick{0%{transform:scale(1,1)}50%{transform:scale(1.06,.92)}100%{transform:scale(.95,1.05)}}
-.cdl-fire{transform-box:fill-box;transform-origin:50% 100%;animation:dkflick 1.6s ease-in-out infinite alternate}
-@media (prefers-reduced-motion:reduce){.gx-spin,.cb-b,.cb-p,.cb-fire,.cdl-fire{animation:none}.cb-p{opacity:0}}
+@media (prefers-reduced-motion:reduce){.gx-spin,.cb-b,.cb-p,.cb-fire{animation:none}.cb-p{opacity:0}}
 .decor{display:inline-block;vertical-align:bottom;margin-bottom:12px;line-height:0;--dk-metal:#c99a3e;--dk-leaf:#5a9a4e;--dk-leaf2:#3d7a43;--dk-leaf3:#8cbf7a;--dk-pot:#c0663a;--dk-pot2:#ece4d4;--dk-vase:#2f7f86;--dk-bloom:#e8566a;--dk-box:#b5462f;--dk-wax:#efe4c8}
 .decor.orn{margin:0 0 12px}
 .decor svg{display:block;width:100%;height:100%;overflow:visible}
@@ -557,6 +570,7 @@ textarea{width:100%;min-height:110px;font-family:var(--mono);font-size:.78rem;re
       <h1>Shelf of Shame</h1>
       <div class="store st-none" id="store"><i></i><span>Example library</span></div>
     </div>
+    <div class="hud" id="hud" role="status" aria-label="Books remaining"><span>Books remaining:</span><b id="hudNum"></b></div>
     <div class="actions">
       <button class="btn" id="btnAdd">Add book</button>
       <button class="btn" id="btnSettings">Settings</button>
@@ -1153,6 +1167,15 @@ let resizeT, lastW = window.innerWidth; window.addEventListener('resize', () => 
 const OL = 'stroke="var(--outline)" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"';
 const leaf = (x, y, r, sc, c) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${sc})"><path d="M0 0C9-6 9-23 0-32C-9-23-9-6 0 0Z" fill="${c}" ${OL}/><path d="M0-4V-26" stroke="var(--outline)" stroke-opacity=".4" stroke-width="1.1" fill="none" vector-effect="non-scaling-stroke"/></g>`;
 const potLight = 'color-mix(in srgb,var(--dk-pot) 78%,#fff)';
+// A round potion flask held in a small iron stand (Crawl): red for health, blue for mana
+function potionSvg(c, mark) {
+  const OL = 'stroke="var(--outline)" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"';
+  const sym = mark === 'star' ? '<path d="M22 46l1.8 3.8 4.2.5-3.1 2.9.8 4.1-3.7-2-3.7 2 .8-4.1-3.1-2.9 4.2-.5z" fill="#fff"/>' : '<path d="M17 51h10M22 46v10" stroke="#fff" stroke-width="3"/>';
+  return `<svg viewBox="0 0 44 82"><rect x="17" y="3" width="10" height="8" rx="2" fill="#8a5a36" ${OL}/><path d="M17 10h10v12c9 4 13 11 13 21a18 18 0 0 1-36 0c0-10 4-17 13-21z" fill="rgba(220,240,255,.2)" ${OL}/>
+    <path d="M6 43a16 16 0 0 0 32 0c0-3-1-5-2-7H8c-1 2-2 4-2 7z" fill="${c}"/>${sym}<circle cx="13" cy="50" r="2" fill="rgba(255,255,255,.55)"/>
+    <path d="M7 56c4 6 26 6 30 0" fill="none" stroke="#3b3f46" stroke-width="3.4"/><path d="M7 56c4 6 26 6 30 0" fill="none" ${OL}/>
+    <path d="M9 58l-3 20M35 58l3 20M22 62v16" stroke="#3b3f46" stroke-width="3" stroke-linecap="round"/><path d="M2 77h40v4H2z" fill="#2a2d33" ${OL}/></svg>`;
+}
 const DECOR = {
   bookend: [18, 98, `<svg viewBox="0 0 18 98"><path d="M-13 90h29v8h-29z" fill="var(--post)" ${OL}/><path d="M8 2h8v96H8z" fill="var(--post)" ${OL}/><path d="M10 5h2v84h-2z" fill="rgba(255,255,255,.22)"/></svg>`],
   plant: [74, 122, `<svg viewBox="0 0 74 122"><path d="M17 83C6 92 4 110 9 132" stroke="var(--dk-leaf2)" stroke-width="2.4" fill="none"/>${leaf(8, 101, 205, .42, 'var(--dk-leaf)')}${leaf(7, 117, 160, .4, 'var(--dk-leaf2)')}${leaf(9, 131, 195, .36, 'var(--dk-leaf)')}
@@ -1169,10 +1192,13 @@ const DECOR = {
   bunny: [56, 74, `<svg viewBox="0 0 56 74"><path d="M17 30C11 18 10 4 16 2s9 12 9 26M39 30C45 18 46 4 40 2s-9 12-9 26" fill="#ffe3ee" ${OL}/><path d="M17 26C14 17 14 8 16 6s5 9 6 20M39 26C42 17 42 8 40 6s-5 9-6 20" fill="#ff9fc4"/><ellipse cx="28" cy="58" rx="20" ry="16" fill="#ffe3ee" ${OL}/><circle cx="28" cy="36" r="15" fill="#ffe3ee" ${OL}/><circle cx="22" cy="35" r="2" fill="var(--outline)"/><circle cx="34" cy="35" r="2" fill="var(--outline)"/><ellipse cx="18.5" cy="40" rx="3.4" ry="2" fill="#ff9fc4" opacity=".8"/><ellipse cx="37.5" cy="40" rx="3.4" ry="2" fill="#ff9fc4" opacity=".8"/><path d="M26 40q2 2 4 0" stroke="var(--outline)" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M20 50l8 4 8-4-3 7h-10z" fill="#ff5fa2" ${OL}/><circle cx="28" cy="54" r="2.4" fill="#ff8fb8" ${OL}/><ellipse cx="17" cy="70" rx="7" ry="4" fill="#ffe3ee" ${OL}/><ellipse cx="39" cy="70" rx="7" ry="4" fill="#ffe3ee" ${OL}/></svg>`],
   d20: [56, 60, `<svg viewBox="0 0 56 60"><path d="M28 2L53 16V44L28 58L3 44V16Z" fill="#8e1b1b" ${OL}/><path d="M28 2L40 24H16Z" fill="#b8302e"/><path d="M16 24L28 46L40 24Z" fill="#a52624"/><path d="M28 2L40 24H16Z M16 24L28 46L40 24 M3 16L16 24L3 44 M53 16L40 24L53 44 M28 46V58 M28 46L3 44 M28 46L53 44" fill="none" stroke="#f1dfa8" stroke-width="1.2" stroke-linejoin="round"/><text x="28" y="38" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="11" fill="#f1dfa8">20</text></svg>`],
   scroll: [84, 44, `<svg viewBox="0 0 84 44"><rect x="10" y="10" width="64" height="26" fill="#efe0b8" ${OL}/><ellipse cx="10" cy="23" rx="7" ry="14" fill="#e2cf9e" ${OL}/><ellipse cx="74" cy="23" rx="7" ry="14" fill="#e2cf9e" ${OL}/><path d="M20 17h40M20 23h44M20 29h32" stroke="#8a6a3a" stroke-width="1.6" stroke-linecap="round"/><path d="M38 34l-3 10 5-4 5 4-3-10" fill="#8e1b1b" ${OL}/><circle cx="40" cy="34" r="5" fill="#a52624" ${OL}/></svg>`],
-  candle: [34, 96, `<svg viewBox="0 0 34 96"><path class="cdl-fire" d="M17 6c-5 7-6 12-2 16 5 3 7-3 5-7 0 0 3 4 1 8 4-2 4-9-4-17z" fill="#ffb347" ${OL}/><ellipse cx="17" cy="20" rx="2.4" ry="4" fill="#fff3c4"/><path d="M10 26h14v52H10z" fill="var(--dk-wax)" ${OL}/><path d="M10 34c3 3 3 7 0 10M24 30c-2 4-2 9 0 12" stroke="#d9c79a" stroke-width="2" fill="none"/><path d="M17 26v-4" stroke="#2b1d12" stroke-width="1.6"/><ellipse cx="17" cy="84" rx="15" ry="5" fill="var(--dk-metal)" ${OL}/><path d="M6 80h22v4H6z" fill="var(--dk-metal)" ${OL}/></svg>`],
+  pouch: [52, 58, `<svg viewBox="0 0 52 58"><path d="M14 18c-8 8-10 22-6 30 4 7 32 7 36 0 4-8 2-22-6-30z" fill="#5a3a1e" ${OL}/><path d="M14 18c4 3 20 3 24 0l-3-6c-5 2-13 2-18 0z" fill="#6e4a26" ${OL}/><path d="M13 19c6 4 20 4 26 0" stroke="#c9a24a" stroke-width="2.2" fill="none"/><path d="M30 20c6 4 9 9 8 14" stroke="#c9a24a" stroke-width="1.8" fill="none"/><circle cx="38" cy="35" r="2.4" fill="#c9a24a"/><path d="M17 10l5-8 5 8z" fill="#2f6b8a" ${OL}/><path d="M27 12l6-7 4 9z" fill="#8e1b1b" ${OL}/><path d="M16 30c3 6 3 12 1 16" stroke="rgba(0,0,0,.25)" stroke-width="3" fill="none"/></svg>`],
+  tankard: [50, 62, `<svg viewBox="0 0 50 62"><path d="M8 14h28v42c0 3-2 4-4 4H12c-2 0-4-1-4-4z" fill="#7a5a34" ${OL}/><path d="M8 22h28M8 48h28" stroke="#3a3f45" stroke-width="4"/><path d="M8 22h28M8 48h28" stroke="#9aa0a6" stroke-width="1.4"/><path d="M36 24h6c4 0 6 3 6 7v10c0 4-2 7-6 7h-6" fill="none" stroke="#3a3f45" stroke-width="5"/><path d="M36 24h6c4 0 6 3 6 7v10c0 4-2 7-6 7h-6" fill="none" ${OL}/><path d="M5 14c0-6 6-9 11-7 3-4 10-4 13 0 5-2 11 1 10 7 0 3-3 5-6 5H11c-4 0-6-2-6-5z" fill="#f3ead4" ${OL}/><path d="M14 30v12M22 30v12M30 30v12" stroke="rgba(0,0,0,.18)" stroke-width="2"/></svg>`],
+  jug: [50, 68, `<svg viewBox="0 0 50 68"><path d="M30 10c4-6 9-7 13-4 3 2 3 6 0 7" fill="none" stroke="#2b2420" stroke-width="2.4" stroke-linecap="round"/><path d="M43 13l2 2" stroke="#2b2420" stroke-width="2.4" stroke-linecap="round"/><path d="M17 20h12v-6c0-2-1-3-3-3h-6c-2 0-3 1-3 3z" fill="#c9a06a" ${OL}/><path d="M20 11l1-4h6l1 4z" fill="#9a7048" ${OL}/><path d="M13 22c-6 3-9 9-9 17v26.4h42V39c0-8-3-14-9-17z" fill="#efe3c6" ${OL}/><path d="M4 44h42v21.4H4z" fill="#7a4a24"/><path d="M3 64h44v3.2H3z" fill="#5a3418" ${OL}/><path d="M33 22c7 2 10 7 9 12" fill="none" stroke="#efe3c6" stroke-width="5" stroke-linecap="round"/><path d="M33 22c7 2 10 7 9 12" fill="none" ${OL}/><rect x="13" y="29" width="16" height="11" rx="1.5" fill="#ffcc00" ${OL}/><path d="M21 31v5M21 37.6v1" stroke="#2b2420" stroke-width="2"/><path d="M8 32c1-3 3-5 5-6" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/></svg>`],
   loot: [72, 64, `<svg viewBox="0 0 72 64"><ellipse cx="36" cy="60" rx="32" ry="4" fill="#22d3ee" opacity=".25"/><path d="M8 28h56v30H8z" fill="#5a3a1a" ${OL}/><path d="M8 28c0-14 10-22 28-22s28 8 28 22z" fill="#6e4720" ${OL}/><path d="M8 36h56M20 28v30M52 28v30" stroke="#ffcc00" stroke-width="3"/><path d="M8 28h56" stroke="#ffcc00" stroke-width="3"/><rect x="30" y="30" width="12" height="13" rx="2" fill="#ffcc00" ${OL}/><path d="M36 34v5" stroke="#3a2a10" stroke-width="2"/><path d="M14 6l3 6M58 6l-3 6M36 0v7" stroke="#22d3ee" stroke-width="2.4" stroke-linecap="round"/></svg>`],
-  hpotion: [40, 70, `<svg viewBox="0 0 40 70"><rect x="15" y="2" width="10" height="8" rx="2" fill="#8a5a36" ${OL}/><path d="M15 9h10v12c9 4 13 11 13 21a18 18 0 0 1-36 0c0-10 4-17 13-21z" fill="rgba(220,240,255,.2)" ${OL}/><path d="M4 42a16 16 0 0 0 32 0c0-3-1-5-2-7H6c-1 2-2 4-2 7z" fill="#ff3b4a"/><path d="M15 44h10M20 39v10" stroke="#fff" stroke-width="3"/><circle cx="12" cy="49" r="2" fill="rgba(255,255,255,.55)"/></svg>`],
-  trophy: [46, 72, `<svg viewBox="0 0 46 72"><path d="M10 6h26v14a13 13 0 0 1-26 0z" fill="#ffcc00" ${OL}/><path d="M10 10H3c0 9 4 14 9 15M36 10h7c0 9-4 14-9 15" fill="none" stroke="#ffcc00" stroke-width="3.4"/><path d="M20 33h6v14h-6z" fill="#e0a800" ${OL}/><path d="M11 47h24v8H11z" fill="#e0a800" ${OL}/><rect x="6" y="55" width="34" height="14" fill="#3b3f4a" ${OL}/><path d="M14 62h18" stroke="#ffcc00" stroke-width="2"/><path d="M17 12v8" stroke="#fff6c4" stroke-width="3" stroke-linecap="round"/></svg>`],
+  hpotion: [44, 82, potionSvg('#ff3b4a', 'cross')],
+  mana: [44, 82, potionSvg('#3b7bff', 'star')],
+  tiara: [60, 92, tiaraSvg([])],
   pumpkin: [66, 60, `<svg viewBox="0 0 66 60"><path d="M33 13c1-6 4-9 8-10" stroke="#3f6b1f" stroke-width="4.5" fill="none" stroke-linecap="round"/><ellipse cx="18" cy="39" rx="15" ry="20" fill="#e2701c" ${OL}/><ellipse cx="48" cy="39" rx="15" ry="20" fill="#e2701c" ${OL}/><ellipse cx="33" cy="38" rx="15" ry="21" fill="#f58a2a" ${OL}/><path d="M26 22c-3 10-3 22 0 34M40 22c3 10 3 22 0 34" stroke="rgba(120,50,0,.4)" stroke-width="1.5" fill="none"/><path d="M24 30a10 6 0 0 1 8-6" stroke="rgba(255,255,255,.4)" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>`],
   potion: [44, 80, `<svg viewBox="-2 0 44 80"><rect x="15" y="2" width="10" height="9" rx="2" fill="#8a5a36" ${OL}/><path d="M15 10h10v14c9 4 13 11 13 22a18 18 0 0 1-36 0c0-11 4-18 13-22z" fill="rgba(220,210,255,.18)" ${OL}/><path d="M4 46a16 16 0 0 0 32 0c0-3-1-6-2-8H6c-1 2-2 5-2 8z" fill="#9be35a"/><circle cx="14" cy="50" r="2.5" fill="rgba(255,255,255,.5)"/><circle cx="22" cy="44" r="1.6" fill="rgba(255,255,255,.5)"/><path d="M-1 60h42v6H-1z" fill="#6e4a2e" ${OL}/><path d="M1 66h5v14H1zM34 66h5v14h-5z" fill="#5a3b24" ${OL}/><path d="M-2 76h44v4H-2z" fill="#6e4a2e" ${OL}/></svg>`],
 };
@@ -1201,8 +1227,21 @@ function cauldronSvg(gs) {
     <ellipse cx="30" cy="48" rx="22" ry="5" fill="#6a3592" stroke="var(--outline)" stroke-width="1.6"/>
     <ellipse cx="30" cy="46" rx="25" ry="5.5" fill="none" stroke="#3a3346" stroke-width="4"/><ellipse cx="30" cy="46" rx="25" ry="5.5" fill="none" stroke="var(--outline)" stroke-width="1.2"/></svg>`;
 }
-const smallGenreSvg = gs => document.documentElement.dataset.theme === 'halloween' ? cauldronSvg(gs) : globeSvg(gs);
-const smallGenreWord = () => document.documentElement.dataset.theme === 'halloween' ? 'cauldron' : 'globe';
+// Crawl: a purple crystal tiara of jagged spikes on a velvet cushion; the small genres are the gems set in its band
+function tiaraSvg(gs) {
+  const gems = gs.slice(0, 5).map((g, i, a) => { const x = 30 + (i - (a.length - 1) / 2) * 7.4, y = 68.6 - Math.abs(x - 30) * .16; return `<path d="M${x} ${y - 2.8}l2.4 2.8-2.4 2.8-2.4-2.8z" fill="var(--g-${g})" stroke="var(--outline)" stroke-width="1" vector-effect="non-scaling-stroke"/>`; }).join('');
+  return `<svg viewBox="0 0 60 92" width="60" height="92" aria-hidden="true"><defs><linearGradient id="tiP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e07af5"/><stop offset=".5" stop-color="#9b2fc0"/><stop offset="1" stop-color="#4e1470"/></linearGradient>
+    <linearGradient id="tiC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a1f78"/><stop offset="1" stop-color="#2a0c3c"/></linearGradient></defs>
+    <path d="M6 76C6 70 16 68 30 68S54 70 54 76V82C54 88 44 90 30 90S6 88 6 82Z" fill="url(#tiC)" stroke="var(--outline)" stroke-width="1.6"/><path d="M10 74c6-3 34-3 40 0" stroke="#8a4aa8" stroke-width="1.2" fill="none" opacity=".7"/>
+    <path d="M6 79l-3 6M54 79l3 6" stroke="#ffcc00" stroke-width="2" stroke-linecap="round"/>
+    <path d="M4.8 62L9 48L13.2 62Z" fill="#3a1450" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M12.6 64L17 42L21.4 64Z" fill="#3a1450" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M38.6 64L43 42L47.4 64Z" fill="#3a1450" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M46.8 62L51 48L55.2 62Z" fill="#3a1450" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M7 60Q30 74 53 60L53 66Q30 80 7 66Z" fill="url(#tiP)" stroke="var(--outline)" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 62Q30 74.5 51 62" stroke="#f0b8ff" stroke-width="1" fill="none" opacity=".7"/>
+    <path d="M14.2 66L17 54L19.8 66Z" fill="url(#tiP)" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M17 55.5L16.16 65" stroke="#f5c6ff" stroke-width="1" opacity=".8"/><path d="M17 55.5L17.98 64" stroke="#3a0f55" stroke-width=".9" opacity=".6"/><path d="M22 68.5L25 50L28 68.5Z" fill="url(#tiP)" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M25 51.5L24.1 67.5" stroke="#f5c6ff" stroke-width="1" opacity=".8"/><path d="M25 51.5L26.05 66.5" stroke="#3a0f55" stroke-width=".9" opacity=".6"/><path d="M32 68.5L35 50L38 68.5Z" fill="url(#tiP)" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M35 51.5L34.1 67.5" stroke="#f5c6ff" stroke-width="1" opacity=".8"/><path d="M35 51.5L36.05 66.5" stroke="#3a0f55" stroke-width=".9" opacity=".6"/><path d="M40.2 66L43 54L45.8 66Z" fill="url(#tiP)" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M43 55.5L42.16 65" stroke="#f5c6ff" stroke-width="1" opacity=".8"/><path d="M43 55.5L43.98 64" stroke="#3a0f55" stroke-width=".9" opacity=".6"/><path d="M6.9 63.5L7.82 55.31L6.67 53.75L9.43 49.85L11.5 44L13.57 49.85L16.33 53.75L15.18 55.31L16.1 63.5Z" fill="url(#tiP)" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M11.5 45.5L10.120000000000001 62.5" stroke="#f5c6ff" stroke-width="1" opacity=".8"/><path d="M11.5 45.5L13.11 61.5" stroke="#3a0f55" stroke-width=".9" opacity=".6"/><path d="M14.9 67L16.02 52.3L14.620000000000001 49.5L17.98 42.5L20.5 32L23.02 42.5L26.38 49.5L24.98 52.3L26.1 67Z" fill="url(#tiP)" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M20.5 33.5L18.82 66" stroke="#f5c6ff" stroke-width="1" opacity=".8"/><path d="M20.5 33.5L22.46 65" stroke="#3a0f55" stroke-width=".9" opacity=".6"/><path d="M22.6 69L24.08 46.74L22.23 42.5L26.67 31.9L30 16L33.33 31.9L37.77 42.5L35.92 46.74L37.4 69Z" fill="url(#tiP)" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M30 17.5L27.78 68" stroke="#f5c6ff" stroke-width="1" opacity=".8"/><path d="M30 17.5L32.59 67" stroke="#3a0f55" stroke-width=".9" opacity=".6"/><path d="M33.9 67L35.02 52.3L33.62 49.5L36.98 42.5L39.5 32L42.02 42.5L45.38 49.5L43.98 52.3L45.1 67Z" fill="url(#tiP)" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M39.5 33.5L37.82 66" stroke="#f5c6ff" stroke-width="1" opacity=".8"/><path d="M39.5 33.5L41.46 65" stroke="#3a0f55" stroke-width=".9" opacity=".6"/><path d="M43.9 63.5L44.82 55.31L43.67 53.75L46.43 49.85L48.5 44L50.57 49.85L53.33 53.75L52.18 55.31L53.1 63.5Z" fill="url(#tiP)" stroke="var(--outline)" stroke-width="1.2" stroke-linejoin="round"/><path d="M48.5 45.5L47.12 62.5" stroke="#f5c6ff" stroke-width="1" opacity=".8"/><path d="M48.5 45.5L50.11 61.5" stroke="#3a0f55" stroke-width=".9" opacity=".6"/>
+    ${gems}
+    <path d="M8 26l2.4 2.4M5 34l3.4.4M52 26l-2.4 2.4M55 34l-3.4.4M30 4v5" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"/></svg>`;
+}
+const smallGenreSvg = gs => { const t = document.documentElement.dataset.theme; return t === 'halloween' ? cauldronSvg(gs) : t === 'crawl' ? tiaraSvg(gs) : globeSvg(gs); };
+const smallGenreWord = () => ({halloween: 'cauldron', crawl: 'tiara'})[document.documentElement.dataset.theme] || 'globe';
 // Comic (phone shelf): lying flat, its cover panels in the tiny genres' colors
 function comicSvg(gs) {
   const n = Math.min(gs.length, 4), w = 52 / n;
@@ -1211,10 +1250,10 @@ function comicSvg(gs) {
     <path d="M0 16h60v5H0z" fill="#e8dcc0" stroke="var(--outline)" stroke-width="1.6"/><path d="M60 16l8-16v5l-8 16z" fill="#d9cba8" stroke="var(--outline)" stroke-width="1.6"/></svg>`;
 }
 // The last shelf's leftover space gets a bookend and these, in order; ORNAMENTS are the small things set between books now and then (Default spine colors only)
-const DECOR_SETS = {quest: ['candle', 'd20', 'scroll', 'box', 'candle', 'stack'], crawl: ['loot', 'hpotion', 'trophy', 'loot', 'hpotion', 'stack'], sakura: ['branch', 'bunny', 'box', 'succulent', 'branch', 'bunny'], halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
-const ORN_INSET = {d20: [3, 3], scroll: [3, 3], candle: [4, 4], loot: [8, 8], hpotion: [2, 2], trophy: [3, 3], branch: [14, 14], bunny: [8, 8], plant: [14, 14], succulent: [7, 7], vase: [2, 2], box: [2, 2], stack: [2, 4], pumpkin: [3, 3], potion: [4, 4]};
+const DECOR_SETS = {quest: ['tankard', 'd20', 'scroll', 'box', 'pouch', 'stack'], crawl: ['tiara', 'jug', 'hpotion', 'mana', 'jug', 'hpotion', 'mana', 'jug'], sakura: ['branch', 'bunny', 'box', 'succulent', 'branch', 'bunny'], halloween: ['pumpkin', 'potion', 'pumpkin', 'potion', 'pumpkin'], cozy: ['stack', 'plant', 'vase', 'succulent', 'box', 'plant'], default: ['plant', 'stack', 'vase', 'succulent', 'box', 'plant']};
+const ORN_INSET = {d20: [3, 3], scroll: [3, 3], pouch: [6, 6], tankard: [6, 2], jug: [4, 4], loot: [8, 8], hpotion: [4, 4], mana: [4, 4], tiara: [4, 4], branch: [14, 14], bunny: [8, 8], plant: [14, 14], succulent: [7, 7], vase: [2, 2], box: [2, 2], stack: [2, 4], pumpkin: [3, 3], potion: [4, 4]};
 const ornSize = k => { const [w, h] = DECOR[k], s = Math.max(1, Math.min(138 / h, 2, 100 / w)); return [Math.round(w * s), Math.round(h * s)]; };
-const ORNAMENTS = {quest: ['d20', 'candle', 'scroll', 'box'], crawl: ['hpotion', 'loot', 'trophy', 'hpotion'], sakura: ['branch', 'bunny', 'box', 'succulent'], halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
+const ORNAMENTS = {quest: ['d20', 'pouch', 'scroll', 'tankard'], crawl: ['hpotion', 'jug', 'mana', 'jug'], sakura: ['branch', 'bunny', 'box', 'succulent'], halloween: ['pumpkin', 'potion'], cozy: ['succulent', 'vase', 'box', 'stack'], default: ['succulent', 'vase', 'box', 'stack']};
 let shelfMemo = {};
 // A share as a whole percent, except near the ends: 3 books read out of 659 is 99.5% unread, never a rounded-up 100%
 const pctText = p => (p > 0 && p < 1 ? Math.max(.1, Math.round(p * 10) / 10) : p > 99 && p < 100 ? Math.min(99.9, Math.floor(p * 10) / 10) : Math.round(p)) + '%';
@@ -1280,7 +1319,7 @@ function settleShelf(bc) {
       // not packed full: a bookend holds the books up, and a plant or the like fills what's left when it fits
       slack -= DECOR.bookend[0] - 7; // its upright sits right against the last book; the foot slides under it
       let fill = '';
-      const pick = [...new Set(DECOR_SETS[document.documentElement.dataset.theme] || DECOR_SETS.default)].map(k => [k, Math.min(Math.floor(DECOR[k][0] * ornScale(k)), slack - 14)]).filter(([k, w]) => w >= DECOR[k][0] * .8).sort((a, b) => b[1] - a[1])[0];
+      const pick = [...new Set(DECOR_SETS[document.documentElement.dataset.theme] || DECOR_SETS.default)].filter(k => k !== 'tiara').map(k => [k, Math.min(Math.floor(DECOR[k][0] * ornScale(k)), slack - 14)]).filter(([k, w]) => w >= DECOR[k][0] * .8).sort((a, b) => b[1] - a[1])[0];
       if (pick) { const [k, w] = pick; fill = `<span class="decor rowend" aria-hidden="true" style="width:${w}px;height:${Math.round(DECOR[k][1] * w / DECOR[k][0])}px;margin-left:${Math.max(10, Math.floor((slack - w) / 2))}px">${DECOR[k][2]}</span>`; }
       ins(`<span class="decor rowend" aria-hidden="true" style="width:${DECOR.bookend[0]}px;height:${DECOR.bookend[1]}px;margin-left:-7px">${DECOR.bookend[2]}</span>` + fill);
     } else if (slack > 0) {
@@ -1289,6 +1328,20 @@ function settleShelf(bc) {
       sp.forEach((n, i) => { const add = Math.floor(slack / sp.length) + (i < slack % sp.length ? 1 : 0); if (!add) return; keep(n); n.style.setProperty('--w', (px(n, '--w') + add) + 'px'); });
     }
   });
+}
+// Seven-segment digits for the Crawl counter, drawn as SVG so they look like a game's display on every device
+const SEG_ON = ['abcdef', 'bc', 'abged', 'abgcd', 'fgbc', 'afgcd', 'afgedc', 'abc', 'abcdefg', 'abcdfg'];
+function segDigits(text) {
+  const H = (x, y) => `M${x + 3} ${y}l2-2h10l2 2-2 2H${x + 5}z`, V = (x, y) => `M${x} ${y + 3}l2-2 2 2v10l-2 2-2-2z`;
+  const SEG = {a: x => H(x, 2), g: x => H(x, 18), d: x => H(x, 34), f: x => V(x + 1, 2), b: x => V(x + 17, 2), e: x => V(x + 1, 18), c: x => V(x + 17, 18)};
+  let x = 0, d = '', off = '';
+  for (const ch of String(text)) {
+    if (ch === ',' || ch === '.') { d += `M${x + 1} 35h3v3l-2 3h-1z`; x += 7; continue; }
+    const on = SEG_ON[+ch] || '';
+    for (const k of 'abcdefg') (on.includes(k) ? (d += SEG[k](x)) : (off += SEG[k](x)));
+    x += 24;
+  }
+  return `<svg viewBox="-1 -1 ${x + 1} 40" height="1em" aria-hidden="true"><path d="${off}" fill="currentColor" opacity=".1"/><path d="${d}" fill="currentColor"/></svg>`;
 }
 const DECOR_ROOM = 340; // px kept free at the end of a computer's full bookcase for the bookend and decorations
 function decorShelf() {
@@ -1309,7 +1362,8 @@ function decorShelf() {
   if (free < DECOR.bookend[0] + 4) { if (gxs.length) { bc.insertAdjacentHTML('beforeend', bookend); gxs.forEach(n => bc.appendChild(n)); } return; }
   const t = document.documentElement.dataset.theme, set = DECOR_SETS[t] || DECOR_SETS.default;
   const picks = []; let used = DECOR.bookend[0] + 4;
-  for (let i = 0; i < 12; i++) { const k = set[i % set.length], w = DECOR[k][0]; if (used + w + 22 > free) break; picks.push(k); used += w + 22; }
+  const oneOnly = new Set(['tiara']), haveGx = bc.querySelector('.gx-globe') || gxs.some(n => n.classList.contains('gx-globe')); // one tiara, ever: none if the small-genre tiara is already on the shelf
+  for (let i = 0; i < 12; i++) { const k = set[i % set.length], w = DECOR[k][0]; if (oneOnly.has(k) && (picks.includes(k) || haveGx)) continue; if (used + w + 22 > free) break; picks.push(k); used += w + 22; }
   const extra = picks.length ? Math.max(0, free - used) / picks.length : 0; // spread whatever is left between the items
   bc.insertAdjacentHTML('beforeend', bookend);
   gxs.forEach(n => bc.appendChild(n));
@@ -1366,6 +1420,7 @@ function renderStats() {
 
   // pile
   $('#pileH').textContent = `${fmtInt(pile.length)} unread book${pile.length === 1 ? '' : 's'}`;
+  { const hn = $('#hudNum'), v = fmtInt(pile.length); if (hn && hn.dataset.v !== v) { hn.dataset.v = v; hn.innerHTML = segDigits(v); hn.parentElement.setAttribute('aria-label', `Books remaining: ${v}`); hn.classList.remove('tick'); void hn.offsetWidth; hn.classList.add('tick'); } }
   const nNew = pile.filter(isNew).length;
   $('#pileNew').hidden = !nNew;
   $('#pileNew').innerHTML = nNew ? `<i></i>${nNew} bought in the last 5 days, shown first` : '';
@@ -1856,16 +1911,16 @@ const THEMES = [
   ['light', 'Light', 'Always light', ['#f7f8f5', '#eceeea', '#27408b', '#2f6b45']],
   ['fruit', 'Fruit', 'Frosted glass and bright colors', ['#f2f2f7', '#ffffff', '#007aff', '#ff3b30']],
   ['sakura', 'Sakura', 'Cherry blossoms, all pink', ['#fff0f6', '#ffd1e3', '#ff5fa2', '#c9a7eb']],
-  ['quest', 'Quest', 'Dice, parchment and candlelight', ['#eadcbc', '#6b4220', '#8e1b1b', '#c9a24a']],
-  ['crawl', 'Crawl', 'Loot boxes and system alerts', ['#0c0d10', '#22d3ee', '#ffcc00', '#ff4d4d']],
+  ['quest', 'Quest', 'Dice, worn maps and dark oak', ['#1b130c', '#d8c290', '#9e2320', '#c9a24a']],
+  ['crawl', 'Crawl', 'Loot boxes, leather and system alerts', ['#0c0d10', '#17120f', '#ffcc00', '#22d3ee']],
 ];
 function applyTheme(t) {
   if (!t || t === 'default') document.documentElement.removeAttribute('data-theme'); else document.documentElement.dataset.theme = t;
   try { localStorage.setItem('klc-theme', t || 'default'); } catch {}
   if (typeof decorShelf === 'function') requestAnimationFrame(decorShelf);
-  // Tab and home-screen icon: the book with a cobweb in the Halloween theme, the book with its price tag otherwise
+  // Tab and home-screen icon: the jack-o'-lantern book in Spooky, the heart boxers in Crawl, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
-  const ico = t === 'halloween' ? 'web' : 'tag';
+  const ico = t === 'halloween' ? 'web' : t === 'crawl' ? 'boxers' : 'tag';
   [['favicon', `icon-${ico}.png?v=__SCRIPT_VERSION__`], ['touchicon', `icon-${ico}-180.png?v=__SCRIPT_VERSION__`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
