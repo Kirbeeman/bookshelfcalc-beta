@@ -6,20 +6,22 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 15 (latest)
+## 2.2 beta 16 (latest)
 
-**Goodreads currently reading never misses a book**
+**Quest, less cartoon and never the same piece twice**
 
-- Goodreads currently reading is checked twice, from the shelf feed and from the shelf page, and any book the feed leaves out is added.
-- Every Goodreads and Amazon request asks for a fresh answer instead of a copy the browser kept.
-- Settings > Accounts shows when the Kindle list was last read, not only when purchases were.
-- Fixed: a book added to Goodreads currently reading could be missing from the sync (seen with a book added the same morning), so it stayed Unread.
+- Quest looks less like a cartoon: leather spines with gold bands and old-style lettering, wood grain and boards in the bookcase, shading in place of thick outlines, and soft shadows under the shelf pieces.
+- Every Quest shelf piece is redrawn and sits flat on the shelf: three d20s numbered like a real die (red and gold, midnight blue and silver, black and silver), three tankards (one lidded, two with different heads of foam), three scrolls (iron, brass or wooden ends, with a silver medallion, red wax or black wax seal), a bag of holding, a tooled shoulder bag, an oxblood satchel, an iron-bound chest and a stack of old tomes.
+- In Quest each piece appears at most once, and dice stay dice-sized instead of growing to fill a gap.
+- By genre in Quest: an old brass globe on parchment seas, and a leather journal with ribbon bookmarks in place of the comic.
+- Other themes keep their own shelf pieces and look. No candles in any theme.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 15** Goodreads currently reading never misses a book
 - **2.2 beta 14** Anthologies match Goodreads, fresher Kindle progress
 - **2.2 beta 13** A lock shows which books syncs leave alone
 - **2.2 beta 12** Accounts tab, and hand-set books still move forward on sync
