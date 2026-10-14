@@ -804,6 +804,11 @@ GM_addStyle(`
 :root[data-theme="crawl"] .btn{border-radius:5px;border:2px solid #050403;background:radial-gradient(120% 90% at 20% 0%, rgba(255,240,220,.08), transparent 60%),#1d1612;color:#ecdcc6;text-transform:uppercase;letter-spacing:.06em;outline:1px dashed rgba(214,186,150,.4);outline-offset:-5px}
 :root[data-theme="crawl"] .btn.primary{background:var(--accent);border-color:#000;color:#111;box-shadow:3px 3px 0 #7a1010}
 :root[data-theme="crawl"] .seg button[aria-pressed="true"]{background:var(--accent);color:#111}
+:root[data-theme="crawl"] .tablewrap th{background:transparent;padding-top:16px}:root[data-theme="crawl"] .tablewrap :is(th,td):first-child{padding-left:20px}:root[data-theme="crawl"] .tablewrap :is(th,td):last-child{padding-right:20px}
+:root[data-theme="crawl"] .tablewrap thead tr{background:linear-gradient(rgba(0,0,0,.28),rgba(0,0,0,.18))}
+:root[data-theme="crawl"] dialog{border:2px solid #050403;border-radius:8px;background:radial-gradient(circle at 12px 12px,#d9dce1 0 2.4px,#6b6f76 2.6px 3.2px,transparent 3.5999999999999996px),radial-gradient(circle at calc(100% - 12px) 12px,#d9dce1 0 2.4px,#6b6f76 2.6px 3.2px,transparent 3.5999999999999996px),radial-gradient(circle at 12px calc(100% - 12px),#d9dce1 0 2.4px,#6b6f76 2.6px 3.2px,transparent 3.5999999999999996px),radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),#d9dce1 0 2.4px,#6b6f76 2.6px 3.2px,transparent 3.5999999999999996px),radial-gradient(120% 70% at 18% 0%, rgba(255,240,220,.07), transparent 55%),radial-gradient(90% 60% at 100% 100%, rgba(255,240,220,.04), transparent 60%),repeating-radial-gradient(circle at 37% 41%, rgba(255,255,255,.018) 0 1px, transparent 1px 3px),#16110e;box-shadow:0 0 0 1px #2a211c, 0 0 24px rgba(34,211,238,.18), 0 18px 50px rgba(0,0,0,.7)}
+:root[data-theme="crawl"] dialog .dlg{outline:1.5px dashed rgba(214,186,150,.38);outline-offset:-10px;border-radius:6px}
+:root[data-theme="crawl"] .acct,:root[data-theme="crawl"] .themelist{border:2px solid #050403;background:radial-gradient(circle at 8px 8px,#d9dce1 0 1.8px,#6b6f76 2.0px 2.6px,transparent 3.0px),radial-gradient(circle at calc(100% - 8px) 8px,#d9dce1 0 1.8px,#6b6f76 2.0px 2.6px,transparent 3.0px),radial-gradient(circle at 8px calc(100% - 8px),#d9dce1 0 1.8px,#6b6f76 2.0px 2.6px,transparent 3.0px),radial-gradient(circle at calc(100% - 8px) calc(100% - 8px),#d9dce1 0 1.8px,#6b6f76 2.0px 2.6px,transparent 3.0px),radial-gradient(120% 70% at 18% 0%, rgba(255,240,220,.07), transparent 55%),radial-gradient(90% 60% at 100% 100%, rgba(255,240,220,.04), transparent 60%),repeating-radial-gradient(circle at 37% 41%, rgba(255,255,255,.018) 0 1px, transparent 1px 3px),#16110e;outline:1px dashed rgba(214,186,150,.35);outline-offset:-5px}
 :root[data-theme="crawl"] .bookcase{box-shadow:0 0 0 2px var(--outline), inset 2px 0 0 var(--outline), inset -2px 0 0 var(--outline), inset 0 2px 0 var(--outline), 0 0 30px rgba(34,211,238,.18), inset 0 18px 30px rgba(0,0,0,.6)}
 :root[data-theme="crawl"] .decor{--dk-metal:#ffcc00;--dk-box:#5a3a1a;--dk-pot:#3b3f4a;--dk-pot2:#9aa3ad}
 .hud{display:none}
@@ -2509,7 +2514,7 @@ function applyTheme(t) {
   // Tab and home-screen icon: the jack-o'-lantern book in Spooky, the heart boxers in Crawl, the book with its price tag otherwise
   // Swapping in a new <link> (not just changing href) makes Safari and Firefox notice too
   const ico = t === 'halloween' ? 'web' : t === 'crawl' ? 'boxers' : 'tag';
-  [['favicon', `icon-${ico}.png?v=2.2.0.0.17`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.17`]].forEach(([id, href]) => {
+  [['favicon', `icon-${ico}.png?v=2.2.0.0.18`], ['touchicon', `icon-${ico}-180.png?v=2.2.0.0.18`]].forEach(([id, href]) => {
     const old = document.getElementById(id); if (!old || old.getAttribute('href') === href) return;
     const n = old.cloneNode(); n.setAttribute('href', href); old.replaceWith(n);
   });
@@ -3236,7 +3241,7 @@ async function lookupAltGenres() {
 }
 
 // ---------- tell people when their sync script is behind the site ----------
-const LATEST_SCRIPT = '2.2.0.0.17';
+const LATEST_SCRIPT = '2.2.0.0.18';
 // Beta builds carry a fifth number, the beta count: 2.0.0.0.1 is shown as "2.0 beta 1" (the live build it's heading toward, then which beta)
 const verLabel = v => { const p = String(v || '').split('.'); if (p.length < 5) return String(v || ''); const b = p.pop(); while (p.length > 2 && p[p.length - 1] === '0') p.pop(); return p.join('.') + ' beta ' + b; };
 const SCRIPT_URL = 'https://raw.githubusercontent.com/Kirbeeman/bookshelfcalc/main/kindle-library-calculator.user.js';
@@ -3322,6 +3327,7 @@ const lsSet1 = (k, v) => { try { v ? localStorage.setItem(k, v) : localStorage.r
 
 // ---------- what's new (shown in Settings) ----------
 const CHANGES = [
+  ['2.2.0.0.18', ['Crawl: the top of the library table shows its leather, stitching and rivets again', 'Crawl: Settings, Edit book and the other windows are riveted, stitched leather like the rest of the page']],
   ['2.2.0.0.17', ['Cozy is an old library: dark wood-panelled walls, a stone fireplace whose fire flickers and lights the whole page, an arched window, a brass floor lamp and a rug', 'Cozy books are leather-bound with gold bands, and light falls warmly onto each shelf', 'New Cozy shelf pieces, none ever shown twice: a banker\'s lamp, a mantel clock, a ship painting, ferns and other plants, lavender, tea, a mug, old books with reading glasses, a keepsake box and an hourglass']],
   ['2.2.0.0.16', ['Quest looks less like a cartoon: leather spines with gold bands and old-style lettering, wood grain in the bookcase, shading instead of thick outlines, and soft shadows', 'Quest shelf pieces redrawn and set flat on the shelf: dice numbered like a real d20 (red, blue and black), tankards (one lidded, two with different heads of foam), scrolls with iron, brass or wooden ends and different seals, a bag of holding, a tooled shoulder bag and an oxblood satchel, an iron-bound chest and a stack of old tomes', 'In Quest no shelf piece is ever shown twice, and dice stay dice-sized', 'By genre in Quest: an old brass globe, and a leather journal in place of the comic']],
   ['2.2.0.0.15', ['Goodreads currently reading is checked twice, from the shelf feed and the shelf page, so a book the feed leaves out still counts', 'Every Goodreads and Amazon read asks for a fresh answer, never a copy the browser kept', 'Settings > Accounts shows when the Kindle list was last read']],

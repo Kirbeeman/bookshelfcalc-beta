@@ -6,20 +6,20 @@ Beta versions are named for the live version they're heading toward, plus a beta
 
 ---
 
-## 2.2 beta 17 (latest)
+## 2.2 beta 18 (latest)
 
-**Cozy becomes an old library with a fire**
+**Crawl leather reaches the library header and the windows**
 
-- Cozy is set in an old library: dark wood-panelled walls, a stone fireplace in the corner whose fire flickers and casts warm, flickering light across the whole page, an arched window and a brass floor lamp on the other side, and a rug along the floor.
-- Cozy books are leather-bound with gold bands and serif titles, and warm light falls onto each shelf.
-- New Cozy shelf pieces, each shown at most once: a brass banker's lamp, a mantel clock, a sailing-ship painting, a fern, a snake plant, a trailing pothos, a succulent bowl, dried lavender, a cup of tea, a mug, old books with reading glasses, a keepsake box and an hourglass.
-- The fire is still and the light steady when a device is set to reduce motion; on phones only the glow shows.
+- Crawl: Settings, Edit book and the other windows are riveted, stitched leather like the cards on the page, including the account cards and the theme list.
+- Fixed: in Crawl, the top of the library table covered the leather, so its stitching and top rivets were missing. They show again, and the first and last columns sit clear of the stitching.
+- Buttons, switches and the other themes are unchanged.
 - The sync script picks this up by itself: it's a signed release.
 
 ---
 
 ## Earlier betas
 
+- **2.2 beta 17** Cozy becomes an old library with a fire
 - **2.2 beta 16** Quest, less cartoon and never the same piece twice
 - **2.2 beta 15** Goodreads currently reading never misses a book
 - **2.2 beta 14** Anthologies match Goodreads, fresher Kindle progress
